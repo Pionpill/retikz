@@ -70,7 +70,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const Example = () => <Layout ir={ir} extensions={definitions} />;
+export const Example = () => <Layout ir={ir} compile={{ ...definitions }} />;
 ```
 
 </DocTab>
@@ -78,14 +78,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { connectedScatterChart, connectedScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { connectedScatterChart } from '@retikz/chart-vanilla/point';
 import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
 
 const chart = connectedScatterChart({
   data: connectedScatterMinimalData,
   encodings: { x: 'month', y: 'unemploymentRate', order: 'month' },
 });
-export const svg = renderChart(chart, { adapters: [connectedScatterChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>
@@ -99,7 +99,7 @@ import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
 
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const chart = ConnectedScatterChartSchema.parse({
   namespace: 'chart',
@@ -116,7 +116,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
+export const svg = renderToSvg(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

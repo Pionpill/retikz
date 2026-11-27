@@ -1,5 +1,5 @@
 import { Entity, Relation } from '@retikz/graph-react';
-import { Layout, Node, Path, Scope } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 import { Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
@@ -58,9 +58,9 @@ const FlowMaterialization: FC<FlowMaterializationProps> = props => {
         data={{ kind: 'entity', bounds: { x: 240, y: 120, width: 80, height: 40 } }}
         defaultCell={{ style: { font: { size: 13 } } }}
       />
-      <Path way={['output.right', [260, 176]]} />
-      <Path way={[[260, 176], [260, 60], 'graph.left']} arrow="->" />
-      <Path way={[[260, 176], [260, 266], 'artifact.left']} arrow="->" />
+      <Draw way={['output.right', [260, 176]]} />
+      <Draw way={[[260, 176], [260, 60], 'graph.left']} arrow="->" />
+      <Draw way={[[260, 176], [260, 266], 'artifact.left']} arrow="->" />
       <Node position={[260, 36]} text={t.draw} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} />
       <Node position={[275, 292]} text={t.record} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} />
       <Node position={[85, 315]} text={t.offset} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} />

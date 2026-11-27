@@ -11,9 +11,9 @@ Chart Source 的根级字段描述整张图。先识别它属于哪个图形家�
 
 需要随图表运行的处理链时，在 `plotExtension.transform` 中声明有序的 `{ operation, dataExecution? }`，并通过 `lowerOptions.definitions.transforms` 与 `lowerOptions.implementations.transforms` 注入自定义操作的定义和实现。执行顺序为显式处理链、encoding 聚合，再到 recipe / 图元局部变换。根 `dataExecution` 复用 Plot 的统一或 `{ root, marks }` 分组策略；声明覆盖所属作用域，之后继承执行器默认值，最终模式缺省为 builtin。
 
-React 六类 Chart 接收 dataBindings、dataTransformExecutor 和 signal；原始 rows 与 dataBindings 互斥，Data Definition/Implementation 通过 lowerOptions 分别注入。独立客户端自动异步准备；嵌入外层 Layout 时开启 runtime.preparation 为 async。
+React 图表接收 `rows`，Vanilla 工厂接收 `data`。需要外接计算时，先调用 `prepareChartData(spec, request, chartProviderContribution, lowerOptions)` 并等待 `execute()`，再把结果改通过 `preparedData` 传入。两种入口都不重复执行已完成的变换。
 
-Vanilla 图表工厂接收相同运行时输入。异步 SSR 使用 `renderChartAsync(input, { adapters: [当前图表Adapter], signal })`，返回 Promise 的 `{ svg, compileResult }`；同步 renderChart 与 React SSR 只接受本地同步计算。数据绑定和三模式说明见 [Data 扩展机制](/viz/data/transform/extensions)。
+SSR 可直接调用 `renderChartAsync(spec, { chartProviderContribution, dataBindings, dataTransformExecutor, signal })`，返回同一次编译的 `{ svg, compileResult }`。provider 必须匹配 spec 的图表类型。
 
 ## 图形根结构
 

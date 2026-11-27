@@ -15,21 +15,23 @@ export class TransformExecution<TSource> implements DataTransformExecution {
   constructor(
     private readonly plan: PreparedTransformPlan<TSource>,
     private readonly input: InputDataTransformStage<TSource>,
-  ) {}
+  ) {
+    this.execute = this.execute.bind(this);
+  }
 
   /** 重复调用同步抛错；异步等待、失败与取消均不恢复执行权 */
-  execute = (): Promise<DataTransformResult> => {
+  execute(): Promise<DataTransformResult> {
     if (this.consumed) throw new RetikzDataError('data: execution can only run once; execution right consumed');
 
     this.consumed = true;
     assertDataExecutionActive(this.plan.signal);
     return this.run();
-  };
+  }
 
   /** 按固定阶段推进当前输入，事件累积只属于本次执行 */
   private async run(): Promise<DataTransformResult> {
     const input = this.input;
-    const { resolution, selected, localStages, materialize, requirements, signal } = this.plan;
+    const { resolution, selected, localStages, requirements, signal } = this.plan;
     const lineageOptions = requirements.lineage;
     let current = input;
     const events = input.kind === 'result' ? [...(input.result.lineage?.events ?? [])] : [];
@@ -87,7 +89,7 @@ export class TransformExecution<TSource> implements DataTransformExecution {
     }
 
     if (current.kind === 'source') {
-      const materialized = await materialize(current);
+      const materialized = await this.plan.materialize(current);
       events.push(
         ...(lineageOptions === undefined
           ? (materialized.lineage?.events ?? [])

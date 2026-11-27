@@ -1,7 +1,7 @@
 import type { IRNode } from '../../../src';
 import type { NodeEvalCase } from '../suite';
 
-/** 相同资源在填充、描边与标签引线位置仍分别测试 */
+/** 填充覆盖资源分支；其他宿主保留位置辨析与实测易错组合 */
 const paintResources: Array<{ request: string; paint: NonNullable<NonNullable<IRNode['style']>['fill']> }> = [
   {
     request: '起点红色且 40% 不透明、终点蓝色且保持默认不透明的线性渐变，角度 45 度',
@@ -85,16 +85,19 @@ const paintResources: Array<{ request: string; paint: NonNullable<NonNullable<IR
 const paintScopes = [
   {
     start: 1,
+    indices: [0, 1, 2, 3, 4],
     scope: 'fill',
     request: '节点内部填充',
   },
   {
     start: 6,
+    indices: [0, 3],
     scope: 'stroke',
     request: '节点轮廓描边',
   },
   {
     start: 11,
+    indices: [0, 1, 3],
     scope: 'pin',
     request: '节点外侧标签 L 的引线描边',
   },
@@ -111,11 +114,11 @@ const createPaintNode = (
 
 /** 绘制资源、默认参数及其消费位置 */
 export const paintCases: Array<NodeEvalCase> = [
-  ...paintScopes.flatMap(({ start, scope, request }) =>
-    paintResources.map((resource, index): NodeEvalCase => ({
+  ...paintScopes.flatMap(({ start, scope, request, indices }) =>
+    indices.map((index): NodeEvalCase => ({
       id: `NF${String(start + index).padStart(3, '0')}`,
-      task: '仅设置' + request + '为' + resource.request + '，不要把资源施加到其他部位。',
-      expected: createPaintNode(scope, structuredClone(resource.paint)),
+      task: '仅设置' + request + '为' + paintResources[index].request + '，不要把资源施加到其他部位。',
+      expected: createPaintNode(scope, structuredClone(paintResources[index].paint)),
     })),
   ),
   {

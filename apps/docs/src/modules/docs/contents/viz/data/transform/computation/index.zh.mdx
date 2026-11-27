@@ -138,35 +138,35 @@ const executor = createDataTransformExecutor({
 
 <DocStep title="注入宿主并选择外接执行">
 
-`dataTransformExecutor` 注入执行器，`dataExecution` 选择已注册的入口，`transform` 继续声明内置 `sort` 的参数。这里显式使用 `external`，确保排序必须由该 Provider 执行。
+应用先等待 Table 的领域计算，再把结果交给组件。
 
 ```tsx
-import { DetailColumn, DetailTable } from '@retikz/table-react';
-import type { FC } from 'react';
+import { prepareTableData } from '@retikz/table';
+import { Table } from '@retikz/table-react';
+import { detailTable } from '@retikz/table-vanilla';
 
+const spec = detailTable({
+  dataRef: 'records',
+  columns: [
+    { id: 'item', field: 'item' },
+    { id: 'value', field: 'value' },
+  ],
+  dataExecution: { mode: 'external', external: 'promise-engine' },
+  transform: [{ operation: { kind: 'sort', params: { field: 'value', order: 'ascending' } } }],
+});
 const rows = [
   { item: 'A', value: 30 },
   { item: 'B', value: 10 },
   { item: 'C', value: 20 },
   { item: 'D', value: 20 },
 ];
-
-export const SortedTable: FC = () => (
-  <DetailTable
-    id="sorted-records"
-    dataRef="records"
-    data={rows}
-    dataTransformExecutor={executor}
-    dataExecution={{ mode: 'external', external: 'promise-engine' }}
-    transform={[{ operation: { kind: 'sort', params: { field: 'value', order: 'ascending' } } }]}
-  >
-    <DetailColumn id="item" field="item" header={{ kind: 'value', value: 'item' }} />
-    <DetailColumn id="value" field="value" header={{ kind: 'value', value: 'value' }} />
-  </DetailTable>
-);
+const task = await prepareTableData(spec, {
+  dataBindings: { records: { kind: 'rows', rows } },
+  dataTransformExecutor: executor,
+});
+const preparedData = await task.execute();
+const table = <Table spec={spec} preparedData={preparedData} />;
 ```
-
-上面的 Table 宿主会自动完成准备、绑定和执行，无需在组件中手动调用 Provider。准备成功后，`ready.bind(actualInput)` 将实际输入绑定到固定计划：输入必须与准备描述匹配，绑定时不会重新选择实现。绑定实例的 `execute()` 再依次调用各阶段的 `implementation.execute(input)`，将前一阶段的结果传给下一阶段。每个绑定实例只能执行一次，首次调用即消耗执行权，失败或取消后也不能重用。
 
 </DocStep>
 
@@ -213,22 +213,9 @@ export const SortedTable: FC = () => (
 
 ## 宿主与数据绑定
 
-在 React 客户端中，独立使用 Plot、Chart 或 Table 时，组件会自动通过共享运行时完成异步准备。放入 Layout 后，需要在外层设置 `runtime={{ preparation: 'async' }}`，如下所示：
+独立组件和 Layout 中的子项都接收就绪输入。多图共用一帧时，应用先等待需要外接计算的部分，再一次提交全部子项。是否丢弃过期请求由应用决定。SSR 可用 `renderPlotAsync`、`renderChartAsync` 或 `renderTableAsync` 等待对应领域的计算。
 
-```tsx
-<Layout runtime={{ preparation: 'async' }}>
-  <Plot data={rows} dataTransformExecutor={executor}>
-    <PlotTransform operation={{ kind: 'sort', params: { field: 'x', order: 'ascending' } }} />
-    <PointMark x="x" y="y" />
-  </Plot>
-</Layout>
-```
-
-Layout 会先对其管理的全部输入完成预检，再执行计算，并将结果作为一次更新提交。当前请求失败时保留已有画面；请求已过期或组件已卸载时，计算结果不会再更新画面。
-
-使用 Vanilla 时，选择 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`，也可以使用配置了对应 adapter 的 `compileToSceneAsync`。同步入口和 React 同步 SSR 只支持本地同步计算。SSR 如需外接计算或等待 Promise，应使用异步 Vanilla 入口。
-
-除了直接传入原始数据，还可以用 `dataBindings` 按数据引用名提供输入；两种方式不能同时使用。绑定支持以下三种形式：
+领域准备函数和异步 SSR 使用 `dataBindings` 按引用名接收以下输入：
 
 | 绑定形式 | 输入要求与处理方式                                                                                   |
 | -------- | ---------------------------------------------------------------------------------------------------- |

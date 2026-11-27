@@ -11,9 +11,9 @@ Data owns data processing. Run a built-in or custom transform first, then pass i
 
 To execute a processing chain with the chart, declare ordered `{ operation, dataExecution? }` entries in `plotExtension.transform`. Supply custom definitions and implementations through `lowerOptions.definitions.transforms` and `lowerOptions.implementations.transforms`. The explicit chain runs before encoding aggregates, followed by recipe/mark-local transforms. Root `dataExecution` reuses the Plot shared policy or independent `{ root, marks }` policies. Declarations override their selected scope, followed by executor defaults and finally builtin.
 
-All six React Chart families accept dataBindings, dataTransformExecutor and signal. Raw rows and dataBindings are exclusive; lowerOptions injects separate Data Definitions and Implementations. Standalone clients prepare automatically; embedded Charts enable async runtime.preparation on the outer Layout.
+Pass rows as `rows` to React or `data` to a Vanilla factory. For external computation, call `prepareChartData(spec, request, chartProviderContribution, lowerOptions)`, await its `execute()`, and pass the result as `preparedData` instead. Neither entry reruns those transforms.
 
-Vanilla chart factories accept the same runtime inputs. Async SSR uses `renderChartAsync(input, { adapters: [the chart adapter], signal })` and returns a Promise of `{ svg, compileResult }`. Synchronous renderChart and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for bindings and modes.
+For SSR use `renderChartAsync(spec, { chartProviderContribution, dataBindings, dataTransformExecutor, signal })`. It returns `{ svg, compileResult }` from one compilation. Choose the provider for the chart type in the spec.
 
 ## Chart root structure
 

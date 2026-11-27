@@ -1,10 +1,9 @@
-import { createInputScene, Layout, Node, Scope } from '@retikz/react';
-import { normalizeScene, renderToSvgString } from '@retikz/vanilla';
+import { convertReactToInputScene, Layout, Node, Scope } from '@retikz/react';
+import { compileToScene, normalizeScene, renderToSvg } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { RawSvgFrame } from '@/modules/docs/components/component-preview/source-panel/RawSvgFrame';
 import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
 import { roundedRectClip } from './clip-registry.definition';
@@ -43,18 +42,18 @@ const Content: FC = () => (
 export const previewSource = {
   deriveIR: false,
   buildViews: ({ theme }) => {
-    const authoring = createInputScene(<Content />);
-    const input = { ...authoring.scene, ...(theme === undefined ? {} : { theme }) };
-    const ir = normalizeScene(input, { adapters: synchronousInputAdaptersOf(authoring.adapters) }).ir;
-    const svg = renderToSvgString(input, {
-      adapters: synchronousInputAdaptersOf(authoring.adapters),
+    const authoring = convertReactToInputScene(<Content />);
+    const input = { ...authoring, ...(theme === undefined ? {} : { theme }) };
+    const ir = normalizeScene(input).ir;
+    const compileResult = compileToScene(input, {
       compile: { clips: [roundedRectClip], measureText: browserMeasurer },
     });
+    const svg = renderToSvg(compileResult.scene);
 
     return {
       ir: {
         files: [{ filename: 'clip-registry.ir.json', code: JSON.stringify(ir, null, 2), lang: 'json' as const }],
-        render: mode => <Layout ir={ir} renderer={mode} extensions={{ clips: [roundedRectClip] }} />,
+        render: mode => <Layout ir={ir} renderer={mode} compile={{ clips: [roundedRectClip] }} />,
       },
       vanilla: {
         files: [{ filename: 'clip-registry.vanilla.ts', code: vanillaCode.trimEnd(), lang: 'ts' as const }],
@@ -66,7 +65,7 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 
 const Demo: FC = () => (
-  <Layout extensions={{ clips: [roundedRectClip] }}>
+  <Layout compile={{ clips: [roundedRectClip] }}>
     <Content />
   </Layout>
 );

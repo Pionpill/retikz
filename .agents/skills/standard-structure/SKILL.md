@@ -9,12 +9,14 @@ description: Use when changing Retikz package structure, dependencies, schemas, 
 
 ## 必须保持
 
+- React 包只做框架适配，不新增领域功能、默认值或解释规则；功能及其类型由对应领域包拥有。React 类型（尤其是 Props）优先复用 Vanilla 或核心包的公开契约，仅为 JSX、上下文、生命周期等框架差异定义类型。
 - 顶级成员声明之间留一个空行；连续 re-export 声明之间不留空行。成员有 JSDoc 或前置注释时，空行放在注释之前，注释紧贴对应声明。
 - 函数、类等成员内部，职责或处理阶段明确不同的逻辑段之间留一个空行；同一逻辑段内不逐句插入空行。逻辑分段由 LLM 自审，不以格式化通过代替检查。
 - 领域包拥有 schema、resolve、lowering 与 Scene 语义；Vanilla 组装 Input → IR，React 等 adapter 调度 Vanilla，不绕开它新建 IR builder。
 - 添加校验前先追踪数据来源，尽量在 schema、parse、定义或注册等最早具备完整信息的上游入口建立约束；上游已保证的约束，下游不得重复校验。仅当后续变换可能破坏该约束，或出现新的领域不变量、真实上下文错误时检查，并明确检查依据。外部 unknown 在入口校验，内部按类型契约消费。
+- 已类型化输入的冲突优先在声明处排除：平级字段必须恰选一个时用 `RequireExactlyOne`；存在分支专属字段时用联合类型，将字段限定在对应分支。允许都不传时保留空分支。适配层保留约束，不用运行时优先级、告警或抛错代替类型约束。
 - schema 声明默认值；resolve 处理继承优先级、上下文 lookup 与默认应用时机；pipeline/compile 管理上下文及调度。
-- 同一领域的 context、prepared 和阶段产物优先维护一份主类型；内部输入与返回值通过 `Pick` / `Omit`、索引访问及已有的必填性工具类型派生，不因运行细节重复定义同构类型或为传参构造字段副本。保留字段的必填、可选与只读语义；具有独立语义的能力契约或不同生命周期的数据不强行合并。
+- 同一领域的 context、prepared 和阶段产物优先维护一份主类型；内部输入与返回值按需通过 `Pick` / `Omit` 及必填性工具派生。字段已有具名类型时按[类型引用规范](../standard-name/SKILL.md#类型引用与参数形态)直接引用（如 `CompileOptions`，而非 `LayoutProps['compile']`），不因运行细节重复定义同构类型或为传参构造字段副本。保留字段的必填、可选与只读语义；具有独立语义的能力契约或不同生命周期的数据不强行合并。
 - 依赖沿 shared → schemas → contract → providers → resolve → pipeline/compile，不反向导入。
 - 同一 composite 的具体 Definition、创建工厂与依赖 Provider 合并为 owner-local `composite.ts`；schema、resolve、编译算法及独立 registry / 数据准备保持各自边界，`index.ts` 仍只做导出。合并时保持公开符号、初始化顺序与依赖方向，不跨包合并 adapter 工厂；删除原文件与遗留空目录，不保留转发层。
 - 命名读 [standard-name](../standard-name/SKILL.md)；公共 JSDoc 读 [JSDoc](../docs-doc-reference/references/jsdoc.md)。

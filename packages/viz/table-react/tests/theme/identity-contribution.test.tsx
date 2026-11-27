@@ -36,8 +36,7 @@ describe('Table React 运行时风格契约', () => {
     const context: InputEmbedContext = {
       id: 'scores',
       kind: 'table',
-      layerId: 'default',
-      identityPath: ['default', 'scores'],
+      identityPath: ['scores'],
     };
     const contribution = tableInputEmbedAdapter.lower(input, context);
 

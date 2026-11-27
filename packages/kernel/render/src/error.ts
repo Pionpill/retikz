@@ -31,19 +31,17 @@ export const RetikzRenderErrorCode = {
   RuntimeScenePatchSnapshotMismatch: 'RENDER_RUNTIME_SCENE_PATCH_SNAPSHOT_MISMATCH',
   /** Scene Patch revision 不匹配 */
   RuntimeScenePatchRevisionMismatch: 'RENDER_RUNTIME_SCENE_PATCH_REVISION_MISMATCH',
-  /** Retained renderer 无效 */
+  /** renderer 无效 */
   RuntimeRendererInvalid: 'RENDER_RUNTIME_RENDERER_INVALID',
-  /** Retained renderer prepare 失败 */
+  /** renderer prepare 失败 */
   RuntimeRendererPrepareFailed: 'RENDER_RUNTIME_RENDERER_PREPARE_FAILED',
-  /** Retained renderer 已释放 */
+  /** renderer 已释放 */
   RuntimeRendererDisposed: 'RENDER_RUNTIME_RENDERER_DISPOSED',
-  /** Retained renderer 不支持只读图层 */
-  RuntimeRendererReadonlyLayerUnsupported: 'RENDER_RUNTIME_RENDERER_READONLY_LAYER_UNSUPPORTED',
-  /** Retained renderer 初始帧不匹配 */
+  /** renderer 初始帧不匹配 */
   RuntimeRendererInitialFrameMismatch: 'RENDER_RUNTIME_RENDERER_INITIAL_FRAME_MISMATCH',
-  /** Retained Render participant 输入无效 */
+  /** Render participant 输入无效 */
   RuntimeParticipantInputInvalid: 'RENDER_RUNTIME_PARTICIPANT_INPUT_INVALID',
-  /** Retained runtime 输入无效 */
+  /** Render runtime 输入无效 */
   RuntimeInputInvalid: 'RENDER_RUNTIME_INPUT_INVALID',
 
   /** Scene 拓扑无效 */

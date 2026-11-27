@@ -1,5 +1,4 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputMatrix } from '@retikz/standard-vanilla/collection';
 import { matrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRMatrix } from '@retikz/standard/collection';
@@ -76,7 +75,7 @@ const createMatrixInput = (props: Readonly<Record<string, unknown>>, context: Re
     ),
   };
 
-  return withInputEmbedAdapters(result, collected.adapters);
+  return result;
 };
 
 const MatrixComponent: FC<MatrixProps> = () => null;

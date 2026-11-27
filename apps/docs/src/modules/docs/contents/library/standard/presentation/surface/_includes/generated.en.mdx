@@ -38,7 +38,7 @@ export type SurfaceProps = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 
 **Direct calls**
 
-#### <ApiSourceLink label={"InputSurface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={22}>InputSurface</ApiSourceLink>
+#### <ApiSourceLink label={"InputSurface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={18}>InputSurface</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -70,22 +70,21 @@ export type InputSurface = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSurfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={19}>InputSurfaceChild</ApiSourceLink>
+#### <ApiSourceLink label={"InputSurfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={15}>InputSurfaceChild</ApiSourceLink>
 
 ```ts
 export type InputSurfaceChild = InputChild;
 ```
 
-#### <ApiSourceLink label={"surfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={64}>surfaceInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={60}>surfaceInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>>;
+export declare const surfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface>;
 ```
 
 **Execution and supporting contracts**
 
-#### <ApiSourceLink label={"surface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={89}>surface</ApiSourceLink>
+#### <ApiSourceLink label={"surface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={80}>surface</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -112,7 +111,7 @@ export declare const surface: (input: InputSurface) => InputEmbed<InputSurface>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"surfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={30}>surfaceChild</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={26}>surfaceChild</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -162,7 +161,7 @@ export declare const surfaceChild: (child: InputSurfaceChild) => InputSurfaceChi
 | `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —           | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `namespace`       | `"standard"`                                                                                                                                                                                                       | —           | Composite namespace for Standard drawing capabilities.                                                                                          |
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | `"visible"` | Whether child visual overflow remains visible or is clipped.                                                                                    |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Uniform or side-specific non-negative Surface padding.                                                                                          |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Padding between the Surface boundary and its child.                                                                                             |
 | `position?`       | `IRScopePosition`                                                                                                                                                                                                  | —           | Origin position in the parent frame or final anchor alignment; defaults to the origin                                                           |
 | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —           | Sparse Theme override inherited by this Scope descendants.                                                                                      |
 | `transforms?`     | `IRSurface['transforms']`                                                                                                                                                                                          | —           | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
@@ -220,7 +219,7 @@ export type IRSurface = Omit<ZodInput<typeof SurfaceSchema>, keyof IRScopeProps 
   Pick<ZodInfer<typeof SurfaceSchema>, 'child'>;
 ```
 
-#### <ApiSourceLink label={"SurfaceSchema"} path={"packages/library/standard/src/presentation/surface/schema.ts"} startLine={36}>SurfaceSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SurfaceSchema"} path={"packages/library/standard/src/presentation/surface/schema.ts"} startLine={32}>SurfaceSchema</ApiSourceLink>
 
 <ZodSchema name="SurfaceSchema" />
 

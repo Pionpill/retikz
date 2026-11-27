@@ -1,5 +1,5 @@
 ---
-title: Composite 编译
+title: 编译 / Composite
 description: 理解领域定义怎样通过子项生成、布局提案、隔离试算和重放参与普通 Core 编译
 ---
 
@@ -114,7 +114,9 @@ proposal 的 x / y 分别使用 intrinsic、range 或 exact。intrinsic 查询 m
 
 `measureChild(child, proposal, axis)` 只查询所需轴的尺寸贡献，没有 replay。上下文 evaluation 指明当前请求完整 layout 还是某个轴的 contribution；能直接计算尺寸的 Composite 可返回对应 contribution，避免为纯查询生成完整子树。
 
-`layoutChild(child, proposal)` 进行完整隔离布局，返回 resolved / failed。成功结果包含可重放的布局；失败句柄可用于舍弃方案或通过 raise 抛出。契约错误和执行不变量等致命错误仍直接传播，不是所有错误都能当作布局备选失败。
+`layoutChild(child, proposal)` 进行完整隔离布局，返回 resolved / failed。成功结果包含可重放的布局；失败句柄可用于舍弃方案或通过 raise 抛出。契约错误和执行不变量等致命错误仍直接传播，不是所有错误都能当作布局备选失败。可用 `isContractViolationError(cause)` 识别 `createContractViolationError` 创建的错误；该契约也适用于 Shape、Clip 等扩展，不限于 Composite。
+
+普通 IR 子项由编译器借用，不会被复制或冻结。从交给测量、布局或返回为输出起，到本次编译结束（包括回放），请不要原地修改子项或其成员。需要不同布局时传入新的子项。
 
 下面的定义试算一个真实节点，再把选中的结果平移 20。节点的定义、字体、继承和引用规则仍沿普通管线执行。
 
@@ -149,7 +151,7 @@ const shiftedNode = defineComposite({
 
 `replay` 将成功结果转成当前回调拥有的输出子项。令牌不能序列化、伪造、跨回调持有或放置两次；它不是可以存进 IR 的缓存。输出先做整体预检，再提交选中的资源、引用、图元和领域产物，避免提交一半后才发现重复句柄。
 
-普通 children 会继续编译；重放子项消费已保存的事务。外层 replay wrapper 只接收已 lowering 的数值变换和裁剪。需要完整 authored Scope 语义时使用 `createScope(props, children)`，继续经过 Scope 调度。
+普通 children 会继续编译；重放子项消费已保存的事务。外层 replay wrapper 只接收已 lowering 的数值变换和裁剪。需要完整 authored Scope 语义时使用 `createScope(props, children)`，继续经过 Scope 调度。此调用借用属性和有序子项列表，不复制或冻结它们。请在本次编译结束前保持两者及其成员稳定。
 
 ### 目标查询、主题和运行时输入
 

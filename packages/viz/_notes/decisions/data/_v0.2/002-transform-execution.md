@@ -9,7 +9,6 @@ keywords: Data、transform、Definition、executor、outputModel、statistics、
 - 决策日期：2026-10-02
 - 关联：[data v0 roadmap](../../../roadmaps/data/v0/roadmap.md) · [Data 设计](../../../architecture/data-design.md) · [Data 能力边界](../../../architecture/data-capability-complete.md)
 - 前置：[Data v0.2 ADR-001](./001-shared-transforms.md)
-- 宿主自动接入前置：[Kernel ADR-047](../../../../../kernel/_notes/decisions/_v0.5/047-async-authoring-preparation.md)，共享异步作者输入准备
 - 实例结果接入：[Kernel ADR-048](../../../../../kernel/_notes/decisions/_v0.5/048-composite-runtime-input.md)，运行时视图绑定真实 Source 位置，嵌套及生成子项显式转交，不重复执行变换
 - 修订：ADR-001 中 Definition 同时拥有计算的契约，以及 [Data v0.1 ADR-002](../settled/data-model.md) 的统计 Definition 执行绑定；其能力归属继续有效
 
@@ -25,7 +24,7 @@ Data 已统一拥有行数据变换，但 `TransformDefinition` 仍强制携带�
 
 `@retikz/data` 拥有 operation schema、默认值、字段依赖、输出模型、统计方法及顺序、缺失值和失败语义。运行时 Definition 描述这些语义，不持有 `apply`、`reduce`、`select` 或 `fit` 等计算回调。
 
-内置与外部实现消费同一语义解析结果。Data 在执行前解析全部 operation 与统计依赖，逐步推导输出模型，再按显式执行模式为每个阶段选择可用实现，并检查整个执行链的结果交接能力。外部 adapter 负责目标引擎的查询生成、调用及结果转换，不重新定义 Data operation。数据源绑定、权限和缓存由应用负责；使用宿主自动准备入口时，由共享 Vanilla processing 管理准备任务与当前输入 revision 的对应关系，应用仍负责底层网络取消和连接资源。
+内置与外部实现消费同一语义解析结果。Data 在执行前解析全部 operation 与统计依赖，逐步推导输出模型，再按显式执行模式为每个阶段选择可用实现，并检查整个执行链的结果交接能力。外部 adapter 负责目标引擎的查询生成、调用及结果转换，不重新定义 Data operation。数据源绑定、权限和缓存由应用负责；等待数据、取消任务与选择要提交的结果均由计算发起方负责。
 
 所有能力从 `@retikz/data` 根入口导出，不增加 transform 子路径。内置与自定义变换使用相同的 Definition、registry、语义解析、执行能力检查和结果接入机制。
 
@@ -175,7 +174,7 @@ type DataInputBinding<TSource> =
 type DataInputBindings<TSource> = Readonly<Record<string, DataInputBinding<TSource>>>;
 ```
 
-Plot/Chart/Table 的 IR/spec 作者入口使用 `dataBindings` 注入上述表；现有 rows DSL 将行数组组装成 rows binding。dataBindings 与同一宿主已有的 data/rows 注入互斥，不双读、不以优先级掩盖重复绑定。`renderPlotAsync(spec, dataBindings, options)` 使用第二参数绑定；`renderChartAsync` 与 `renderTableAsync` 的 options 使用同名 dataBindings。三个入口的 options 均接收 dataTransformExecutor 与可选 signal，React 对应 runtime props 同样不进入 JSON。
+领域准备函数使用 `dataBindings`；三个领域 SSR 入口接收显式绑定、执行器和可选 signal。Vanilla 与 React 作者层只接收直接行数据或该声明对应的 `preparedData`，二者互斥。
 
 rows binding 先复用现有 Data 字段映射、format、resolveField 及非法值政策，产生规范输入再执行变换。result binding 已是规范值，使用自身模型作为当前事实源；若作者另声明模型，须与其字段、已知类型和 order 一致，不重新套源 parser。source binding 必须在宿主 `data.model` 显式提供完整逻辑字段模型，必要测量类型不能依赖下载后的观测推断；source 句柄必须指向满足该模型的规范逻辑输入。
 
@@ -191,13 +190,13 @@ Table 的数据驱动 Detail/Custom 入口新增 `transform` 声明序列，在�
 
 React 的 `PlotTransform` 保留声明组件角色，其 props 与 `IRDataTransformDeclaration` 相同：`{ operation, dataExecution? }`，由 Vanilla 作者 API 组装；Table 和 Chart 作者入口复用此 Data 声明语义。JSON IR、Vanilla 和 JSX 均使用同一包装，不平铺 operation 字段；自定义 operation 即使包含名为 dataExecution 的计算参数，也不会与声明配置冲突。provider 回调留在 runtime，不塞进 JSON。根节点的 props 与 spec 表达同一个配置槽；同一输入同时提供两份根配置时诊断重复声明，不建立额外优先级。
 
-外部计算在同步 lowering 前的共享数据准备阶段完成。Plot/Chart/Table 领域负责解析实际数据作用域和依赖，Data 负责每条阶段链的配置继承、能力匹配与执行；Vanilla processing 调度准备，React 只收集声明并订阅结果。准备产物是本次输入的运行时消费态，不回写作者 IR、不保存已执行数量或完成标记；同步 lowering 直接消费已准备视图，不重新执行源声明。应用自行调用 Data 执行后绑定新 dataset 的路径也继续成立，此时只声明仍需执行的操作。
+外部计算在同步 lowering 前的共享数据准备阶段完成。Plot/Chart/Table 领域负责解析实际数据作用域和依赖，Data 负责每条阶段链的配置继承、能力匹配与执行；应用等待领域任务，React 与 Vanilla 只消费就绪数据。准备产物是本次输入的运行时消费态，不回写作者 IR、不保存已执行数量或完成标记；同步 lowering 直接消费已准备视图，不重新执行源声明。应用自行调用 Data 执行后绑定新 dataset 的路径也继续成立，此时只声明仍需执行的操作。
 
-宿主提供明确的异步渲染入口 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`。这些入口与 React 独立组件、Layout 嵌入共用 Kernel ADR-047 的 Vanilla processing 准备能力；带自动执行配置的 JSON IR 渲染也经该入口。准备回调解析数据作用域、调用 Data prepare 固定各阶段选择，execute 回调完成计算并将准备视图交给同一同步领域 lowering。
+宿主提供明确的异步渲染入口 `renderPlotAsync`、`renderChartAsync`、`renderTableAsync`。每个入口只等待本领域明确声明的任务，再同步编译与交付。Chart 接收 Source 及其 recipe provider；不遍历任意 embed。
 
 同步 `renderPlot`、`renderChart`、`renderTable` 及直接领域 lowering 不接受通用 DataTransformExecutor、原生 source binding 或异步实现，只消费既有 rows 入口和同步本地 implementation 集合；其类型与同步 apply 入口一致，不将可返回 Promise 的实现放入集合。本地同步与通用异步 Implementation 都引用相同语义 Definition，使用相同 registry/解析/结果接入规则，区别是允许的计算回调返回类型。执行配置在完整继承后逐声明检查；出现 external/hybrid 就在计算前诊断应改用异步入口。全 builtin 声明可同步执行，单个模式覆盖不会绕过同步实现限制。同步入口不通过调用回调来探测 Promise，也不改变返回类型。
 
-异步准备、发布与 revision 生命周期遵循 Kernel ADR-047；Viz Vanilla 提供领域准备逻辑，Kernel 不解释 Data 语义。准备失败、过期或卸载后不得发布新图形；任务失效不保证撤销外部计算。
+领域任务的失败不触发图形更新；应用负责在输入变化或卸载后决定是否采用结果。领域执行器的取消不保证撤销外部副作用。
 
 新的结果引用是独立的物化数据源：其局部来源下标只指向该结果 dataset。绑定时不能透传指向上游原始 rows 的 Symbol 下标；应用如需保留上游行级映射，应在绑定前通过既有 provenance helpers 读取并关联，执行事件由 result.lineage 独立返回。lineage 不能替代行映射。现有 locator 不自动跨引用回查数据库或原始明细，无证据时只能定位结果数据，不能声称具有上游行级来源。
 
@@ -208,5 +207,5 @@ Chart 仍拥有 recipe 展开、phase 和 slot 政策，Table 仍拥有表结构
 - 字段配置、默认输出名、分组粒度、缺失与非法值处理、空组行为、统计算法、稳定排序、并列规则和结果顺序沿用现有操作语义。依赖原始顺序的 first/last、选择和分组必须由 adapter 明确保持；只有引擎名称或相同函数名不足以证明支持。随机扰动保持既有 seed 与序列语义。
 - 支持检查覆盖参数、输入类型、统计依赖、输入形态、交接能力及语义约束。浮点与时间表达须符合对应操作的算法和精度契约；没有已明确的误差规则时不得自行采用近似替代。无法证明语义等价时返回不支持诊断，不改变 operation 含义。
 - 结果接入能证明结构和字段值域符合声明，不能证明引擎算术、分组和顺序实现正确；executor 对其支持声明负责。执行器使用源数据时须满足输入模型的逻辑字段映射及规范值语义，原始解析和格式接入仍由数据模型层负责。
-- 未注册操作或统计依赖、字段缺失、输出冲突、不能确定的必要类型、无效执行配置、能力不支持、执行失败以及结果模型不匹配均由 `RetikzDataError` 表达。错误保留 operation 下标及可用的字段/依赖路径；宿主补充 root/mark/facet/声明的作者位置，引擎、用户回调异常保留为 cause。失败不接入部分结果；自动接入入口还不得将旧 revision 的结果发布到当前图形。
+- 未注册操作或统计依赖、字段缺失、输出冲突、不能确定的必要类型、无效执行配置、能力不支持、执行失败以及结果模型不匹配均由 `RetikzDataError` 表达。错误保留 operation 下标及可用的字段/依赖路径；宿主补充 root/mark/facet/声明的作者位置，引擎、用户回调异常保留为 cause。失败不接入部分结果。
 - 这是 Definition、运行时执行 API 和宿主 transform 声明结构的 breaking 调整：计算回调迁入独立 Implementation，语义 context 不再持有计算 helper，输出模型及统计 outputs 成为完整声明，冗余 outputFields 移除。宿主 transform 数组与 JSX props 由裸 operation 改为 declaration 包装；operation 自身的 JSON 配置保持现状。旧组合 Definition、旧 registry 参数形态、context、裸 operation 宿主数组及平铺 JSX props 不提供兼容别名、适配层或双轨。

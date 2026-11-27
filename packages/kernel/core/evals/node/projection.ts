@@ -136,7 +136,7 @@ const projectLabels = (input: JsonValue): JsonValue => {
       const projected = { ...label };
       if (Object.hasOwn(label, 'text')) projected.text = projectText(label.text);
       projected.position ??= 'top';
-      if (isJsonObject(projected.position) && typeof projected.position.boundary === 'string') {
+      if (isJsonObject(projected.position) && typeof projected.position.side === 'string') {
         projected.position = { ...projected.position, fraction: projected.position.fraction ?? 0.5 };
       }
       projected.placement ??= 'outside';

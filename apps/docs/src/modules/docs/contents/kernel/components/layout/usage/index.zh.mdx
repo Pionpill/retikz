@@ -5,11 +5,11 @@ description: 组织图形输入，设置视框、全图默认值与渲染输出
 
 `<Layout>` 是 React 图形的顶层入口。把 Node、Path 等组件放入其中即可显示图形；默认自动取景，通常不必设置宽高或 viewBox。安装步骤见[快速开始](/kernel/components/get-start)。
 
-## 接入异步组件
+显式传入 `animate={true}` 或 `animate={false}` 会覆盖最近的 `AnimationModeProvider`。省略 `animate` 才继承 Provider；没有 Provider 或其模式为 `system` 时，遵循系统的减少动态效果偏好。
 
-Layout 默认 `runtime.preparation: 'sync'`。包含使用 Promise 或外接计算的组件时，在最外层 Layout 设置 `runtime={{ preparation: 'async', signal }}`，由同一宿主准备完整作者树并原子提交；组件传入的执行器与句柄留在运行时。取消、卸载或过期请求不发布，当前请求失败保留旧画面。独立 Plot、Chart、Table 客户端已自动选择异步准备。
+## 使用异步来源的数据
 
-React 服务端渲染保持同步，不等待异步准备。需要异步 SSR 时使用 [Vanilla processing](/kernel/packages/vanilla/overview#异步作者输入准备) 或领域 renderAsync 入口。模式及可运行示例见 [Data 外接计算](/viz/data/transform/extensions)。
+在组件外等待数据，再将就绪的声明作为子项传给 Layout。独立组件与嵌入组件使用相同写法；无需配置 Layout。SSR 也可以先等待数据，再同步渲染。见[领域数据计算](/viz/data/transform/computation)。
 
 ## 接入方式
 
@@ -95,7 +95,7 @@ export default Demo;
 
 ```ts
 import { scene, node, path } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -106,7 +106,7 @@ const input = scene({
   ],
 });
 
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 容器移除前调用 `view.dispose()` 释放挂载资源。
@@ -118,7 +118,7 @@ const view = mount(document.getElementById('diagram')!, input);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,
@@ -161,9 +161,9 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 全图默认值通过包住所有图元的根 [Scope](/kernel/components/scope/usage) 设置，React、Vanilla 和 IR 都可以使用。Layout 为 JSX 提供了 `rootScope` 便捷属性，自动创建这层 Scope，并将 `defaults` 传给它；Vanilla 使用 `scope(...)`，IR 则在场景的 `children` 中声明 `type: 'scope'`，同样包住全部图元。
 
-| 属性        | 类型                           | 描述                                       |
-| ----------- | ------------------------------ | ------------------------------------------ |
-| `rootScope` | `Pick<InputScope, 'defaults'>` | 全图级联视觉覆盖、四个默认值通道与继承屏障 |
+| 属性        | 类型              | 描述                                       |
+| ----------- | ----------------- | ------------------------------------------ |
+| `rootScope` | `ScopeStyleProps` | 全图级联视觉覆盖、四个默认值通道与继承屏障 |
 
 下面三个 Node 和三条 Path（通过 Draw 声明）都没有局部样式。调整 `rootScope.defaults.style` 的描边与不透明度，观察所有图元一起变化；`rootScope.defaults.node` 的填充和内边距只作用于节点。示例的蓝色、线宽与内边距为演示设置，不是库的默认值。
 
@@ -176,8 +176,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 ## 补充说明
 
 - **渲染后端**：默认输出 SVG，设置 `renderer="canvas"` 切换到 Canvas。动画播放与静态截帧见[动画](/kernel/visual/animation/usage)。
-- **输入优先级**：React 同时传入 `ir` 和 `children` 时采用 `ir`。
-- **全图默认值**：传入完整 `ir` 时，应在 IR 中声明根 Scope；Layout 不再应用 `rootScope`，存在有效配置时会在开发环境提示。
+- **输入二选一**：传入 `ir`，或通过 `children` 声明图元，不能同时提供或同时省略。空 JSX 场景可写作 `<Layout>{null}</Layout>`。
+- **全图默认值**：传入完整 `ir` 时，应在 IR 中声明根 Scope；`rootScope` 只能与 JSX children 一起使用。
 - **样式作用范围**：`Layout.style` 设置宿主 CSS；图元样式使用 `rootScope.defaults.style`。
 
 ## 相关属性
@@ -188,7 +188,7 @@ const view = mount(document.getElementById('diagram')!, ir);
       name: 'ir',
       kind: 'property',
       type: 'IRScene',
-      description: '直接传入可持久化的 Source IR；与 `children` 同时提供时优先采用它。',
+      description: '直接传入可持久化的 Source IR；不能同时提供 `children`。',
     },
     {
       name: 'viewBox',
@@ -200,7 +200,7 @@ const view = mount(document.getElementById('diagram')!, ir);
     {
       name: 'rootScope',
       kind: 'property',
-      type: "Pick<InputScope, 'defaults'>",
+      type: 'ScopeStyleProps',
       description: 'JSX 子图的隐式根 Scope；为全图设置级联样式和各类图元的默认值。',
     },
     {
@@ -222,7 +222,6 @@ const view = mount(document.getElementById('diagram')!, ir);
       description: '配置主题、注入能力、读取编译结果并控制更新',
       url: '/kernel/components/layout/extend',
     },
-    { title: 'Inspect', description: '为图形添加观测辅助内容', url: '/kernel/packages/inspect' },
     { title: 'Layout 布局包', description: '自动排列图形内容', url: '/library/layout' },
     { title: 'API 参考', description: '查询 Layout 完整属性', url: '/kernel/components/layout/reference' },
   ]}

@@ -9,7 +9,7 @@ import {
   ribbonPathDefinition,
 } from '@retikz/extension';
 import { Layout } from '@retikz/react';
-import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
+import { renderToSvg, scene, compileToScene } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -75,9 +75,10 @@ describe('扩展根条目集成', () => {
       ],
     });
 
-    expect(() => renderToSvgString(input)).toThrow(/cross/);
+    expect(() => renderToSvg(compileToScene(input).scene)).toThrow(/cross/);
 
-    const svg = renderToSvgString(input, { compile: { shapes: [crossShapeDefinition] } });
+    const compileResult = compileToScene(input, { compile: { shapes: [crossShapeDefinition] } });
+    const svg = renderToSvg(compileResult.scene);
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('#38bdf8');
@@ -86,11 +87,11 @@ describe('扩展根条目集成', () => {
 
   it('保持直接 Core 编译和 Vanilla 编译场景与精确的功能条目等效', () => {
     const direct = compileTestResult(source, definitions);
-    const vanilla = toSceneResult(source, { compile: definitions });
-    const svg = renderToSvgString(source, { compile: definitions });
+    const vanilla = compileToScene(source, { compile: definitions });
+    const svg = renderToSvg(vanilla.scene);
 
-    expect(vanilla.compileResult?.scene).toEqual(direct.scene);
-    expect(vanilla.compileResult?.artifacts).toEqual(direct.artifacts);
+    expect(vanilla.scene).toEqual(direct.scene);
+    expect(vanilla.artifacts).toEqual(direct.artifacts);
     expect(svg).toContain('optional shape');
     expect(svg).toContain('Source endpoint');
     expect(svg).toContain('Target endpoint');
@@ -101,7 +102,7 @@ describe('扩展根条目集成', () => {
 
   it('通过 React SSR 呈现相同的显式组装的能力集', () => {
     const markup = renderToStaticMarkup(
-      <Layout ir={source} extensions={definitions} idPrefix="extension-provider-entry" />,
+      <Layout ir={source} compile={definitions} idPrefix="extension-provider-entry" />,
     );
 
     expect(markup).toContain('<svg');

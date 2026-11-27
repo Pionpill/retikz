@@ -1,3 +1,4 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import { PanelLeftOpen } from 'lucide-react';
 import type { CSSProperties, FC, ReactNode, RefObject } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -22,7 +23,6 @@ import type {
   PreviewFigureType,
   PreviewThemeMode,
   PreviewThemeSelection,
-  RendererMode,
 } from '../types';
 import { PreviewControlPanel } from './PreviewControlPanel';
 import { PreviewResizeHandle } from './PreviewResizeHandle';
@@ -71,7 +71,7 @@ export type PreviewWorkspaceProps = {
   /** 当前文档语言。 */
   lang?: Lang;
   /** 当前源码视图提供的渲染函数 */
-  activeRender?: (rendererMode: RendererMode) => ReactNode;
+  activeRender?: (rendererMode: RenderMode) => ReactNode;
   /** 当前预览区的浮层控制 slots */
   controlSlots?: Array<PreviewControlSlot>;
   /** 预览面板容器附加样式 */

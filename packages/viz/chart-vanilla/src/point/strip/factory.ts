@@ -1,45 +1,46 @@
 import { createStripChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed } from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedContext } from '@retikz/vanilla';
 
 import { buildChartRuntime, typedChartPartsOf } from '../../authoring';
-import { createChartInputEmbedAdapter } from '../../shared';
+import { lowerChartInput } from '../../shared';
 import { normalizeStripChart } from './normalize';
 import type { StripChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 StripChart 输入并复用统一数据准备 */
-export const stripChartInputEmbedAdapter = createChartInputEmbedAdapter(
-  'chart.strip',
-  (input: StripChartInputEmbedProps<unknown>) => {
-    const parts = typedChartPartsOf(input);
-    const source = normalizeStripChart({
-      ...parts.root,
-      ...(input.title === undefined ? {} : { title: input.title }),
-      ...(input.subtitle === undefined ? {} : { subtitle: input.subtitle }),
-      ...(input.note === undefined ? {} : { note: input.note }),
-      ...(input.source === undefined ? {} : { source: input.source }),
-      encodings: input.encodings,
-      ...(input.properties === undefined ? {} : { properties: input.properties }),
-      ...(input.guides === undefined ? {} : { guides: input.guides }),
-      ...(input.marks === undefined ? {} : { marks: input.marks }),
-    });
+const chartRuntimeOf = (input: StripChartInputEmbedProps) => {
+  const parts = typedChartPartsOf(input);
+  const source = normalizeStripChart({
+    ...parts.root,
+    ...(input.title === undefined ? {} : { title: input.title }),
+    ...(input.subtitle === undefined ? {} : { subtitle: input.subtitle }),
+    ...(input.note === undefined ? {} : { note: input.note }),
+    ...(input.source === undefined ? {} : { source: input.source }),
+    encodings: input.encodings,
+    ...(input.properties === undefined ? {} : { properties: input.properties }),
+    ...(input.guides === undefined ? {} : { guides: input.guides }),
+    ...(input.marks === undefined ? {} : { marks: input.marks }),
+  });
 
-    return buildChartRuntime(
-      source,
-      parts,
-      createStripChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
-    );
-  },
-);
+  return buildChartRuntime(
+    source,
+    parts,
+    createStripChartProviderContribution(parts.chartThemeDefinitions, parts.lowerOptions),
+  );
+};
+
+/** 绑定当前配方的同步转换 */
+export const stripChartInputEmbedAdapter = {
+  kind: 'chart.strip',
+  lower: (input: StripChartInputEmbedProps, _context: InputEmbedContext) => lowerChartInput(chartRuntimeOf(input)),
+};
 
 /**
  * 创建可直接组合到 Vanilla Scene 的 Strip 节点
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export const stripChart = <TNative = never>(
-  input: StripChartInputEmbedProps<TNative>,
-): InputEmbed<StripChartInputEmbedProps<TNative>> => ({
-  type: 'embed',
-  kind: stripChartInputEmbedAdapter.kind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const stripChart = (input: StripChartInputEmbedProps): InputEmbed<StripChartInputEmbedProps> =>
+  embed({
+    adapter: stripChartInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

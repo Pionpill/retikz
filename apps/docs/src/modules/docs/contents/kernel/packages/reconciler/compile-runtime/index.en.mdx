@@ -1,0 +1,142 @@
+---
+title: Execution / Runtime Context
+description: Trace how the runtime supplies shared configuration, host services, and inputs for the current scene
+---
+
+[Compilation Scheduling](/kernel/packages/reconciler/compile-scheduling) determines when each step runs. The runtime gives those steps a common set of rules and services and keeps track of the compilation as it progresses. Its `context` supplies what the steps need to do their work; its `state` records intermediate results so that later steps can use what earlier ones computed.
+
+## Overview
+
+Given the root declaration, <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/compile/runtime/runtime.ts" startLine={21}>`createCompileRuntime`</ApiSourceLink> builds the context from the compile options and current input, and allocates fresh state for this run. During traversal, the executor reads the context and updates the state. At finalization, resources accompany the primitives in the Scene and diagnostics are returned in the snapshot.
+
+<ComponentPreview files="runtime-storage" size="md" hideCode type="flow" />
+
+| Type                                                                                                                                                                      | Key members                              | When they are prepared                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| <ApiSourceLink label="SharedCompileContext" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={93}>`SharedCompileContext`</ApiSourceLink>        | `registries`, `host`, `layout`, `limits` | From compile options; each root execution wraps the host measurer in its own cache |
+| <ApiSourceLink label="ExecutionCompileContext" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={189}>`ExecutionCompileContext`</ApiSourceLink> | `theme`, `compositeInputs`, `padding`    | Resolved for this root, not copied from the previous scene                         |
+| <ApiSourceLink label="CompileState" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={23}>`CompileState`</ApiSourceLink>                    | `execution`, `workspace`, `composite`    | Allocated for traversal, collecting outputs, and composite probes respectively     |
+
+The executor reads its configuration and services from `runtime.context`. Its type, `CompileContext`, combines two parts: one can be shared across compilations, while the other is determined by the input for this run.
+
+```ts
+export type SharedCompileContext = Readonly<{
+  registries: CompileContextRegistries;
+  host: CompileContextHost;
+  layout: CompileContextLayout;
+  limits: CompileContextLimits;
+}>;
+
+export type ExecutionCompileContext = Readonly<{
+  compositeInputs: CompositeInputScope;
+  theme: CanonicalTheme;
+  padding?: CompileOptions['padding'];
+}>;
+
+export type CompileContext = SharedCompileContext & ExecutionCompileContext;
+```
+
+**Shared** is independent of the declaration tree. Multiple runs can reuse it while the compile configuration and host services stay the same. **Execution** belongs to the current compilation: the root runtime determines the component inputs, effective theme, and automatic viewport padding for this run. Two scenes can therefore share a theme registry while selecting different themes.
+
+## registries: finding the implementation for a declaration
+
+Definitions are grouped by capability; composites have their own index type (<ApiSourceLink label="CompileContextRegistries" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={45} endLine={64}>`CompileContextRegistries`</ApiSourceLink>):
+
+```ts
+export type CompileContextRegistries = Readonly<{
+  shapeRegistry: ReadonlyMap<string, ShapeDefinition>;
+  boundaryRegistry: ReadonlyMap<string, BoundaryDefinition>;
+  clipRegistry: ReadonlyMap<string, ClipDefinition>;
+  arrowRegistry: ReadonlyMap<string, ArrowDefinition>;
+  markRegistry: ReadonlyMap<string, MarkDefinition>;
+  patternRegistry: ReadonlyMap<string, PatternDefinition>;
+  pathRegistry: ReadonlyMap<string, AnyPathDefinition>;
+  compositeRegistry: CompositeRegistry;
+  themeRegistry: ReadonlyMap<string, ThemeDefinition>;
+}>;
+```
+
+When A requests a shape, the compiler looks up its definition in `shapeRegistry`. When a path connects to A, a definition in `boundaryRegistry` determines how its connection boundary is computed. Building the context combines built-in and caller-supplied definitions so traversal can look up an identifier without rebuilding the registries at each node.
+
+Paths, arrows, marks, patterns, clips, composites, and themes have their own definition registries. In particular, `registries.clipRegistry` describes **how to interpret a clip**, not which clip resources this particular scene produced.
+
+To extend a drawing capability, find its registry in the table below. For example, to control where a path meets the boundary of a shape, follow the guide for `boundaryRegistry`.
+
+| Registry member     | Documentation                                            |
+| ------------------- | -------------------------------------------------------- |
+| `shapeRegistry`     | [Custom shapes](/kernel/components/node/custom-shape)    |
+| `boundaryRegistry`  | [Custom boundaries](/kernel/components/node/custom)      |
+| `clipRegistry`      | [Custom clipping](/kernel/components/scope/custom)       |
+| `arrowRegistry`     | [Custom arrows](/kernel/components/path/custom-arrow)    |
+| `markRegistry`      | [Custom marks](/kernel/components/path/custom-mark)      |
+| `patternRegistry`   | [Custom patterns](/kernel/visual/style/custom-pattern)   |
+| `pathRegistry`      | [Custom paths](/kernel/components/path/custom-path)      |
+| `compositeRegistry` | [Tier 2 Composites](/kernel/components/design/composite) |
+| `themeRegistry`     | [Theme](/kernel/components/design/theme)                 |
+
+## host: calling services supplied by the host
+
+Text measurement is always available to the executor; TeX lowering depends on the host (<ApiSourceLink label="CompileContextHost" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={67} endLine={72}>`CompileContextHost`</ApiSourceLink>):
+
+```ts
+export type CompileContextHost = Readonly<{
+  measureText: NonNullable<CompileHostOptions['measureText']>;
+  lowerTex: CompileHostOptions['lowerTex'];
+}>;
+```
+
+The executor calls `host.measureText` for text metrics, using a fallback if the host supplied no measurer. The optional `lowerTex` hook handles TeX lowering. A root runtime wraps the underlying measurer: **the service may be shared across runs, but its cached metrics belong to one root compilation**.
+
+Suppose nodes A and B both need the metrics for “X” in the same font. On the first miss, <ApiSourceLink label="createCachedTextMeasurer" path="packages/kernel/reconciler/src/compile/runtime/text-cache.ts" startLine={5}>`createCachedTextMeasurer`</ApiSourceLink> calls the host measurer and stores the width, height, ascent, and descent. A second request can get a copy of those metrics, even in a different subtree of the same run. The key comprises **text, font size, family, weight, and style**. It does not include the node name or its coordinates.
+
+| Next request                                                                                   | Does it call the underlying measurer again?           |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| B has a different position but identical text and font parameters in the same root compilation | No. It finds the metrics cached for A’s request.      |
+| B uses a font size not yet measured in this run                                                | Yes. This is a new key.                               |
+| The request explicitly sets `disableCache`                                                     | Yes. It neither reads nor writes the cache.           |
+| A new full compilation measures the same “X” for the first time                                | Yes. The new root runtime starts with an empty cache. |
+
+## layout and limits: units, precision, and bounds on work
+
+Layout settings and execution limits have separate types (<ApiSourceLink label="CompileContextLayout" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={75} endLine={82}>`CompileContextLayout`</ApiSourceLink> and <ApiSourceLink label="CompileContextLimits" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={85} endLine={90}>`CompileContextLimits`</ApiSourceLink>):
+
+```ts
+export type CompileContextLayout = Readonly<
+  Required<Pick<CompileLayoutOptions, 'nodeDistance' | 'labelDistance'>> & {
+    round: (n: number) => number;
+    rootFontSize: NonNullable<CompileLayoutOptions['fontSize']>;
+  }
+>;
+
+export type CompileContextLimits = Readonly<{
+  maxCompositeDepth: NonNullable<CompileOptions['maxCompositeDepth']>;
+  maxClipDepth: NonNullable<CompileOptions['maxClipDepth']>;
+}>;
+```
+
+`layout.nodeDistance` and `layout.labelDistance` supply defaults for relative positioning and label spacing. `rootFontSize` is the baseline for font presets and rem units. The context turns output precision into a `layout.round` function, so scene finalization and resource registration use the same rounding rule.
+
+The two `limits` constrain work, not drawing size. `maxCompositeDepth` bounds recursive composite expansion; `maxClipDepth` bounds the number of declarations visited in one clip conversion. Neither sets a geometric clipping rectangle.
+
+## theme, compositeInputs, and padding: settings for this root
+
+The root runtime builds the context for this execution on top of the shared configuration (<ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/compile/runtime/runtime.ts" startLine={27} endLine={33}>`createCompileRuntime`</ApiSourceLink>):
+
+```ts
+context: {
+    ...shared,
+    host: { ...shared.host, measureText: createCachedTextMeasurer(shared.host.measureText) },
+    compositeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
+    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', shared.registries.themeRegistry),
+    padding: options.padding,
+  },
+```
+
+While `themeRegistry` holds available definitions, `context.theme` is the **effective theme**. The root resolves it from the defaults and its declaration; a Scope with an override derives a theme for its subtree. Similarly, `compositeRegistry` identifies the implementation for a component type, while `compositeInputs` supplies inputs to instances. Sharing a definition does not mean sharing instance data.
+
+Finalization uses `padding` only for an automatic viewport. Without an explicit viewBox, it adds space around the subtree’s visible bounds; otherwise the declared viewBox determines the viewport. Increasing padding neither widens A’s text nor moves A and B farther apart.
+
+## Further reading
+
+- [Execution / Compilation Scheduling](/kernel/packages/reconciler/compile-scheduling): Follow the same path to see when it reads the registered geometry.
+- [Execution / Runtime State](/kernel/packages/reconciler/compile-state): See how traversal records and uses per-run data.

@@ -5,7 +5,8 @@ import type {
   InputBranchNode,
 } from '@retikz/diagram-vanilla/branch';
 import type { BranchDiagramDefinitionOptions } from '@retikz/diagram/branch';
-import type { LayoutExtensions, LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -14,11 +15,11 @@ import { Branch } from './Branch';
 import { BranchNode } from './BranchNode';
 
 export type BranchDiagramLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
+  LayoutProps & CompileOptions,
   | 'authoring'
-  | 'compileDriver'
   | 'handlers'
-  | 'runtime'
+  | 'reconciler'
+  | 'onDiagnostic'
   | 'width'
   | 'height'
   | 'viewBox'
@@ -47,9 +48,9 @@ export type BranchDiagramLayoutHostProps = Pick<
 /** Branch standalone-only Layout props 的完整字段表 */
 const branchDiagramLayoutHostPropKeys = [
   'authoring',
-  'compileDriver',
   'handlers',
-  'runtime',
+  'reconciler',
+  'onDiagnostic',
   'width',
   'height',
   'viewBox',
@@ -121,9 +122,9 @@ export const collectBranchDiagramInput = (
   const {
     children,
     authoring: _authoring,
-    compileDriver: _compileDriver,
     handlers: _handlers,
-    runtime: _runtime,
+    reconciler: _reconciler,
+    onDiagnostic: _onDiagnostic,
     width: _width,
     height: _height,
     viewBox: _viewBox,
@@ -151,9 +152,9 @@ export const collectBranchDiagramInput = (
     ...input
   } = props;
   void _authoring;
-  void _compileDriver;
   void _handlers;
-  void _runtime;
+  void _reconciler;
+  void _onDiagnostic;
   void _width;
   void _height;
   void _viewBox;

@@ -5,10 +5,12 @@ keywords: Inspect、CompileResult、Scene、CompositeArtifact、InspectorDefinit
 
 # ADR-078：Inspect 消费普通编译结果
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-10-29
 - 接受日期：2026-10-29
 - 关联：[roadmap](./roadmap.md) · [077](./077-compile-output-contract.md) · [021](./021-extensible-inspector-content.md) · [039](./039-builtin-inspection.md) · [绘图完备性](../../architecture/core-drawing-complete.md)
+
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
 
 ## 背景与目标
 
@@ -90,7 +92,7 @@ appearance 使用辅助编译显式环境的公共色板，不恢复每个原始
 
 辅助编译输出 `InspectionPlane | null` 与独立 diagnostics；plane 条目包含辅助 Scene、放置 transform、Inspector key 和 target。空输出的 plane 为 null。输入 CompileResult 不复制进输出，不在 Inspect 建立主图结果或 revision 的第二真源。
 
-纯计算入口同步执行；React 与 Vanilla 的可选入口复用同一结果消费与辅助编译链，React 仅适配生命周期。入口消费普通编译结果或已提交结果通知，不替换主图 compile driver，不注册 observer，不收集作者位置。
+纯计算入口同步执行；React 与 Vanilla 的可选入口复用同一结果消费与辅助编译链，React 仅适配生命周期。入口消费普通编译结果或已提交结果通知，不参与主图编译，不注册 observer，不收集作者位置。
 
 宿主按主图视口、相机与尺寸显示辅助内容，主图独自决定 fit、布局、资源、命中与交互。Inspect 使用独立的辅助呈现生命周期，不能把辅助 Scene 加入主图 Reconciler 提交的必需事务。现有普通只读层契约可用于辅助呈现，但其整帧原子性不能用于阻塞主图提交；组合导出可以显式将已成功生成的辅助层交给普通 renderer。
 

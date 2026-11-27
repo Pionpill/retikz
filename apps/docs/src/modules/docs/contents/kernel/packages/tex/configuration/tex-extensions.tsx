@@ -13,7 +13,7 @@ export const previewControls = texExtensionsControls;
 const extensions = [...TexExtensions];
 
 /** 在 MathJax 配置切换期间保留稳定取景，不把原始 TeX 当普通文本显示 */
-const renderTexExtensionsLoading = () => <Layout />;
+const renderTexExtensionsLoading = () => <Layout>{null}</Layout>;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => TexExtensionsPreview(values));
 

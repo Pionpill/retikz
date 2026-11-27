@@ -1,13 +1,12 @@
-import { createInputScene, Node } from '@retikz/react';
-import { matrix, matrixInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { convertReactToInputScene, Node } from '@retikz/react';
+import { matrix } from '@retikz/standard-vanilla/collection';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { Matrix, MatrixRow, MatrixCell, Map, Array } from '../src/collection';
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 it('JSX 行保留空单元格和具有 Vanilla 等价性的显式别名', () => {
-  const jsx = createInputScene(
+  const jsx = convertReactToInputScene(
     <Matrix id="m" cellIdMode="index">
       <>
         <MatrixRow>
@@ -34,17 +33,12 @@ it('JSX 行保留空单元格和具有 Vanilla 等价性的显式别名', () => 
       }),
     ],
   });
-  const options = { adapters: synchronousAdapters(jsx.adapters) };
 
-  expect(normalizeScene(jsx.scene, options).ir).toEqual(
-    normalizeScene(vanilla, { adapters: [matrixInputEmbedAdapter] }).ir,
-  );
-  expect(renderToSvgString(jsx.scene, options)).toEqual(
-    renderToSvgString(vanilla, { adapters: [matrixInputEmbedAdapter] }),
-  );
+  expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);
+  expect(renderToSvg(compileToScene(jsx).scene)).toEqual(renderToSvg(compileToScene(vanilla).scene));
 });
 it('自动收集嵌套的 Matrix、Array、Map 和裁剪提供者', () => {
-  const jsx = createInputScene(
+  const jsx = convertReactToInputScene(
     <Matrix defaultCell={{ layout: { width: 80, height: 50 } }}>
       <MatrixRow>
         <MatrixCell>
@@ -65,7 +59,7 @@ it('自动收集嵌套的 Matrix、Array、Map 和裁剪提供者', () => {
     </Matrix>,
   );
 
-  expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
+  expect(renderToSvg(compileToScene(jsx).scene)).toContain('<svg');
 });
 it('空 React 输入和所有三个显式输入均进行编译', () => {
   for (const element of [
@@ -74,9 +68,9 @@ it('空 React 输入和所有三个显式输入均进行编译', () => {
     <Matrix data={[[{ a: [1] }]]} />,
     <Matrix skeleton={{ labels: [['x', '']] }} />,
   ]) {
-    const jsx = createInputScene(element);
+    const jsx = convertReactToInputScene(element);
 
-    expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<svg');
+    expect(renderToSvg(compileToScene(jsx).scene)).toContain('<svg');
   }
 });
 it('拒绝放错位置的标记、多个可绘制子项和参差不齐的行', () => {
@@ -98,9 +92,9 @@ it('拒绝放错位置的标记、多个可绘制子项和参差不齐的行', (
       </MatrixRow>
     </Matrix>,
   ])
-    expect(() => createInputScene(element)).toThrow();
+    expect(() => convertReactToInputScene(element)).toThrow();
 
-  const jsx = createInputScene(
+  const jsx = convertReactToInputScene(
     <Matrix>
       <MatrixRow>
         <MatrixCell />
@@ -109,5 +103,5 @@ it('拒绝放错位置的标记、多个可绘制子项和参差不齐的行', (
     </Matrix>,
   );
 
-  expect(() => renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toThrow();
+  expect(() => renderToSvg(compileToScene(jsx).scene)).toThrow();
 });

@@ -25,7 +25,7 @@ export const Diagram = () => {
   const lowerTexState = useLowerTex({ profile: 'math' });
 
   return (
-    <Layout lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
+    <Layout compile={{ lowerTex: lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined }}>
       <Node position={[0, 0]}>{'$\\frac{a}{b}=c$'}</Node>
     </Layout>
   );
@@ -37,13 +37,14 @@ export const Diagram = () => {
 ## Vanilla / core injection
 
 ```ts
-import { figure, node, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, scene, node, renderToSvg } from '@retikz/vanilla';
 import { createMathJaxLowerTex } from '@retikz/tex';
 
 const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
 
-const fig = figure([node({ id: 'eq', position: [0, 0], text: '$\\frac{a}{b}=c$' })]);
-const svg = renderToSvgString(fig, { compile: { lowerTex } });
+const input = scene([node({ id: 'eq', position: [0, 0], text: '$\\frac{a}{b}=c$' })]);
+const compileResult = compileToScene(input, { compile: { lowerTex } });
+const svg = renderToSvg(compileResult.scene);
 ```
 
 The default `base` profile keeps MathJax minimal. `math` adds `ams`, `newcommand`, `boldsymbol`, `braket`, `cancel`, `cases`, `centernot`, `mathtools`, and `color`. Individual entries can be appended through `extensions`.

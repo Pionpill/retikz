@@ -36,7 +36,7 @@ const snapshotSources = (root: string) => {
       'packages/kernel/math/src',
       'packages/kernel/reconciler/src',
       'packages/kernel/reconciler/benchmarks/weave',
-      'packages/kernel/reconciler/benchmarks/reconciler/_execution.ts',
+      'packages/kernel/reconciler/benchmarks/reconcile/_execution.ts',
       'packages/kernel/reconciler/vitest.weave.config.ts',
       'packages/kernel/reconciler/package.json',
       'packages/kernel/reconciler/tsconfig.json',

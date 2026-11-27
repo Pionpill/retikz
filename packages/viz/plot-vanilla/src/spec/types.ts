@@ -1,13 +1,6 @@
-import type { DataInputBindings, DataTransformExecutor, ExternalDatasets } from '@retikz/data';
+import type { ExternalDatasets } from '@retikz/data';
 import type { RequireExactlyOne } from '@retikz/foundation';
-import type {
-  IRPlot,
-  PlotsLoweringOptions,
-  PlotHostLineageMetadata,
-  PlotLineageOptions,
-  PlotLineageRun,
-  PreparedPlotData,
-} from '@retikz/plot';
+import type { IRPlot, PlotsLoweringOptions, PreparedPlotData } from '@retikz/plot';
 import type { InputScope } from '@retikz/vanilla';
 
 import type { InputPlot } from '../normalize/plot';
@@ -25,44 +18,17 @@ export type PlotSource = RequireExactlyOne<{
 
 /**
  * Plot InputEmbed 交给 adapter 的属性
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type InputPlotEmbed<TSource = never> = PlotSource &
+export type InputPlotEmbed = PlotSource &
   RequireExactlyOne<{
-    /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
+    /** 以数据引用名索引的外部行数据集，与 preparedData 互斥 */
     readonly datasets: ExternalDatasets;
-    /** 行数据或原生数据源的运行时绑定，与 datasets 互斥 */
-    readonly dataBindings: DataInputBindings<TSource>;
+    /** 已完成的 Plot 数据计算结果，与 datasets 互斥 */
+    readonly preparedData: PreparedPlotData;
   }> &
   Readonly<{
-    /** 通用异步 transform 执行器，不进入 Source IR */
-    dataTransformExecutor?: DataTransformExecutor<TSource>;
-    /** 此 Plot 的外部请求取消信号 */
-    signal?: AbortSignal;
-    /** 可选的同次数据链路记录 */
-    lineage?: false | PlotLineageOptions;
-    /** 链路宿主元数据 */
-    hostLineageMetadata?: PlotHostLineageMetadata;
-    /** 同次完整帧提交后通知，不在 preparation 中调用 */
-    onLineage?: (lineage: PlotLineageRun) => void;
     /** 将绘图描述降低为 Core 图元时的运行时选项 */
     lowerOptions?: PlotsLoweringOptions;
     /** 作用于 Plot 根节点的可选 Core Scope */
     panel?: InputPlotPanel;
   }>;
-
-/** Plot contribution 提供给同 revision compile driver 的链路消费输入 */
-export type PreparedPlotLineageNotification = Readonly<{
-  /** 本请求借用的作者 Source */
-  spec: IRPlot;
-  /** 已完成的数据计算 */
-  preparedData: PreparedPlotData;
-  /** 同次 lowering 配置 */
-  lowerOptions?: PlotsLoweringOptions;
-  /** 链路配置 */
-  lineage: PlotLineageOptions;
-  /** 元数据 */
-  hostLineageMetadata?: PlotHostLineageMetadata;
-  /** 帧成功提交后的通知 */
-  onLineage: (lineage: PlotLineageRun) => void;
-}>;

@@ -1,6 +1,6 @@
 import type { IRPosition } from '@retikz/core';
 import { createRibbonPathDefinition, defineRibbonCap } from '@retikz/extension';
-import { path, scene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, path, scene, renderToSvg } from '@retikz/vanilla';
 import { number, strictObject } from 'zod';
 
 const pointedCap = defineRibbonCap({
@@ -45,4 +45,5 @@ const input = scene({
   ],
 });
 
-export const svg = renderToSvgString(input, { compile: { paths: [ribbonDefinition] } });
+const compileResult = compileToScene(input, { compile: { paths: [ribbonDefinition] } });
+export const svg = renderToSvg(compileResult.scene);

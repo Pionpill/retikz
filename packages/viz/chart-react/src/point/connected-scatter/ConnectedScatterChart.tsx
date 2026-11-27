@@ -8,23 +8,18 @@ import { collectConnectedScatterChartDeclarations } from './declaration-collecti
 
 /**
  * Connected Scatter Chart React 属性
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type ConnectedScatterChartProps<TNative = never> = TypedChartCommonProps<IRConnectedScatterChart, TNative>;
+export type ConnectedScatterChartProps = TypedChartCommonProps<IRConnectedScatterChart>;
 
 /** 组装 Connected Scatter 声明并复用 Vanilla factory 的 React Chart 组件 */
 export const ConnectedScatterChart = createTypedChartComponent<
-  ConnectedScatterChartProps<unknown>,
+  ConnectedScatterChartProps,
   IRConnectedScatterChart,
-  ConnectedScatterChartInputEmbedProps<unknown>
+  ConnectedScatterChartInputEmbedProps
 >(
   'ConnectedScatterChart',
   props =>
-    createTypedChartInput<
-      ConnectedScatterChartProps<unknown>,
-      IRConnectedScatterChart,
-      ConnectedScatterChartInputEmbedProps<unknown>
-    >(
+    createTypedChartInput<ConnectedScatterChartProps, IRConnectedScatterChart, ConnectedScatterChartInputEmbedProps>(
       props,
       collectConnectedScatterChartDeclarations(props.children),
       input => connectedScatterChart(input),

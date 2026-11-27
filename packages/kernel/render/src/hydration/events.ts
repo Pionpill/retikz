@@ -61,7 +61,7 @@ export type ElementHandlers = Partial<Record<RetikzEvent, HydrationHandler>>;
 /** 水合 handler 注册表：id → 事件名 → handler */
 export type HydrationHandlers = Record<string, ElementHandlers>;
 
-/** Retained hydration 命中的 runtime occurrence 与语义 owner */
+/** 事件绑定 命中的 runtime occurrence 与语义 owner */
 export type HydrationTarget = Readonly<{
   /** 图元在逻辑树中当前出现位置的身份 */
   identity: SceneIdentity;
@@ -71,5 +71,5 @@ export type HydrationTarget = Readonly<{
   publicId?: string;
 }>;
 
-/** 把一次事件定位到公开 id 或 retained runtime target，命不中返回 null */
+/** 把一次事件定位到公开 id 或 运行时目标，命不中返回 null */
 export type Locate = (event: Event) => string | HydrationTarget | null;

@@ -116,9 +116,9 @@ export const Gateway = () => (
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { graph, entity, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { graph, entity } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { serviceRole, gatewayKind, availabilityPredicate, availabilityRules } from './entity-definition.data';
 
 const input = scene({
@@ -140,15 +140,13 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input, {
-  adapters: createGraphVanillaAdapters(),
-});
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>
 </DocTabs>
 
-直接消费 IR 时，把相同 definitions 传给 `createGraphDefinitions({ entityRoles, entityKinds, entityPredicates })`，再按基础用法装入 React 的 `extensions.composites` 或 Vanilla 的 `compile.composites`。规则仍属于 Graph Source 的 `graphRules`，不塞进 Entity predicate 参数。Vanilla 示例需要已有容器，卸载时调用 `view.dispose()`。
+直接消费 IR 时，把相同 definitions 传给 `createGraphDefinitions({ entityRoles, entityKinds, entityPredicates })`，再按基础用法装入 React 的 `compile.composites` 或 Vanilla 的 `compile.composites`。规则仍属于 Graph Source 的 `graphRules`，不塞进 Entity predicate 参数。Vanilla 示例需要已有容器，卸载时调用 `view.dispose()`。
 
 ## 错误与限制
 

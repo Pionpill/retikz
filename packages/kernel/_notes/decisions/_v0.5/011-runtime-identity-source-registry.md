@@ -171,7 +171,7 @@ Private executor的 `prepare/compare`成功返回 `RuntimeSourceExecutionResult`
 ## 长期边界
 
 - Computation graph、candidate transaction、revision commit 和 observer。
-- Core contribution / Scene Patch / retained renderer。
+- Core contribution / Scene Patch / renderer。
 - concurrent scheduler、generation 或 interaction。
 
 ## 遗留风险与后续

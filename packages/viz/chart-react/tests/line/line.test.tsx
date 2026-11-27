@@ -1,4 +1,4 @@
-import { lineChart, lineChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { lineChart } from '@retikz/chart-vanilla/line';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -31,8 +31,7 @@ describe('Line React 声明', () => {
       ),
     });
     expect(declarations).toEqual(root);
-    const normalize = (input: typeof root) =>
-      normalizeScene(scene({ children: [lineChart(input)] }), { adapters: [lineChartInputEmbedAdapter] }).ir;
+    const normalize = (input: typeof root) => normalizeScene(scene({ children: [lineChart(input)] })).ir;
     expect(normalize(declarations)).toEqual(normalize(root));
   });
 

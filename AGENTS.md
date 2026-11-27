@@ -15,6 +15,8 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 ## 设计原则
 
+- 所有 Vanilla 包在编译侧只封装对应领域核心编译包的公开契约；可以展开等价作者简写、提供已有宿主接口的实现，不得新增底层未定义的编译选项、样式默认值或编译语义。新增编译能力由对应领域的核心编译包定义。
+
 - 上层包的底层机制优先复用 `@retikz/foundation`、`@retikz/math`、`@retikz/core` 的公开能力；实现前先检索项目内已有 capability、类型、工具和模式，确认不能满足需求并说明理由后才能自建。移除领域词汇后仍成立、被多个官方 Tier 2 包复用的通用绘图组件进入 `@retikz/standard`。Plot、Table 等领域包可以单向依赖 Standard 的公开 capability，但 Standard 不得反向依赖领域包；React / Vanilla / Docs demo 仍通过 adapter、sugar、composite、lowering、renderer 扩展表达力，不要绕开基础包另造平行 IR、平行渲染语义或平行几何底座。
 - 当前需求明确需要扩展的公开能力，优先建立统一的 Definition / registry / capability contract，再实现内置能力。内置与自定义应复用同一套注册、解析和消费逻辑，不要拆成“内置白名单 + 扩展补丁接口”。
 - 新增或改变公开能力、IR / schema、扩展契约、pipeline / lowering、Scene / manifest、跨包职责或 adapter 独有能力前，先读 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档，并在 ADR 设计阶段完成能力归属、包边界与闭环检查，结论写入同步镜像 plan。纯 bugfix、文案和行为等价重构只需确认不改变能力边界。
@@ -65,6 +67,8 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 用户确认后，计划内的实现、验证和已声明 subagent / review 连续执行，不在每个阶段重复询问。只有 scope / 架构 / 公开契约超出计划、授权动作变化、外部阻塞或达到计划内失败阈值时才中断交人工。小型任务无需计划确认，按明确请求直接执行。
 
+长任务、审计或 review 请求确认时，分别说明已用与拟用的检查粒度（粗粒度关键词筛查 / 细粒度 LLM 阅读实现、调用链与测试）、覆盖范围和盲区，给出推荐粒度及理由供用户确认。筛查命中仅是候选，不作为细读结论；用户已选定粒度时不重复询问。
+
 ### 主模型匹配
 
 按需求不确定性、决策代价、包边界和验证难度选择主控，不按文件数分档。大型架构决策由 Astra 或 Sol 主控。当前主控能胜任就继续，不因高档模型执行小任务而暂停；能力不足时说明风险、推荐角色并请用户裁决，不自动切换模型。
@@ -83,7 +87,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 这类文件放到 `.gitignore` 已覆盖的本地目录：`notes/reports/`、`notes/plans/`、任意 `**/_notes/reports/`、`**/_notes/plans/`；不要 stage / commit。
 - 正式测试只保留 tracked runtime case `tests/**/*.test.ts(x)`；TypeScript 可直接判断的类型关系由生产代码与 `tsc --noEmit` 负责，不编写独立测试；仅服务当次流程、排查或对照的 case 使用 ignored `tests/_scratch/*.test.ts(x)`，不因先写或跑绿而永久保留。准入与转正按 [单元测试规范](.agents/skills/test-contract/references/unit-tests.md)。
 - 不得新增 `*.typecheck.ts(x)`，也不得在 runtime 测试中使用强转、`expectTypeOf` 或 `@ts-expect-error` 触发 TypeScript 已拒绝的字段、互斥 union、必填项或封闭判别分支。
-- 临时 Vitest case 只放受影响 workspace 的 `tests/_scratch/`。用 `pnpm temp:test -- --workspace <workspace-directory> --file tests/_scratch/<case>.test.ts` 指定单个文件运行；默认完成后自动删除，只有人工显式传 `--keep` 才保留，异常终止后仍须核对残留。不要 `git add -f` 此目录。
+- 临时 Vitest case 只放受影响 workspace 的 `tests/_scratch/`。用 `pnpm temp:test --workspace <workspace-directory> --file tests/_scratch/<case>.test.ts` 指定单个文件运行；默认完成后自动删除，只有人工显式传 `--keep` 才保留，异常终止后仍须核对残留。不要 `git add -f` 此目录。
 - 如果新流程需要新的临时产物目录，先征求用户确认并补 `.gitignore`，再写入该目录。
 
 常用命令：
@@ -173,6 +177,8 @@ Control: <human-directed|llm-autonomous>
 
 - 仅用于开发调试的代码及其专属计算统一放入 `if (__DEV__)`；生产必需的校验、异常和用户诊断回调不得受此开关控制。Vite 入口接入共享 DEV 插件，仓库内 Node/tsx 源码入口预加载 `config/dev-runtime.mjs`；库产物保留环境判断，由消费方生产构建裁剪。业务源码不自行读取 `NODE_ENV` 或定义运行时 DEV 常量。
 - TypeScript ESM；目录、文件、符号、enum、registry 和组件命名统一遵循 `standard-name`。
+- 调用方负责在输入被使用期间保持已类型化的配置、定义及其成员稳定；内部不为防范调用方原地修改而复制、冻结输入或检查其稳定性，违约后果由调用方承担。
+- 外部输入需要运行时不可变快照时，只在接收边界对本方拥有的数据使用 `Object.freeze` 等手段；不冻结借用的调用方对象。内部只读约束用 `readonly` / `ReadonlyArray` 表达，不为中间结果逐层复制或冻结。
 - 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
 - `packages/**/src` 由 Retikz 主动创建的错误必须是 `RetikzError` 或其子类，自定义错误类统一命名为 `RetikzXxxError`；每个发布包一般只保留一个统一的 `Retikz<Package>Error`，通过 code、message、details 与 cause 区分失败。只有错误边界独立且调用方确实需要按 class 分支，或存在额外稳定结构字段时，才允许增加专用错误类型。生产源码不得创建原生 `Error`；第三方或用户回调异常在 Retikz API 边界包装为 owner 错误并原样保留为 `cause`，测试可用原生 `Error` 模拟外部失败。
 - JSON、持久化配置和其他类型不明确的外部输入只在 parse / schema 入口完成一次解析和校验；adapter 只将已类型化的 `InputXxx` 调度至 Vanilla API `normalizeXxx`。纵向领域 `resolveXxx` 只校验补全后才出现的领域不变量与真实上下文错误；不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。已类型化的 Tier 2 封装和扩展回调由作者负责满足契约，不强制 Schema 解析；用户编写的代码不等同于外部数据。校验边界按数据来源判断，不按包边界判断；内部调用、跨包传递和官方编译产物消费不得重复执行 schema 结构校验。Schema 仍可用于类型派生与权威默认值复用，不得借此重新解析完整内部对象。

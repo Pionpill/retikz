@@ -1,5 +1,5 @@
 import { blockHeaderProviderKey } from '@retikz/graph';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { blockHeaderEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -12,7 +12,7 @@ import { normalizeGraphAuthoringChildren } from './semantic-children';
 export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 
 /** Block Header Source 的 InputEmbed adapter */
-export const blockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps> = {
+export const blockHeaderInputEmbedAdapter: InputEmbedAdapter<BlockHeaderInputEmbedProps> = {
   kind: blockHeaderEmbedKind,
   lower: (props, context) => {
     const inputOf = (inputProps: BlockHeaderInputEmbedProps): InputBlockHeader => {
@@ -48,4 +48,4 @@ export const blockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHea
 
 /** 创建 Block Header Source 的 authoring embed 节点 */
 export const blockHeader = (input: BlockHeaderInputEmbedProps) =>
-  createGraphInputEmbed(blockHeaderEmbedKind, input, undefined);
+  createGraphInputEmbed(blockHeaderInputEmbedAdapter, input, undefined);

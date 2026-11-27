@@ -55,7 +55,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <Layout nodeDistance={34.85}>
+  <Layout compile={{ nodeDistance: 34.85 }}>
     <RoadmapNode id="title" position={[343.4, 17]} variant="title" width={170} height={34}>
       AI Expert in 2022
     </RoadmapNode>
@@ -72,7 +72,7 @@ const Demo: FC = () => (
     {/* === Step 3：两侧色块条 ===
         左侧 "Required for any path" 列 —— 4 蓝色按钮紧贴堆叠；
         段头 papers 用绝对坐标，剩 3 个用 AtPosition direction=bottom，
-        靠 <Layout nodeDistance={34.85}> 按紧凑间距堆叠 */}
+        靠 <Layout compile={{ nodeDistance: 34.85 }}> 按紧凑间距堆叠 */}
 
     <RoadmapNode id="required-header" position={[85, 29.75]} variant="header" width={136} height={19.125}>
       Required for any path

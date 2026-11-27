@@ -3,6 +3,7 @@ import type {
   CompiledPath,
   PathCompileContext,
   IRPathBase,
+  IRTarget,
   InputPathCompilation,
   LayoutBoundsContribution,
   PositionTargetEvaluateContext,
@@ -15,7 +16,7 @@ import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import type { TreeOutputState, InternalScenePrimitive } from '../shared';
+import type { CompositeElementDispatcher, TreeOutputState, InternalScenePrimitive } from '../shared';
 import { PATH_PLACEHOLDER, createTreePositionContext } from '../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 
@@ -38,8 +39,6 @@ export type PendingPathEmission = InputPathCompilation & {
   };
   /** 产生 path primitive 的语义 owner */
   semanticOwner?: CompileOwnerKey;
-  /** 编译期排序用 zIndex，不写入 Scene primitive */
-  zIndex?: number;
 };
 
 /** 合并 path 样式并加入延迟 emit 队列，保留顶层绘制顺序占位 */
@@ -76,7 +75,6 @@ export const queuePathChild = (
     theme,
     scopeDefaults: defaults,
     ...(semanticOwner === undefined ? {} : { semanticOwner }),
-    zIndex: ir.zIndex,
   };
   output.pendingPathCount++;
   paths.push(pending);
@@ -90,8 +88,21 @@ export const flushPendingPathEmissions = (
 ): void => {
   if (pendingPaths.length === 0) return;
 
+  // 等名称注册完毕才核对生成 Path 的阶段记录，使引用目标按本轮几何解析
+  const { compositeDispatcher } = output;
+  const compileWithDispatcher = (dispatcher: CompositeElementDispatcher, pending: PendingPathEmission) => {
+    const namespace = runtime.state.execution.namespaceStack;
+    namespace.setPhase('resolving');
+    try {
+      return dispatcher.path(runtime, pending);
+    } finally {
+      namespace.setPhase('registering');
+    }
+  };
   const compiled = pendingPaths.map(pending =>
-    runtime.state.execution.withWarningOccurrence(pending.occurrence, () => compilePendingPath(runtime, pending)),
+    runtime.state.execution.withWarningOccurrence(pending.occurrence, () =>
+      compositeDispatcher ? compileWithDispatcher(compositeDispatcher, pending) : compilePendingPath(runtime, pending),
+    ),
   );
   assemblePaths(runtime, output, pendingPaths, compiled);
 };
@@ -102,7 +113,25 @@ const compilePendingPath = (runtime: CompileRuntime, pending: PendingPathEmissio
   const namespace = runtime.state.execution.namespaceStack;
   namespace.setPhase('resolving');
   try {
-    return compilePath(canon, createPathCompileContext(runtime, pending));
+    // ⚡一次性描边不保存目标表；无变换的绝对点已是局部坐标，无须按来源登记后再按值查回
+    const literal = (point: IRTarget) =>
+      Array.isArray(point) &&
+      Number.isFinite(point[0]) &&
+      Number.isFinite(point[1]) &&
+      !Object.is(point[0], -0) &&
+      !Object.is(point[1], -0);
+    const direct =
+      pending.scopeChain.length === 0 &&
+      canon.stroke !== undefined &&
+      !canon.canon.arrow &&
+      !canon.canon.marks?.length &&
+      !canon.canon.label?.length &&
+      canon.canon.children?.every(step =>
+        step.kind === 'line' || step.kind === 'move'
+          ? (!('label' in step) || step.label === undefined) && literal(step.to)
+          : step.kind === 'smooth' && step.label === undefined && step.points.every(literal),
+      );
+    return compilePath(canon, createPathCompileContext(runtime, pending), direct ? { targets: new Map() } : undefined);
   } finally {
     namespace.setPhase('registering');
   }
@@ -137,8 +166,9 @@ export const assemblePaths = (
 
     output.pendingPathCount--;
 
-    if (pendingPath.zIndex !== undefined) {
-      for (const prim of primitives) output.zIndexMap.set(prim, pendingPath.zIndex);
+    const { zIndex } = pendingPath.path;
+    if (zIndex !== undefined) {
+      for (const prim of primitives) output.zIndexMap.set(prim, zIndex);
     }
     if (result !== null) {
       // ⚡两种内部边界汇总只读同一份已物化点集
@@ -211,6 +241,6 @@ export const createPathCompileContext = (
       clips: runtime.state.workspace.clipRegistry.getResources(),
     }),
     onWarn: runtime.state.workspace.diagnosticCollector.collect,
-    resolveTransform: runtime.state.execution.scopeTransformComposer.resolve,
+    resolveTransform: chain => runtime.state.execution.scopeTransformComposer.resolve(chain),
   };
 };

@@ -11,6 +11,7 @@ import type {
   IRScope,
   IRStep,
   AnyPathDefinition,
+  ShapeDefinition,
 } from '@retikz/core';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
@@ -38,7 +39,6 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { LayoutProps } from '@retikz/react';
 import type { IRQueue, IRStack } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
 import type { IRCell, IRMatrix, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
@@ -131,13 +131,10 @@ type Ctx = {
   used: Set<string>;
   usesDrawWay: boolean;
   standardHelpers: Set<string>;
-  standardAdapters: Set<string>;
   standardCounts: Map<string, number>;
   layoutHelpers: Set<string>;
-  layoutAdapters: Set<string>;
   layoutCounts: Map<string, number>;
   graphHelpers: Set<string>;
-  graphAdapters: Set<string>;
   graphCounts: Map<string, number>;
   flowCount: number;
 };
@@ -149,7 +146,7 @@ export type IrToVanillaCodeOptions = Readonly<{
   /** 当前图显式装配的 Path Definition */
   paths?: ReadonlyArray<AnyPathDefinition>;
   /** 当前图显式装配的形状定义 */
-  shapes?: NonNullable<LayoutProps['extensions']>['shapes'];
+  shapes?: ReadonlyArray<ShapeDefinition>;
 }>;
 
 type WayFrag = { text: string; comment?: boolean };
@@ -347,35 +344,7 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'shape',
 ];
 
-const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'circleInputEmbedAdapter',
-  'ellipseInputEmbedAdapter',
-  'rectangleInputEmbedAdapter',
-  'polygonInputEmbedAdapter',
-  'starInputEmbedAdapter',
-  'arcInputEmbedAdapter',
-  'sectorInputEmbedAdapter',
-  'gridInputEmbedAdapter',
-  'axesInputEmbedAdapter',
-  'frameInputEmbedAdapter',
-  'surfaceInputEmbedAdapter',
-  'queueInputEmbedAdapter',
-  'treeInputEmbedAdapter',
-  'stackInputEmbedAdapter',
-  'chainInputEmbedAdapter',
-  'matrixInputEmbedAdapter',
-  'arrayInputEmbedAdapter',
-  'mapInputEmbedAdapter',
-  'legendInputEmbedAdapter',
-];
-
 const LAYOUT_HELPER_ORDER: ReadonlyArray<string> = ['flexLayout', 'gridLayout', 'overlayLayout'];
-
-const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'flexLayoutInputEmbedAdapter',
-  'gridLayoutInputEmbedAdapter',
-  'overlayLayoutInputEmbedAdapter',
-];
 
 const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
   'graph',
@@ -386,17 +355,6 @@ const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
   'blockRow',
   'entity',
   'relation',
-];
-
-const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'graphInputEmbedAdapter',
-  'groupInputEmbedAdapter',
-  'blockInputEmbedAdapter',
-  'blockHeaderInputEmbedAdapter',
-  'blockSectionInputEmbedAdapter',
-  'blockRowInputEmbedAdapter',
-  'entityInputEmbedAdapter',
-  'relationInputEmbedAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
@@ -676,18 +634,13 @@ export const collectLayoutPreviewDefinitions = (
 
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type}InputEmbedAdapter`;
-  if (
-    !(STANDARD_HELPER_ORDER.includes(record.type) || STANDARD_SHAPE_KINDS.includes(record.type)) ||
-    !STANDARD_ADAPTER_ORDER.includes(adapterName)
-  ) {
+  if (!(STANDARD_HELPER_ORDER.includes(record.type) || STANDARD_SHAPE_KINDS.includes(record.type))) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
 
   const count = (ctx.standardCounts.get(record.type) ?? 0) + 1;
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
-  ctx.standardAdapters.add(adapterName);
   if (record.type === 'tree') return `tree(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
   if (record.type === 'chain') {
     const source = child as IRChain;
@@ -770,15 +723,13 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
 
 const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type}InputEmbedAdapter`;
-  if (!LAYOUT_HELPER_ORDER.includes(record.type) || !LAYOUT_ADAPTER_ORDER.includes(adapterName)) {
+  if (!LAYOUT_HELPER_ORDER.includes(record.type)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
 
   const count = (ctx.layoutCounts.get(record.type) ?? 0) + 1;
   ctx.layoutCounts.set(record.type, count);
   ctx.layoutHelpers.add(record.type);
-  ctx.layoutAdapters.add(adapterName);
   const input = stripKeys(record, ['namespace', 'type']);
 
   return `${record.type}(${formatObject(input, indent)})`;
@@ -942,15 +893,13 @@ const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): strin
 const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string };
   const helperName = record.type;
-  const adapterName = `${helperName}InputEmbedAdapter`;
-  if (!GRAPH_HELPER_ORDER.includes(helperName) || !GRAPH_ADAPTER_ORDER.includes(adapterName)) {
+  if (!GRAPH_HELPER_ORDER.includes(helperName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
 
   const count = (ctx.graphCounts.get(helperName) ?? 0) + 1;
   ctx.graphCounts.set(helperName, count);
   ctx.graphHelpers.add(helperName);
-  ctx.graphAdapters.add(adapterName);
   if (helperName === 'graph') {
     return `graph(${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
   }
@@ -1073,13 +1022,10 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     used: new Set(['scene']),
     usesDrawWay: false,
     standardHelpers: new Set(),
-    standardAdapters: new Set(),
     standardCounts: new Map(),
     layoutHelpers: new Set(),
-    layoutAdapters: new Set(),
     layoutCounts: new Map(),
     graphHelpers: new Set(),
-    graphAdapters: new Set(),
     graphCounts: new Map(),
     flowCount: 0,
   };
@@ -1097,11 +1043,8 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
 
   const helpers = HELPER_ORDER.filter(name => ctx.used.has(name));
   const standardHelpers = STANDARD_HELPER_ORDER.filter(name => ctx.standardHelpers.has(name));
-  const standardAdapters = STANDARD_ADAPTER_ORDER.filter(name => ctx.standardAdapters.has(name));
   const layoutHelpers = LAYOUT_HELPER_ORDER.filter(name => ctx.layoutHelpers.has(name));
-  const layoutAdapters = LAYOUT_ADAPTER_ORDER.filter(name => ctx.layoutAdapters.has(name));
   const graphHelpers = GRAPH_HELPER_ORDER.filter(name => ctx.graphHelpers.has(name));
-  const graphAdapters = GRAPH_ADAPTER_ORDER.filter(name => ctx.graphAdapters.has(name));
   const hasStandaloneGraphMembers = graphHelpers.length > 0 && !ctx.graphCounts.has('graph');
 
   const imports = [
@@ -1119,29 +1062,11 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     new Set(ctx.graphCounts.keys()),
   );
   if (standardHelpers.length > 0) {
-    const shapeAdapters = new Set(STANDARD_SHAPE_KINDS.map(kind => `${kind}InputEmbedAdapter`));
-    const members = [...standardHelpers, ...standardAdapters];
-    const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
-    const collectionMemberNames = new Set<string>([
-      'queue',
-      'tree',
-      'stack',
-      'chain',
-      'matrix',
-      'queueInputEmbedAdapter',
-      'treeInputEmbedAdapter',
-      'stackInputEmbedAdapter',
-      'chainInputEmbedAdapter',
-      'matrixInputEmbedAdapter',
-      'array',
-      'map',
-      'arrayInputEmbedAdapter',
-      'mapInputEmbedAdapter',
-    ]);
+    const members = standardHelpers;
+    const shapeMembers = members.filter(name => name === 'shape');
+    const collectionMemberNames = new Set<string>(['queue', 'tree', 'stack', 'chain', 'matrix', 'array', 'map']);
     const collectionMembers = members.filter(name => collectionMemberNames.has(name));
-    const presentationMembers = members.filter(
-      name => !shapeMembers.includes(name) && !collectionMemberNames.has(name),
-    );
+    const presentationMembers = members.filter(name => name !== 'shape' && !collectionMemberNames.has(name));
     if (presentationMembers.length > 0)
       imports.push(`import { ${presentationMembers.join(', ')} } from '@retikz/standard-vanilla/presentation';`);
     if (collectionMembers.length > 0)
@@ -1151,16 +1076,16 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   }
 
   if (layoutHelpers.length > 0) {
-    imports.push(`import { ${[...layoutHelpers, ...layoutAdapters].join(', ')} } from '@retikz/layout-vanilla';`);
+    imports.push(`import { ${layoutHelpers.join(', ')} } from '@retikz/layout-vanilla';`);
   }
 
   if (graphHelpers.length > 0) {
-    imports.push(`import { ${[...graphHelpers, ...graphAdapters].join(', ')} } from '@retikz/graph-vanilla';`);
+    imports.push(`import { ${graphHelpers.join(', ')} } from '@retikz/graph-vanilla';`);
     imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
   }
 
   if (ctx.flowCount > 0) {
-    imports.push("import { flowDiagram, flowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';");
+    imports.push("import { flowDiagram } from '@retikz/diagram-vanilla/flow';");
     if (graphHelpers.length === 0) {
       imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
     }
@@ -1202,13 +1127,6 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   if (hasStandaloneGraphMembers)
     imports.push("import { createGraphProviders, GraphProviderKey } from '@retikz/graph';");
 
-  const adapters = [
-    ...standardAdapters,
-    ...layoutAdapters,
-    ...graphAdapters,
-    ...(ctx.flowCount > 0 ? ['flowDiagramInputEmbedAdapter'] : []),
-  ];
-  const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
   const definitionNames = [
     ...definitions.standard,
     ...definitions.layout,
@@ -1229,8 +1147,8 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   ];
   const compile = compileEntries.length > 0 ? `\nconst compile = { ${compileEntries.join(', ')} };\n` : '';
   const inputCode = hasStandaloneGraphMembers
-    ? `const source = scene(${figureArgs});\n${adapterCode}const input = normalizeScene(source, { adapters }).ir;\n`
-    : `const input = scene(${figureArgs});\n${adapterCode}`;
+    ? `const source = scene(${figureArgs});\nconst input = normalizeScene(source).ir;\n`
+    : `const input = scene(${figureArgs});\n`;
 
   return `${imports.join('\n')}\n\n${inputCode}${providerCode}${compile}`;
 };

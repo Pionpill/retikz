@@ -1,9 +1,9 @@
 import { SlopeChartSchema } from '@retikz/chart/line';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { slopeChart, slopeChartInputEmbedAdapter, slopeMark, normalizeSlopeChart } from '../../src/line';
-import { scatterChart, scatterChartInputEmbedAdapter } from '../../src/point';
+import { slopeChart, slopeMark, normalizeSlopeChart } from '../../src/line';
+import { scatterChart } from '../../src/point';
 
 const rows = [
   { x: 0, y: 1, s: 'A' },
@@ -20,15 +20,14 @@ describe('Slope Vanilla 输入闭环', () => {
       marks: [slopeMark({ override: true, properties: { path: { strokeWidth: 3 } } })],
     };
     const input = slopeChart({ data: rows, ...recipe });
-    const actual = normalizeScene(scene({ children: [input] }), { adapters: [slopeChartInputEmbedAdapter] }).ir
-      .children[0];
+    const actual = normalizeScene(scene({ children: [input] })).ir.children[0];
     const expected = normalizeSlopeChart({ data: { reference: 'chart.data' }, ...recipe });
     expect(actual).toEqual(expected);
     expect(SlopeChartSchema.parse(actual)).toEqual(SlopeChartSchema.parse(expected));
   });
 
   it('Slope 和 Point provider 在同一场景独立编译并生成 SVG', () => {
-    const svg = renderToSvgString(
+    const compileResult = compileToScene(
       scene({
         children: [
           slopeChart({
@@ -47,8 +46,8 @@ describe('Slope Vanilla 输入闭环', () => {
           }),
         ],
       }),
-      { adapters: [slopeChartInputEmbedAdapter, scatterChartInputEmbedAdapter] },
     );
+    const svg = renderToSvg(compileResult.scene);
     expect(svg).toContain('<svg');
     expect(svg).toContain('trend');
     expect(svg).toContain('observations');

@@ -59,10 +59,10 @@ export default Demo;
 
 ```tsx
 import { node, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({ children: [node({ id: 'a', position: [0, 0], text: 'Hello' })] });
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>
@@ -70,7 +70,7 @@ const view = mount(document.getElementById('diagram')!, input);
 
 ```tsx
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,
@@ -114,7 +114,7 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
   defaultSourceFile="node-shape.preview.tsx"
 />
 
-更多形状由 Extension 拓展包提供，按[Extension Shape](/library/extension/shape)的入口导入并通过 `Layout.extensions.shapes` 注册。
+更多形状由 Extension 拓展包提供，按[Extension Shape](/library/extension/shape)的入口导入并通过 `Layout.compile.shapes` 注册。
 
 ## 尺寸与变换
 

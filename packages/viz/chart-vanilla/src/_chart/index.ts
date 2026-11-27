@@ -1,21 +1,21 @@
+import { prepareChartData } from '@retikz/chart';
 import type { IRChartSource } from '@retikz/chart';
+import type { CoreProviderContribution } from '@retikz/core';
+import type { PlotDataPreparationOptions, PlotsLoweringOptions } from '@retikz/plot';
 import type { CompileResult } from '@retikz/reconciler';
-import type { RenderToStringOptions, AsyncProcessingOptions } from '@retikz/vanilla';
-import { renderToSvgString, scene, toSceneResult, compileToSceneAsync } from '@retikz/vanilla';
-import type { InputEmbed } from '@retikz/vanilla';
+import type { ProcessOptions, RenderToStringOptions } from '@retikz/vanilla';
+import { renderToSvg, scene, compileToScene, embed } from '@retikz/vanilla';
+import type { AnyInputEmbed } from '@retikz/vanilla';
 
-import { RetikzChartVanillaError } from '../error';
-import type { InputChartHostTheme } from '../shared';
+import { lowerChartInput } from '../shared';
+import type { InputChartPanel, InputChartHostTheme } from '../shared';
 
 export type { InputChartCoordinate } from '../normalize/chart';
 export { normalizeChartCoordinate } from '../normalize/chart';
 export type { InputChartHostTheme, InputChartPanel } from '../shared';
 
 /** Chart 服务端渲染选项 */
-export type ChartRenderOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'> & {
-  /** 当前图表的 Vanilla adapter */
-  adapters: NonNullable<RenderToStringOptions['adapters']>;
-};
+export type ChartRenderOptions = RenderToStringOptions & Pick<ProcessOptions, 'compile'>;
 
 /** Chart 单次编译与服务端渲染结果 */
 export type ChartRenderResult = Readonly<{
@@ -26,16 +26,20 @@ export type ChartRenderResult = Readonly<{
 }>;
 
 /** Chart 异步服务端渲染选项 */
-export type ChartRenderAsyncOptions = Omit<ChartRenderOptions, 'adapters'> & {
-  /** 当前图表支持prepare的adapter */
-  adapters: NonNullable<AsyncProcessingOptions['adapters']>;
-  /** 本次请求取消信号 */
-  signal?: AbortSignal;
-};
+export type ChartRenderAsyncOptions<TSource = never> = ChartRenderOptions &
+  InputChartHostTheme &
+  Omit<PlotDataPreparationOptions<TSource>, 'lineage'> & {
+    /** 与当前 Chart recipe 配套的 provider */
+    chartProviderContribution: CoreProviderContribution;
+    /** 领域准备与同步绘图共享的配置 */
+    lowerOptions?: PlotsLoweringOptions;
+    /** Chart 的宿主面板 */
+    panel?: InputChartPanel;
+  };
 
-type InputChartRender = InputEmbed<InputChartHostTheme & { layout?: IRChartSource['layout'] }>;
+type InputChartRender = AnyInputEmbed & { props: InputChartHostTheme & { layout?: IRChartSource['layout'] } };
 
-/** 两种入口共用相同的Scene与Core配置，异步生命周期由Vanilla负责 */
+/** 两种入口共用相同的Scene与Core配置 */
 const chartRenderRequest = (input: InputChartRender, compile: ChartRenderOptions['compile']) => {
   const themeDefinitions =
     input.props.themeDefinitions === undefined
@@ -58,24 +62,52 @@ const chartRenderRequest = (input: InputChartRender, compile: ChartRenderOptions
 };
 
 /** 通过一次同步Core编译渲染Chart */
-export const renderChart = (input: InputChartRender, options: ChartRenderOptions): ChartRenderResult => {
-  const { compile, adapters, ...renderOptions } = options;
+export const renderChart = (input: InputChartRender, options: ChartRenderOptions = {}): ChartRenderResult => {
+  const { compile, ...renderOptions } = options;
   const request = chartRenderRequest(input, compile);
-  const result = toSceneResult(request.source, { adapters, compile: request.compile });
-  if (result.compileResult === undefined)
-    throw new RetikzChartVanillaError('Chart processing must produce a Core compile result');
+  const result = compileToScene(request.source, { compile: request.compile });
 
-  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
+  return { svg: renderToSvg(result.scene, renderOptions), compileResult: result };
 };
 
-/** 准备完整作者树后通过同一Core编译渲染Chart，支持Promise计算 */
-export const renderChartAsync = async (
-  input: InputChartRender,
-  options: ChartRenderAsyncOptions,
+/** 只等待显式 Chart 领域计算，再同步编译同一份就绪结果 */
+export const renderChartAsync = async <TSource = never>(
+  source: IRChartSource,
+  options: ChartRenderAsyncOptions<TSource>,
 ): Promise<ChartRenderResult> => {
-  const { compile, adapters, signal, ...renderOptions } = options;
-  const request = chartRenderRequest(input, compile);
-  const result = await compileToSceneAsync(request.source, { adapters, signal, compile: request.compile });
-
-  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
+  const {
+    chartProviderContribution,
+    lowerOptions,
+    panel,
+    theme,
+    themeDefinitions,
+    dataBindings,
+    dataTransformExecutor,
+    signal,
+    ...renderOptions
+  } = options;
+  const preparation = await prepareChartData(
+    source,
+    { dataBindings, dataTransformExecutor, signal },
+    chartProviderContribution,
+    lowerOptions,
+  );
+  const preparedData = await preparation.execute();
+  return renderChart(
+    embed({
+      adapter: { kind: source.namespace, lower: lowerChartInput },
+      props: {
+        source,
+        layout: source.layout,
+        theme,
+        themeDefinitions,
+        panel,
+        datasets: {},
+        preparedData,
+        chartProviderContribution,
+        lowerOptions,
+      },
+    }),
+    renderOptions,
+  );
 };

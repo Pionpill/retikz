@@ -20,8 +20,9 @@ const input: IRScene = {
 
 /** 构造包含声明及双向依赖的已提交树 */
 const fixture = () => {
-  const prepared = new WeaveManager(input).mount();
-  const root = prepared.root;
+  const preparedManager = new WeaveManager(input);
+  const prepared = preparedManager.mount();
+  const root = preparedManager.root;
   const scope = readWeaveCurrent(root).children[0];
   if (scope.type !== 'scope') throw new Error('Expected scope fixture');
   const [a, b] = readWeaveCurrent(scope).children;
@@ -156,11 +157,13 @@ it('未完成状态阻止整批提交，不切换此前已检查的节点', () =
 });
 
 it('普通 Scope 缺少局部 ids 时不隐式创建命名空间', () => {
-  const { root } = new WeaveManager({
+  const manager = new WeaveManager({
     type: 'scene',
     version: 1,
     children: [{ type: 'scope', children: [] }],
-  }).mount();
+  });
+  manager.mount();
+  const { root } = manager;
   const scope = readWeaveCurrent(root).children[0];
   if (scope.type !== 'scope') throw new Error('Expected scope fixture');
   const work = new WeaveTransaction(root);

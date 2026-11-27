@@ -44,7 +44,7 @@ const IntervalProjection: FC<IntervalProjectionProps> = props => {
   return (
     <Layout
       viewBox={{ x: 0, y: 0, width: 750, height: 430 }}
-      extensions={{ shapes: [sectorShapeDefinition] }}
+      compile={{ shapes: [sectorShapeDefinition] }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       {[0, 1, 2].map(stage => {

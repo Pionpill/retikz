@@ -1,5 +1,5 @@
 ---
-title: Node 编译
+title: 编译 / Node
 description: 追踪节点从确定语义到文字度量、形状布局、连接几何和后端中立图元的过程
 ---
 
@@ -24,7 +24,7 @@ description: 追踪节点从确定语义到文字度量、形状布局、连接�
 | `label` / <ApiSourceLink label="NodeLabelSchema" path="packages/kernel/core/src/schemas/node/label.ts" startLine={106}>`NodeLabelSchema`</ApiSourceLink>        | 单个标签或标签数组                                                          | 解析为标签列表，编译时逐个独立测量并附着到主体边界                     |
 | `scale`、`padding`、`margin`、`minimumSize`                                                                                                                     | 数值简写或轴向、四边、宽高对象                                              | 解析时展开并应用节点缩放，编译使用展开后的尺寸约束                     |
 
-锚点对齐的输入由 <ApiSourceLink label="AnchorPositionSchema" path="packages/kernel/core/src/schemas/position/anchor.ts" startLine={7}>`AnchorPositionSchema`</ApiSourceLink> 描述；它的目标位置与自身 `selfAnchor` 分别决定“对齐到哪里”和“拿自身哪个点去对齐”。标签位置可用方位、角度或 `{ boundary, fraction }`，随后按边界求附着点；`placement` 决定内外放置，`pin` 为外侧标签增加引线。
+锚点对齐的输入由 <ApiSourceLink label="AnchorPositionSchema" path="packages/kernel/core/src/schemas/position/anchor.ts" startLine={7}>`AnchorPositionSchema`</ApiSourceLink> 描述；它的目标位置与自身 `selfAnchor` 分别决定“对齐到哪里”和“拿自身哪个点去对齐”。标签位置可用方位、角度或 `{ side, fraction }`，随后按边界求附着点；`placement` 决定内外放置，`pin` 为外侧标签增加引线。
 
 下面是贯穿示例中 A 的完整声明片段。普通文字 A 能放入给定最小尺寸；最终视觉矩形为 60 × 40，中心 [0, 0]，默认无额外旋转。
 

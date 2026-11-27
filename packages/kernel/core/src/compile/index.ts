@@ -36,7 +36,7 @@ export {
   mergeLayoutBounds,
   viewBoxToLayout,
 } from './scene';
-export type { CompileBounds, CompileOutput, LayoutBoundsContribution } from './scene';
+export type { CompileBounds, LayoutBoundsContribution } from './scene';
 export * from './scope';
 export { BuiltinCompileWarningCode, applyScopeTransform, composeScopeTransform, inverseScopeTransform } from './shared';
 export type { CompileWarning, CompileWarningCode, ComposedScopeTransform } from './shared';

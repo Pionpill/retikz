@@ -1,0 +1,149 @@
+---
+title: 执行 / 作用域与遍历
+description: 以 Scope 承载的嵌套子树为例，追踪遍历时传给子项的配置与变换、路径可见的名称，以及返回父层的绘制结果
+---
+
+Reconciler 以子树（subtree）为单位遍历声明：从场景根的 `children` 开始，按声明顺序访问子项，收集这一层的布局和绘制结果。Scope（作用域）是声明中承载嵌套子树的一种方式。遇到 Scope 时，执行器带着这一层的默认样式和坐标变换继续遍历它的 `children`；如果开启了 `localNamespace`，还会为子树内的名字建立局部名称帧。
+
+## 整体流程
+
+结合[运行状态](/kernel/packages/reconciler/compile-state)，可以从五个方面看一次全量遍历：
+
+- **默认样式**：父层的默认值如何传给子项，内层的覆盖又在哪一层生效？
+- **坐标变换**：哪些变换在进入时就能传下去，哪些要等子项布局完成才能确定？
+- **作用域包络**：子项布局何时汇成整组的边界，父层收到的是整组包络还是各个子布局？
+- **名称可见性**：路径引用一个名字时，执行器在哪一层查找？
+- **子树输出**：本层的路径何时回填，图元和可见边界又怎样交给父层？
+
+## 遍历 Scope 承载的子树
+
+全量编译从 <ApiSourceLink label="compileRootChildren" path="packages/kernel/reconciler/src/compile/execution/subtree/element.ts" startLine={95}>`compileRootChildren`</ApiSourceLink> 遍历根子项。遇到 Scope 时，<ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink> 为它的子树安排下面三个阶段；内层结束后，父层才继续处理下一个兄弟项。
+
+1. **进入**：根据父层配置准备子执行帧，按需压入局部名称帧，然后按声明顺序访问子项。
+2. **返回**：子项遍历结束，用收集到的布局计算 Scope 的边界和最终变换，更新几何，再求值本层待处理的路径。
+3. **退出**：离开作用域，弹出进入时创建的局部名称帧。正常结束后，把绘制输出和可见边界交给父帧。
+
+下图把这三个阶段对应到实际调用。路径求值排在退出之前，因此还能查询本层的名字；发布排在清理之后，中途抛错也会经过 `finally` 离开作用域。
+
+<ComponentPreview files="scope-visit" size="lg" hideCode type="flow" />
+
+## 默认样式
+
+假设外层 Scope 把节点的默认填充设为蓝色。进入内层时，<ApiSourceLink label="prepareScopeExecution" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={57}>`prepareScopeExecution`</ApiSourceLink> 取出父帧的有效配置，由 Core 合并当前 Scope 的设置，再把合并结果作为子执行帧的 `inheritance` 传给子项。内层没有设置填充色时，里面的节点 A 就沿用蓝色。
+
+子帧的 `context.inheritance` 引用一份 <ApiSourceLink label="CanonicalScopeInheritance" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={13}>`CanonicalScopeInheritance`</ApiSourceLink>。其中 `defaults` 保存子元素的有效默认配置，`theme` 保存当前主题：
+
+```ts
+export type CanonicalScopeInheritance = Readonly<{
+  defaults: MergedScopeDefaults;
+  theme: CanonicalTheme;
+}>;
+```
+
+展开 <ApiSourceLink label="MergedScopeDefaults" path="packages/kernel/core/src/resolve/style/types.ts" startLine={13}>`MergedScopeDefaults`</ApiSourceLink>，可以看到节点和路径各有一组可选默认值。例子中的蓝色位于 `defaults.node.style.fill`；它只影响节点，不会改写路径的填充：
+
+```ts
+export type MergedScopeDefaults = Readonly<{
+  node?: Readonly<{
+    geometry: Readonly<Omit<IRNodeDefault, 'style' | 'layout' | 'label'>>;
+    style: Readonly<IRNodeStyle>;
+    layout: Readonly<IRNodeLayout>;
+    label?: Readonly<IRNodeLabelDefault>;
+  }>;
+  path?: Readonly<{
+    geometry: Readonly<Omit<IRPathDefault, 'style' | 'label' | 'arrow'>>;
+    style: Readonly<IRPathStyle>;
+    label?: Readonly<IRPathLabelDefault>;
+    arrow?: Readonly<IRArrowDetail>;
+  }>;
+}>;
+```
+
+下图对照同一次遍历中的两个执行帧，只展开填充色和主题。外层的 I₁ 保存蓝色；内层只覆盖节点填充，因此它的执行帧引用另一份继承数据 I₂，填充为红色，两者的主题仍引用同一个 T。
+
+<ComponentPreview files="scope-inheritance" size="md" hideCode type="illustration" />
+
+内层节点 A 从 I₂ 取得红色。回到外层后，兄弟节点从外层帧的 I₁ 取得蓝色，执行器无需把填充色改回去。如果内层既没有设置默认值，也没有改变主题，就可以直接沿用 I₁。
+
+## 坐标变换
+
+节点的位置写在局部坐标系里。假设 A 的中心是 [10, 5]，外层 Scope 向右平移 100，内层没有变换，那么 A 登记到名称帧的全局中心就是 [110, 5]。执行器之所以知道外层的平移，是因为每个子执行帧都收到一条从祖先传下来的变换链：`context.transformChains: ReadonlyArray<Transform>`。
+
+进入 Scope 时，Core 先判断本层有哪些变换已经可以确定。源码里的 <ApiSourceLink label="ScopePlacementPreparation" path="packages/kernel/core/src/compile/scope/types.ts" startLine={12}>`ScopePlacementPreparation`</ApiSourceLink> 分开保存两个值：`positionTarget` 是在父坐标系中解析出的放置目标；`preliminaryTransforms` 是无需知道本层包络就能使用的变换。比如绕原点旋转可以提前计算，绕整组的中心旋转则要等子项给出边界。
+
+```ts
+export type ScopePlacementPreparation = Readonly<{
+  positionTarget?: IRPosition;
+  preliminaryTransforms?: Array<Transform>;
+}>;
+```
+
+Reconciler 用下面这段代码准备子帧的变换链：本层变换尚未确定时，先沿用父链；已经确定时，把本层的变换追加到父链后面。结果写入子帧的 `context.transformChains`。
+
+```ts
+const preliminaryScopeChain =
+  preliminaryTransforms === undefined
+    ? transformChains
+    : runtime.state.execution.scopeTransformComposer.append(transformChains, preliminaryTransforms);
+```
+
+下图给内层加上绕原点旋转 90° 的变换。左侧两行是外层和内层各自传给子项的数组；右侧是每条链对应的合成结果。外层的链只有平移 T，内层的链是 [T, R]。将内层节点投影到全局时，先在局部旋转 R，再随外层平移 T。同一帧中的多个节点可以复用这条链的合成结果。
+
+<ComponentPreview
+  files="/kernel/packages/reconciler/compile-state/transform-cache"
+  size="md"
+  hideCode
+  type="illustration"
+/>
+
+如果把内层的旋转中心改成**整组的中心**，进入时还不知道该绕哪里转。子项返回布局后，Core 才能确定旋转中心和最终变换。此时 <ApiSourceLink label="project" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={166}>`project`</ApiSourceLink> 用补出的变换更新已登记的几何，并在待处理路径的变换链中、父链之后插入这段变换。这样回填路径时，它和目标节点使用同一套坐标；外层已经计入的平移也无需再加一次。
+
+## 作用域包络
+
+包络是把这一组子项视为一个整体时，用于定位和连接的几何边界。进入 Scope 时，执行器已经知道要用矩形还是圆形包住子项，但要等子项遍历返回，才知道这个形状应该有多大、中心在哪里。
+
+全量遍历中，Reconciler 把子执行帧收集的 `state.geometries` 作为 `context.layouts` 交给 Core 的 <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink>。Core 先在本层坐标系里算出包络，再用它确定依赖自身边界的放置。例如，要求整组绕中心旋转时，用的就是这次计算出的中心。矩形和圆形怎样从同一组子布局算出，见 [Core：子布局怎样形成包络](/kernel/packages/core/scope-compilation#子布局怎样形成包络)。
+
+下图用同一对子布局 A、B 对照两种返回结果。上排左侧是子帧收集的几何数组，右侧是 Core 算出的局部包络 E 和本层变换 T。下排只画本次追加到父帧 `state.geometries` 的条目：左边是匿名 Scope 的两项，右边是具名 Scope 的一项。两列是二选一的结果。
+
+<ComponentPreview files="envelope-layouts" size="md" hideCode type="illustration" />
+
+回到父层时，具名 Scope 把自己的包络作为一项布局贡献，并用最终几何替换名称帧里的占位，供路径连接整组。匿名 Scope 则把经过本层变换的子布局继续传给父层。两者的绘制范围都另行汇总：例如阴影可以扩大画布的可见边界，却不会因此改变连线使用的 Scope 包络。
+
+## 名称可见性
+
+现在让根层也有一个 A，并让内层开启 `localNamespace`。内层的路径 p 和它在外层的兄弟路径 q 都引用 A。两条路径读到不同的节点，关键在于区分子执行帧和名称帧：
+
+| 帧                                                                                                                                                                                          | 何时创建                       | 在例子中的作用                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------ |
+| 子执行帧（<ApiSourceLink label="SubtreeCompileRuntime" path="packages/kernel/reconciler/src/compile/execution/subtree/compile.ts" startLine={155}>`SubtreeCompileRuntime`</ApiSourceLink>） | 每次进入 Scope                 | 上下文传下有效配置、变换链和声明路径；本层单独收集图元、子项布局和待计算路径。 |
+| 名称帧                                                                                                                                                                                      | Scope 开启 `localNamespace` 时 | 外层共享根的名称帧；内层压入新帧，把内层 A 登记在栈顶。                        |
+
+下图追踪这个例子：p 求值时，内层帧还在栈顶，查到的是中心为 [110, 5] 的内层 A。退出内层后，q 仍继承外层的平移，但查找 A 时只能看到根层的绑定。
+
+<ComponentPreview files="/kernel/packages/reconciler/compile-state/execution-lookup" size="md" hideCode type="flow" />
+
+如果 Scope 自己也有名字，执行器会先在**父名称帧**登记它的位置占位，再按需压入局部帧。子项布局完成后，占位会被 Scope 的最终几何替换。这样外部路径可以引用整个具名 Scope，同时它的子项仍能使用局部名字。
+
+## 子树输出
+
+如果 p 声明在内层 A 之前，遍历到 p 时，执行器先在图元列表中为它占位。等 A 登记几何、本层变换确定后，再计算端点并把路径填回原位。因此 p 虽然后算，仍按声明顺序画在 A 下面。
+
+内层路径处理完，<ApiSourceLink label="dispose" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={241}>`dispose`</ApiSourceLink> 退出当前作用域，并弹出进入时压入的局部名称帧。接着 <ApiSourceLink label="publish" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={248}>`publish`</ApiSourceLink> 将内层绘制输出交给父执行帧，并把投影后的可见边界汇入父层。父层拿到的是内层已经组装好的内容，不必再遍历一次 A 和 p。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '执行 / 运行状态',
+      description: '查看遍历使用的名称帧和变换链',
+      url: '/kernel/packages/reconciler/compile-state',
+    },
+    {
+      title: 'Core / Scope 编译',
+      description: '查看 Core 怎样根据子项布局确定作用域的边界与位置',
+      url: '/kernel/packages/core/scope-compilation',
+    },
+  ]}
+/>

@@ -62,8 +62,8 @@ export const Example = () => <Layout ir={ir} composites={[surfaceDefinition]} />
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { surface, surfaceChild, surfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import { scene, node, renderToSvgString } from '@retikz/vanilla';
+import { surface, surfaceChild } from '@retikz/standard-vanilla/presentation';
+import { compileToScene, scene, node, renderToSvg } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -74,7 +74,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [surfaceInputEmbedAdapter] });
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -84,7 +85,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { surfaceDefinition } from '@retikz/standard/presentation';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -99,7 +100,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [surfaceDefinition] } });
+const compileResult = compileToScene(ir, { compile: { composites: [surfaceDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

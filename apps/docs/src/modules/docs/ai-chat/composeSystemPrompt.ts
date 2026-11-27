@@ -28,7 +28,7 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 需要画图时用下面两种围栏代码块之一，否则正常用 markdown。
 
 - \`\`\`retikz-ir\`\`\`：直接给 @retikz/core 的 IR JSON。
-- \`\`\`retikz-tsx\`\`\`：JSX，仅允许 21 个 retikz 组件 — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`EdgeLabel\` + Standard 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Polygon\` / \`Star\`，以及 Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
+- \`\`\`retikz-tsx\`\`\`：JSX，仅允许以下 retikz 组件 — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`NodeLabel\` / \`PathLabel\` / \`StepLabel\` + Standard 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Polygon\` / \`Star\`，以及 Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
 
 **两种围栏块都只用于"完整可运行单元"**——retikz-tsx 必须有最外层 \`<Layout>\` 包裹；retikz-ir 必须是完整 Scene 对象（含 \`version\` / \`type\` / \`children\`）。**只展示改动 / 片段 / 单独几个标签时用普通 \`\`\`tsx 或 \`\`\`json 围栏**，不要用 retikz-* 否则会被当成完整图去渲染、报 parse 错。
 
@@ -108,7 +108,7 @@ Coordinate = {
 
 ### 复杂场景的扩展参考
 
-需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / EdgeLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
+需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / StepLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
 
 - 定位：\`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
 - IR：\`/kernel/components/layout/reference\` · \`/kernel/components/node/reference\` · \`/kernel/components/path/reference\`
@@ -134,7 +134,7 @@ const diagramProtocolEn = (preference: DiagramFormatPreference): string => {
 When you need to draw a diagram, use one of the two fenced blocks below; otherwise answer normally with markdown.
 
 - \`\`\`retikz-ir\`\`\`: feed @retikz/core IR JSON directly.
-- \`\`\`retikz-tsx\`\`\`: JSX, only the 21 retikz components allowed — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`EdgeLabel\` + Standard shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Polygon\` / \`Star\`, plus Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
+- \`\`\`retikz-tsx\`\`\`: JSX, only the following retikz components are allowed — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`NodeLabel\` / \`PathLabel\` / \`StepLabel\` + Standard shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Polygon\` / \`Star\`, plus Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
 
 **Both fenced blocks are for "complete, runnable units" only** — retikz-tsx must include the outer \`<Layout>\` wrapper; retikz-ir must be a complete Scene object (with \`version\` / \`type\` / \`children\`). **When showing only changes / snippets / a handful of standalone tags, use plain \`\`\`tsx or \`\`\`json fences instead** — using retikz-* will be treated as a full diagram and will throw a parse error.
 
@@ -214,7 +214,7 @@ Coordinate = {
 
 ### When you need more depth
 
-For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / EdgeLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
+For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / StepLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
 
 - Positioning: \`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
 - IR: \`/kernel/components/layout/reference\` · \`/kernel/components/node/reference\` · \`/kernel/components/path/reference\`

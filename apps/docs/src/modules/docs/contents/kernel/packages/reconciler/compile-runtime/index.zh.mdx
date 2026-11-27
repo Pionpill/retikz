@@ -1,0 +1,142 @@
+---
+title: 执行 / 运行上下文
+description: 从运行环境的创建过程理解编译器共用的配置、宿主服务和当前场景输入
+---
+
+[编译调度](/kernel/packages/reconciler/compile-scheduling)决定各个步骤何时执行。运行环境（runtime）则为这些步骤提供公共的配置和服务，并记录本次编译的状态。其中，`context` 提供各步骤共同遵循的规则和可以调用的能力；`state` 记录执行中产生的中间结果，让后续步骤可以接着使用。
+
+## 整体流程
+
+收到根声明后，<ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/compile/runtime/runtime.ts" startLine={21}>`createCompileRuntime`</ApiSourceLink> 根据编译配置和当前输入建立上下文，并为这次执行分配新的状态。遍历声明树时，执行器读取上下文，随计算推进更新状态。整图收尾时，资源随图元进入 Scene，诊断随快照返回。
+
+<ComponentPreview files="runtime-storage" size="md" hideCode type="flow" />
+
+| 类型                                                                                                                                                                      | 重要成员                                 | 何时准备                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------- |
+| <ApiSourceLink label="SharedCompileContext" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={93}>`SharedCompileContext`</ApiSourceLink>        | `registries`、`host`、`layout`、`limits` | 从编译选项建立；根执行为宿主测量器加上独立缓存             |
+| <ApiSourceLink label="ExecutionCompileContext" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={189}>`ExecutionCompileContext`</ApiSourceLink> | `theme`、`compositeInputs`、`padding`    | 收到根声明后解析，不能从上一张图照搬                       |
+| <ApiSourceLink label="CompileState" path="packages/kernel/reconciler/src/compile/runtime/state/state.ts" startLine={23}>`CompileState`</ApiSourceLink>                    | `execution`、`workspace`、`composite`    | 创建根运行环境时分配，分别服务于树遍历、产物归集和组件试算 |
+
+执行器从 `runtime.context` 读取编译所需的配置和服务。它的类型 `CompileContext` 由两部分组成：一部分可以跨次编译共享，另一部分随本次编译的输入确定。
+
+```ts
+export type SharedCompileContext = Readonly<{
+  registries: CompileContextRegistries;
+  host: CompileContextHost;
+  layout: CompileContextLayout;
+  limits: CompileContextLimits;
+}>;
+
+export type ExecutionCompileContext = Readonly<{
+  compositeInputs: CompositeInputScope;
+  theme: CanonicalTheme;
+  padding?: CompileOptions['padding'];
+}>;
+
+export type CompileContext = SharedCompileContext & ExecutionCompileContext;
+```
+
+**Shared** 不依赖某一棵声明树。只要编译配置和宿主服务不变，多次执行就可以复用这部分。**Execution** 针对当前编译入口：本次使用哪些组件输入、哪个主题生效，以及自动视口留多少空白，都在创建根运行环境时确定。例如，两张图可以共用同一份主题注册表，却选用不同的主题。
+
+## registries：按声明找到实现
+
+注册表按能力分开，只有复合组件使用专门的索引类型（<ApiSourceLink label="CompileContextRegistries" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={45} endLine={64}>`CompileContextRegistries`</ApiSourceLink>）：
+
+```ts
+export type CompileContextRegistries = Readonly<{
+  shapeRegistry: ReadonlyMap<string, ShapeDefinition>;
+  boundaryRegistry: ReadonlyMap<string, BoundaryDefinition>;
+  clipRegistry: ReadonlyMap<string, ClipDefinition>;
+  arrowRegistry: ReadonlyMap<string, ArrowDefinition>;
+  markRegistry: ReadonlyMap<string, MarkDefinition>;
+  patternRegistry: ReadonlyMap<string, PatternDefinition>;
+  pathRegistry: ReadonlyMap<string, AnyPathDefinition>;
+  compositeRegistry: CompositeRegistry;
+  themeRegistry: ReadonlyMap<string, ThemeDefinition>;
+}>;
+```
+
+A 声明一种形状，编译器从 `shapeRegistry` 找形状定义；路径连接 A 时，连接面如何计算则由 `boundaryRegistry` 中的定义决定。注册表在创建上下文时合并内置定义和调用方定义，因此遍历时按声明的标识查找即可，不需要为每个节点重新组织这些定义。
+
+同样的分工也适用于路径、箭头、路径标记、图案、裁剪、复合组件和主题。注意这里的 `registries.clipRegistry` 保存的是**如何解释某种裁剪**的定义，不是这张图已经生成的裁剪资源。
+
+要扩展某项绘图能力，可以按注册表成员查找对应文档。例如，要控制路径在形状边界上的连接位置，可以从下表的 `boundaryRegistry` 进入「自定义连接面」。
+
+| 注册表成员          | 对应文档                                           |
+| ------------------- | -------------------------------------------------- |
+| `shapeRegistry`     | [自定义形状](/kernel/components/node/custom-shape) |
+| `boundaryRegistry`  | [自定义连接面](/kernel/components/node/custom)     |
+| `clipRegistry`      | [自定义裁剪区](/kernel/components/scope/custom)    |
+| `arrowRegistry`     | [自定义箭头](/kernel/components/path/custom-arrow) |
+| `markRegistry`      | [自定义标记](/kernel/components/path/custom-mark)  |
+| `patternRegistry`   | [自定义图案](/kernel/visual/style/custom-pattern)  |
+| `pathRegistry`      | [自定义路径](/kernel/components/path/custom-path)  |
+| `compositeRegistry` | [复合](/kernel/components/design/composite)        |
+| `themeRegistry`     | [主题](/kernel/components/design/theme)            |
+
+## host：把宿主能力接入编译
+
+执行器总能调用文字测量服务，TeX 转换则取决于宿主是否提供钩子（<ApiSourceLink label="CompileContextHost" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={67} endLine={72}>`CompileContextHost`</ApiSourceLink>）：
+
+```ts
+export type CompileContextHost = Readonly<{
+  measureText: NonNullable<CompileHostOptions['measureText']>;
+  lowerTex: CompileHostOptions['lowerTex'];
+}>;
+```
+
+`host.measureText` 是执行器请求文字度量的入口；宿主未提供实现时使用默认测量器。另一个成员 `lowerTex` 是可选的 TeX 转换钩子。根运行环境复用宿主服务，但会包装测量函数，因此**函数可以跨次复用，测量结果只在本次根编译中共享**。
+
+假设 A、B 都需要以相同字体测量「X」。第一次请求没有命中，<ApiSourceLink label="createCachedTextMeasurer" path="packages/kernel/reconciler/src/compile/runtime/text-cache.ts" startLine={5}>`createCachedTextMeasurer`</ApiSourceLink> 调用宿主测量器，保存宽、高、上升和下降距离。第二次请求即使来自另一棵子树，也可以直接取回度量值的副本。缓存键包含**文本、字号、字体族、字重和字形样式**，不含节点名和坐标。
+
+| 接下来的请求                                   | 是否再次调用宿主测量器           |
+| ---------------------------------------------- | -------------------------------- |
+| 同一次根编译，B 的位置不同，文本与字体参数相同 | 否，命中 A 请求时写入的度量值    |
+| 同一次根编译，B 使用一个尚未测过的字号         | 是，新键需要测量                 |
+| 请求显式设置 `disableCache`                    | 是，绕过缓存，既不读取也不写入   |
+| 开始下一次全量编译，首次测量相同的「X」        | 是，新的根运行环境有自己的空缓存 |
+
+## layout 与 limits：布局按什么尺度算，展开到哪里停止
+
+布局参数与执行限制分别由两个类型描述（<ApiSourceLink label="CompileContextLayout" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={75} endLine={82}>`CompileContextLayout`</ApiSourceLink>、<ApiSourceLink label="CompileContextLimits" path="packages/kernel/reconciler/src/compile/runtime/context.ts" startLine={85} endLine={90}>`CompileContextLimits`</ApiSourceLink>）：
+
+```ts
+export type CompileContextLayout = Readonly<
+  Required<Pick<CompileLayoutOptions, 'nodeDistance' | 'labelDistance'>> & {
+    round: (n: number) => number;
+    rootFontSize: NonNullable<CompileLayoutOptions['fontSize']>;
+  }
+>;
+
+export type CompileContextLimits = Readonly<{
+  maxCompositeDepth: NonNullable<CompileOptions['maxCompositeDepth']>;
+  maxClipDepth: NonNullable<CompileOptions['maxClipDepth']>;
+}>;
+```
+
+`layout.nodeDistance` 和 `layout.labelDistance` 分别提供相对定位和标签间距的默认值；`rootFontSize` 给预设字号与 rem 换算提供基准。输出精度则在创建上下文时转换成 `layout.round` 函数。整图收尾和资源登记使用同一舍入规则，不必各自解释精度选项。
+
+`limits` 不决定图形的大小。它约束编译工作量：`maxCompositeDepth` 限制复合组件递归展开的深度，`maxClipDepth` 限制一次裁剪转换允许访问的声明数量。前者看嵌套层数，后者不是视口上的几何裁剪范围。
+
+## theme、compositeInputs 与 padding：本次根声明带来了什么
+
+根运行环境在共享配置之上组装本次执行的上下文（<ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/compile/runtime/runtime.ts" startLine={27} endLine={33}>`createCompileRuntime`</ApiSourceLink>）：
+
+```ts
+context: {
+    ...shared,
+    host: { ...shared.host, measureText: createCachedTextMeasurer(shared.host.measureText) },
+    compositeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
+    theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', shared.registries.themeRegistry),
+    padding: options.padding,
+  },
+```
+
+`themeRegistry` 里可以有多个主题定义，`context.theme` 却是**当前生效的主题**：根执行从默认主题和根声明解析出它，进入有主题覆盖的 Scope 时再派生子树的有效主题。类似地，`compositeRegistry` 决定某类组件由谁实现，`compositeInputs` 则为当前组件实例提供输入。复用定义不意味着不同实例必须收到相同的数据。
+
+`padding` 直到整图收尾才用于自动视口：没有显式 viewBox 时，在子树的可见边界外留白；已有 viewBox 时按指定视口输出。因此增大它不会让 A 的文字变宽，也不会把 A、B 推远。
+
+## 延伸阅读
+
+- [执行 / 编译调度](/kernel/packages/reconciler/compile-scheduling)：沿着同一条连线，看路径何时读取已登记的几何。
+- [执行 / 运行状态](/kernel/packages/reconciler/compile-state)：看执行器如何记录和使用本次遍历产生的数据。

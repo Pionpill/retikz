@@ -16,84 +16,37 @@ describe('Layout API 公开范围', () => {
     expect(headings).not.toContain('Node');
     expect(headings).not.toContain('Scope');
 
-    for (const name of [
-      'scene',
-      'InputScene',
-      'InputSceneChildren',
-      'InputSceneLayers',
-      'layer',
-      'InputLayer',
-      'IRScene',
-      'IRViewBox',
-    ])
+    for (const name of ['scene', 'InputScene', 'layer', 'layerFromInput', 'InputLayer', 'IRScene', 'IRViewBox'])
       expect(headings).toContain(name);
 
     for (const owner of ['react', 'vanilla', 'core']) expect(source).toContain('## `@retikz/' + owner + '`');
 
-    expect(source).toContain('Members · Children');
-    expect(source).toContain('Members · Layers');
-    expect(source).toContain('normalization supplies the data version');
-    expect(source).toContain("IRScene['theme']");
-    expect(source).toContain('`compileDriver?`');
-
-    const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';
-    const fields = [...extensions.matchAll(/^\| `(?:readonly )?([^`?]+)\?` \|/gm)].map(match => match[1]);
-
-    expect(fields).toEqual([
-      'arrows',
-      'boundaries',
-      'clips',
-      'composites',
-      'paths',
-      'patterns',
-      'shapes',
-      'themeDefinitions',
-    ]);
-    expect(extensions).toContain('ReadonlyArray<ClipDefinition>');
-    expect(extensions).toContain('ReadonlyArray<AnyCompositeDefinition>');
-    expect(extensions).toContain('`BUILTIN_ARROWS`');
-    expect(extensions).toContain('`[]`');
-    expect(extensions).toContain('`ThemeDefinitionsContext`');
-    expect(extensions).not.toContain('import("');
-    expect(extensions).not.toContain('$ZodTypeInternals');
-    expect(extensions).toContain('<DocTabs defaultValue="members">');
-    expect(extensions).toMatch(
-      /\| Member \|[\s\S]*<DocTab value="definition" label="Type definition">[\s\S]*export type LayoutExtensions = Readonly<\{/,
-    );
+    const sceneInput = source.split('### InputScene\n')[1]?.split('\n### ')[0] ?? '';
+    const layerInput = source.split('### InputLayer\n')[1]?.split('\n### ')[0] ?? '';
+    expect(sceneInput).toContain('ReadonlyArray<InputChild>');
+    expect(sceneInput).not.toContain('`layers`');
+    expect(layerInput).toContain('scene: IRScene;');
+    expect(layerInput).toContain('config?: ProcessOptions');
 
     const layoutProps = source.split('### Layout / LayoutProps\n')[1]?.split('\n### ')[0] ?? '';
 
-    expect(layoutProps).toContain('| Group | Member | Type | Default | Description |');
+    const irBranch = layoutProps.split('<DocTab value="ir"')[1]?.split('</DocTab>')[0];
+    const jsxBranch = layoutProps.split('<DocTab value="children"')[1]?.split('</DocTab>')[0];
+    expect(irBranch).toContain('`ir`');
+    expect(irBranch).toContain('`children?` | `never`');
+    expect(irBranch).toContain('`rootScope?` | `never`');
+    expect(jsxBranch).toContain('`rootScope?` | `ScopeStyleProps`');
+    expect(jsxBranch).toContain('`children`');
+    expect(jsxBranch).toContain('`ir?` | `never`');
     expect(layoutProps).toMatch(
-      /```ts\n(?:(?!```)[\s\S])*export declare const Layout: FC<LayoutProps>;(?:(?!```)[\s\S])*export type LayoutProps = \{/,
+      /```ts\n(?:(?!```)[\s\S])*export declare const Layout: FC<LayoutProps>;(?:(?!```)[\s\S])*export type LayoutProps = Omit<SceneOptions,/,
     );
     expect(layoutProps).toContain('`computeDisplaySize`');
 
-    const runtimeMode = source.split('### LayoutRuntimeMode\n')[1]?.split('\n### ')[0] ?? '';
-
-    expect(headings.filter(name => name === 'LayoutRuntimeMode')).toHaveLength(1);
-    expect(runtimeMode).toContain('export const LayoutRuntimeMode = Object.freeze({');
-    expect(runtimeMode).toContain("Retained: 'retained'");
-    expect(runtimeMode).toContain("Static: 'static'");
-    expect(runtimeMode).toContain('export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;');
-
-    const runtimeOptions = source.split('### LayoutRuntimeOptions\n')[1]?.split('\n### ')[0] ?? '';
-
-    expect(runtimeOptions.match(/<DocTabs\b/g)).toHaveLength(1);
-    expect(runtimeOptions).toContain('<DocTabs defaultValue="retained">');
-    expect(runtimeOptions).toContain('<DocTab value="retained" label="Members · Retained">');
-    expect(runtimeOptions).toContain('<DocTab value="static" label="Members · Static">');
-    expect(runtimeOptions).toContain('<DocTab value="definition" label="Type definition">');
-
-    const staticBranch =
-      runtimeOptions.split('<DocTab value="static" label="Members · Static">')[1]?.split('</DocTab>')[0] ?? '';
-
-    expect(staticBranch).toContain('`typeof LayoutRuntimeMode.Static`');
-    expect(staticBranch).toMatch(/`readonly updateStrategy\?` \| `never`/);
-    expect(runtimeOptions).toContain(
-      'export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;',
-    );
-    expect(extensions).not.toContain('<details>');
+    expect(layoutProps).toContain('SceneViewOptions');
+    expect(layoutProps).toContain('readonly compile?');
+    expect(layoutProps).toContain('readonly reconciler?');
+    expect(layoutProps).toContain('onDiagnostic');
     expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
 
     const paths = [...source.matchAll(/path=\{"([^"}]+)"\}/g)].map(match => match[1]);

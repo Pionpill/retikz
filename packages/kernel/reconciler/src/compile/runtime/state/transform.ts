@@ -16,7 +16,7 @@ export class ScopeTransformComposer {
   >();
 
   /** 获取变换链的合成结果；空链复用单位变换，非空链仅在首次访问时计算 */
-  readonly resolve = (chain: ReadonlyArray<Transform>): ComposedScopeTransform => {
+  resolve(chain: ReadonlyArray<Transform>): ComposedScopeTransform {
     if (chain.length === 0) return composeScopeTransform(chain);
     let value = this.transformCache.get(chain);
     if (value === undefined) {
@@ -24,7 +24,7 @@ export class ScopeTransformComposer {
       this.transformCache.set(chain, value);
     }
     return value;
-  };
+  }
 
   /**
    * 将一组变换插入原链指定位置，并缓存组合链与合成结果
@@ -33,11 +33,11 @@ export class ScopeTransformComposer {
    * @param transforms 保持自身顺序插入的变换序列
    * @returns 非空组合返回新链或已有缓存；任一输入为空时直接复用另一输入
    */
-  readonly insert = (
+  insert(
     chain: ReadonlyArray<Transform>,
     index: number,
     transforms: ReadonlyArray<Transform>,
-  ): ReadonlyArray<Transform> => {
+  ): ReadonlyArray<Transform> {
     if (transforms.length === 0) return chain;
     if (chain.length === 0) return transforms;
     // 逐层定位原链、插入序列和位置，避免重复构造同一组合的数组
@@ -65,17 +65,20 @@ export class ScopeTransformComposer {
     this.transformCache.set(next, value);
     byIndex.set(index, next);
     return next;
-  };
+  }
 
   /** 在祖先链末尾追加当前层变换，复用插入缓存 */
-  readonly append = (chain: ReadonlyArray<Transform>, transforms: ReadonlyArray<Transform>) =>
-    this.insert(chain, chain.length, transforms);
+  append(chain: ReadonlyArray<Transform>, transforms: ReadonlyArray<Transform>) {
+    return this.insert(chain, chain.length, transforms);
+  }
 
   /** 将局部点按给定链投影到全局坐标，复用合成结果 */
-  readonly apply = (point: IRPosition, chain: ReadonlyArray<Transform>) =>
-    applyScopeTransform(point, this.resolve(chain));
+  apply(point: IRPosition, chain: ReadonlyArray<Transform>) {
+    return applyScopeTransform(point, this.resolve(chain));
+  }
 
   /** 将全局点反投影到给定链的局部坐标；链包含零缩放轴时抛出不可逆错误 */
-  readonly inverse = (point: IRPosition, chain: ReadonlyArray<Transform>) =>
-    inverseScopeTransform(point, this.resolve(chain));
+  inverse(point: IRPosition, chain: ReadonlyArray<Transform>) {
+    return inverseScopeTransform(point, this.resolve(chain));
+  }
 }

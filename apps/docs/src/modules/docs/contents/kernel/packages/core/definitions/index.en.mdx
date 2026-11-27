@@ -1,5 +1,5 @@
 ---
-title: Capability Registration
+title: Basics / Capability Registration
 description: Understand Core entities, extension contracts and how registered definitions participate in resolution and compilation
 ---
 
@@ -67,7 +67,7 @@ const pair = defineComposite({
   }),
 });
 
-const reconciler = new SceneReconciler({ composites: [pair] }, { incremental: false });
+const reconciler = new SceneReconciler({ composites: [pair] });
 try {
   const output = reconciler.mount({
     type: 'scene',

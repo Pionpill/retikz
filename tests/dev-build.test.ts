@@ -146,7 +146,7 @@ test('Node/tsx 源码入口预加载宏，开发提示和生产诊断均可用',
       { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }
     ] };
     for (const options of [{}, { onWarn: warning => console.log(warning.code) }]) {
-      const reconciler = new SceneReconciler(options, { incremental: false });
+      const reconciler = new SceneReconciler(options);
       try {
         reconciler.mount(scene);
       } finally {

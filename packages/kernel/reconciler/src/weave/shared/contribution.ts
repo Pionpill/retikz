@@ -46,6 +46,8 @@ export const collectContributionResources = (
   primitives: Array<ScenePrimitive>,
   resources: SceneResources,
 ): SceneResources => {
+  // ⚡没有候选资源时，无需遍历图元收集引用
+  if (resources.paints.length === 0 && resources.clips.length === 0) return { paints: [], clips: [] };
   const retained = new Set<string>();
   visitSceneContent({ primitives, resources }, primitive => {
     if (primitive.type === 'group') {

@@ -47,7 +47,7 @@ To declare IR and compile it directly, use Core's types and Reconciler's executi
 
 <PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
 
-Import `IRScene` from Core to declare the scene, and `SceneReconciler` from Reconciler to execute it. This example performs one full compilation, using `incremental: false` to disable state retention for later incremental updates. `mount(ir)` establishes the session's first result; `compilation.result.scene` is the Scene that can be passed to a renderer.
+Import `IRScene` from Core to declare the scene, and `SceneReconciler` from Reconciler to execute it. This example performs one full compilation, using the default full mode without state retention for later incremental updates. `mount(ir)` establishes the session's first result; `compilation.result.scene` is the Scene that can be passed to a renderer.
 
 ```ts
 import type { IRScene } from '@retikz/core';
@@ -69,7 +69,7 @@ const ir: IRScene = {
   ],
 };
 
-const reconciler = new SceneReconciler({}, { incremental: false });
+const reconciler = new SceneReconciler();
 
 try {
   const { compilation } = reconciler.mount(ir);
@@ -109,52 +109,52 @@ The existing topic pages are listed below. Within each process, execution order 
 <LinkedSections
   items={[
     {
-      title: 'Semantic Resolution',
+      title: 'Basics / Semantic Resolution',
       description: 'Follow IR, Schema and semantic resolution',
       url: '/kernel/packages/core/resolution',
     },
     {
-      title: 'Capability Registration',
+      title: 'Basics / Capability Registration',
       description: 'Follow capability contracts, keys and consumers',
       url: '/kernel/packages/core/definitions',
     },
     {
-      title: 'Capability Dependencies',
+      title: 'Basics / Capability Dependencies',
       description: 'Follow provider contributions, dependencies and built-ins',
       url: '/kernel/packages/core/providers',
     },
     {
-      title: 'Compilation Flow',
+      title: 'Compilation / Overview',
       description: 'Connect resolve, compile and entity dependencies',
       url: '/kernel/packages/core/compilation',
     },
     {
-      title: 'Coordinate Evaluation',
+      title: 'Compilation / Coordinate',
       description: 'Follow reference reads and spatial evaluation',
       url: '/kernel/packages/core/coordinates',
     },
     {
-      title: 'Node Compilation',
+      title: 'Compilation / Node',
       description: 'Follow text measurement, shape layout and emission',
       url: '/kernel/packages/core/node-compilation',
     },
     {
-      title: 'Path Compilation',
+      title: 'Compilation / Path',
       description: 'Follow target binding, path geometry and decorations',
       url: '/kernel/packages/core/path-compilation',
     },
     {
-      title: 'Scope Compilation',
+      title: 'Compilation / Scope',
       description: 'Follow inheritance, child layout and local transforms',
       url: '/kernel/packages/core/scope-compilation',
     },
     {
-      title: 'Composite Compilation',
+      title: 'Compilation / Composite',
       description: 'Follow child generation, layout and domain artifacts',
       url: '/kernel/packages/core/composite-compilation',
     },
     {
-      title: 'Compilation Output',
+      title: 'Compilation / Output Artifacts',
       description: 'Understand primitive, resource and output contracts',
       url: '/kernel/packages/core/compilation-output',
     },

@@ -91,7 +91,7 @@ Add the `Fundamentals` gray mini button and the `Choose your path` sub-header be
 
 Add two independent stacks — 4 dodgerblue "required" buttons on the left, 2 legend buttons on the right (1 dodgerblue + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/kernel/components/basic/position) `{ direction: 'bottom', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
 
-- `<Layout ... nodeDistance={34.85}>` sets the global node distance on the container
+- `<Layout ... compile={{ nodeDistance: 34.85 }}>` sets the global node distance on the container
 - Each AtPosition node references the previous node's id, gluing them visually into a "color bar"
 
 ```tsx

@@ -1,0 +1,794 @@
+import type { IRScene, Scene } from '@retikz/core';
+import type { PerformanceTraceSink } from '@retikz/foundation';
+import { isRetikzError } from '@retikz/foundation';
+import { SceneReconciler } from '@retikz/reconciler';
+import type { ReconcilerPreparedCommit } from '@retikz/reconciler';
+import { describe, expect, it, vi } from 'vitest';
+
+import type { SceneRuntimeSnapshot, InputRenderRuntimeConfig, RendererFactory, RendererRead } from '../../src/runtime';
+import {
+  createRenderTarget,
+  defineRenderer,
+  isRetikzRenderError,
+  prepareRuntimeConfig,
+  RendererCapability,
+  RetikzRenderError,
+  RetikzRenderErrorCode,
+} from '../../src/runtime';
+import type { ScenePatch } from '../../src/scene';
+
+const scene = (text: string): IRScene => ({
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'node-a', position: [0, 0], text }],
+});
+
+const svgHost = Object.freeze({ tagName: 'svg', namespaceURI: 'http://www.w3.org/2000/svg' }) as SVGSVGElement;
+
+const canvasHost = Object.freeze({ tagName: 'canvas' }) as HTMLCanvasElement;
+
+const noopToken = (): ReconcilerPreparedCommit =>
+  Object.freeze({
+    commit: () => undefined,
+    rollback: () => undefined,
+    dispose: () => undefined,
+  });
+
+const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity') => {
+  let current: SceneRuntimeSnapshot | undefined;
+  const patches: Array<ScenePatch> = [];
+  const prepareMount = vi.fn((snapshot: SceneRuntimeSnapshot) => {
+    const previous = current;
+    return Object.freeze({
+      commit: () => {
+        current = snapshot;
+      },
+      rollback: () => {
+        current = previous;
+      },
+      dispose: () => undefined,
+    });
+  });
+  const prepare = vi.fn((patch: ScenePatch, snapshot: SceneRuntimeSnapshot) => {
+    const previous = current;
+    return Object.freeze({
+      commit: () => {
+        patches.push(patch);
+        current = snapshot;
+      },
+      rollback: () => {
+        current = previous;
+      },
+      dispose: () => undefined,
+    });
+  });
+  const read = vi.fn(() => {
+    if (current === undefined) throw new Error('renderer is not committed');
+    return Object.freeze({ snapshot: current });
+  });
+  const renderer = defineRenderer({
+    backend: 'svg',
+    host: svgHost,
+    capability,
+    prepareMount,
+    prepare,
+    read,
+    dispose: vi.fn(),
+  });
+
+  return { renderer, prepareMount, prepare, read, patches };
+};
+
+const createHarness = (
+  capability: 'none' | 'group' | 'entity' = 'entity',
+  initialScene: IRScene = scene('A'),
+  trace?: PerformanceTraceSink,
+  expectedInitialScene?: Scene,
+) => {
+  const renderer = createRendererHarness(capability);
+  let config: InputRenderRuntimeConfig = {};
+  const factory = vi.fn(() => renderer.renderer) as unknown as RendererFactory;
+  const handle = createRenderTarget({
+    trace,
+    expectedInitialScene,
+    backend: 'svg',
+    host: svgHost,
+    rendererFactory: factory,
+    immutableOptions: { backend: 'svg', idPrefix: 'test' },
+    configuration: () => config,
+  });
+  const session = Object.assign(
+    new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }),
+    {
+      updateConfig: (next: InputRenderRuntimeConfig) => {
+        const previous = config;
+        config = next;
+        try {
+          return session.updateTarget();
+        } catch (cause) {
+          config = previous;
+          throw cause;
+        }
+      },
+    },
+  );
+  session.mount(initialScene);
+  return { renderer, handle, session, factory };
+};
+
+describe('@retikz/render/runtime 公共契约', () => {
+  it('公开稳定错误码、具名错误和类型守卫', () => {
+    const cause = new Error('invalid patch');
+    const details = { source: 'test' };
+    const error = new RetikzRenderError({
+      code: RetikzRenderErrorCode.RuntimeScenePatchInvalid,
+      cause,
+      details,
+    });
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe('RetikzRenderError');
+    expect(error.code).toBe(RetikzRenderErrorCode.RuntimeScenePatchInvalid);
+    expect(error.cause).toBe(cause);
+    expect(error.details).toBe(details);
+    expect(Object.isFrozen(error.details)).toBe(false);
+    expect(isRetikzError(error)).toBe(true);
+    expect(Object.hasOwn(error, 'cause')).toBe(true);
+    expect(Object.getOwnPropertyNames(error)).toContain('cause');
+    expect(isRetikzRenderError(error)).toBe(true);
+    expect(isRetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchInvalid })).toBe(false);
+  });
+
+  it('省略时保留自己的 undefined 原因', () => {
+    const error = new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
+
+    expect(error).toBeInstanceOf(RetikzRenderError);
+    expect(error.name).toBe('RetikzRenderError');
+    expect(error.message).toBe(RetikzRenderErrorCode.RuntimeRendererDisposed);
+    expect(error.details).toEqual({ code: RetikzRenderErrorCode.RuntimeRendererDisposed });
+    expect(Object.isFrozen(error.details)).toBe(true);
+    expect(Object.hasOwn(error, 'cause')).toBe(true);
+    expect(error.cause).toBeUndefined();
+    expect(Object.getOwnPropertyNames(error)).toContain('cause');
+    expect(isRetikzError(error)).toBe(true);
+    expect(isRetikzRenderError(error)).toBe(true);
+  });
+
+  it('以判别联合绑定 backend、host 和 immutable options', () => {
+    const svgRenderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: RendererCapability.Entity,
+      prepareMount: noopToken,
+      prepare: noopToken,
+      read: () => {
+        throw new Error('unused');
+      },
+      dispose: () => undefined,
+    });
+
+    expect(Object.isFrozen(svgRenderer)).toBe(true);
+    expect(svgRenderer).toEqual({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+    });
+    expect('read' in svgRenderer).toBe(false);
+    expect('prepare' in svgRenderer).toBe(false);
+  });
+
+  it('拒绝无法与宿主 provenance 对齐的 renderer backend', () => {
+    expect(() =>
+      defineRenderer({
+        backend: 'webgl',
+        host: canvasHost,
+        capability: 'entity',
+        prepareMount: noopToken,
+        prepare: noopToken,
+        read: () => {
+          throw new Error('unused');
+        },
+        dispose: () => undefined,
+      } as unknown as Parameters<typeof defineRenderer>[0]),
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererInvalid }));
+  });
+
+  it('把 renderer Proxy getter throw 收敛为稳定 renderer error', () => {
+    const getterFailure = new Error('getter failed');
+    const input = new Proxy({} as Parameters<typeof defineRenderer>[0], {
+      get: () => {
+        throw getterFailure;
+      },
+    });
+
+    expect(() => defineRenderer(input)).toThrowError(
+      expect.objectContaining({
+        code: RetikzRenderErrorCode.RuntimeRendererInvalid,
+        cause: getterFailure,
+      }),
+    );
+  });
+});
+
+describe('prepareRuntimeConfig', () => {
+  it('借用有序配置，不冻结调用方的 handlers', () => {
+    const click = vi.fn();
+    const protoClick = vi.fn();
+    const input = {
+      handlerContributions: [
+        {
+          registration: 0,
+          handlers: { node: { click }, ['__proto__']: { click: protoClick } },
+        },
+      ],
+      animation: { enabled: true, snapshotAt: 12 },
+      canvas: { width: 320, height: 180 },
+      cachePolicy: 'static' as const,
+    };
+
+    const config = prepareRuntimeConfig(input);
+    expect(config).toBe(input);
+    expect(config.handlerContributions?.[0]?.handlers.node?.click).toBe(click);
+    expect(config.handlerContributions?.[0]?.handlers['__proto__']?.click).toBe(protoClick);
+    expect(Object.isFrozen(input.handlerContributions[0].handlers.node)).toBe(false);
+  });
+
+  it('按 registration 排序，并拒绝重复 registration 与非法动态字段', () => {
+    const inputConfig = {
+      handlerContributions: [
+        { registration: 2, handlers: {} },
+        { registration: 0, handlers: {} },
+      ],
+    };
+    const sorted = prepareRuntimeConfig(inputConfig);
+    expect(inputConfig.handlerContributions.map(item => item.registration)).toEqual([2, 0]);
+    expect(sorted.handlerContributions?.map(item => item.registration)).toEqual([0, 2]);
+
+    for (const input of [
+      {
+        handlerContributions: [
+          { registration: 0, handlers: {} },
+          { registration: 0, handlers: {} },
+        ],
+      },
+      { animation: { snapshotAt: Number.NaN } },
+      { canvas: { width: -1 } },
+      { canvas: { height: Number.POSITIVE_INFINITY } },
+    ]) {
+      try {
+        prepareRuntimeConfig(input);
+        throw new Error('expected invalid config to fail');
+      } catch (error) {
+        expect(error).toEqual(
+          expect.objectContaining({
+            code: RetikzRenderErrorCode.RuntimeInputInvalid,
+          }),
+        );
+      }
+    }
+  });
+});
+
+describe('createRenderTarget', () => {
+  it('首次准备失败后释放尚未取得 lease ownership 的 renderer', () => {
+    const dispose = vi.fn();
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'none',
+      prepareMount: () => {
+        throw new Error('prepare failed');
+      },
+      prepare: () => noopToken(),
+      read: () => {
+        throw new Error('not mounted');
+      },
+      dispose,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: vi.fn(() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'failed' },
+      configuration: () => ({}),
+    });
+    const session = new SceneReconciler({}, { target: handle.target, captureProvenance: true });
+    expect(() => session.mount(scene('A'))).toThrow();
+    session.dispose();
+    session.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('拒绝与主图不匹配的 SVG 初始 Scene', () => {
+    const expected: Scene = { layout: { x: 0, y: 0, width: 1, height: 1 }, primitives: [] };
+    expect(() => createHarness('entity', scene('A'), undefined, expected)).toThrowError(
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeRendererInitialFrameMismatch }),
+    );
+  });
+
+  it('initial mount 后只经 session committed cache 暴露 renderer read', () => {
+    const { renderer, handle, factory } = createHarness();
+
+    expect(factory).toHaveBeenCalledTimes(1);
+    expect(renderer.prepareMount).toHaveBeenCalledTimes(1);
+    expect(renderer.read).toHaveBeenCalledTimes(1);
+
+    const first = handle.read();
+
+    expect(first.snapshot.revision).toBe(0);
+    expect(handle.read()).toBe(first);
+    expect(renderer.read).toHaveBeenCalledTimes(1);
+  });
+
+  it('Core update 原子提交 Patch 与 next snapshot', () => {
+    const trace = vi.fn();
+    const initial = {
+      ...scene('A'),
+      children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }],
+    };
+    const { renderer, handle, session } = createHarness('entity', initial, trace);
+    const previous = handle.read();
+
+    session.replace({
+      ...initial,
+      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
+    });
+
+    const next = handle.read();
+
+    expect(next).not.toBe(previous);
+    expect(next.snapshot.revision).toBe(1);
+    expect(next.snapshot.root).toEqual({ owner: 'kernel', path: ['root'] });
+    expect(trace.mock.calls.map(([record]) => [record.owner, record.phase])).toEqual([
+      ['kernel/render/svg', 'commit'],
+      ['kernel/render/svg', 'update'],
+    ]);
+    expect(renderer.prepare).toHaveBeenCalledTimes(1);
+    expect(renderer.read).toHaveBeenCalledTimes(2);
+    expect(renderer.patches[0]).toMatchObject({ baseRevision: 0, nextRevision: 1 });
+    expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
+  });
+
+  it('config-only update 以 empty Patch 连续推进 lineage，prepare 前不调用 read', () => {
+    const { renderer, handle, session } = createHarness();
+    const callsBefore = renderer.read.mock.calls.length;
+
+    session.updateConfig({
+      animation: { enabled: false },
+      cachePolicy: 'dynamic',
+    });
+
+    expect(renderer.prepare).toHaveBeenCalledTimes(1);
+    expect(renderer.prepare.mock.invocationCallOrder[0]).toBeLessThan(
+      renderer.read.mock.invocationCallOrder.at(-1) ?? 0,
+    );
+    expect(renderer.read).toHaveBeenCalledTimes(callsBefore + 1);
+    expect(renderer.patches[0]).toEqual({ baseRevision: 0, nextRevision: 1, operations: [] });
+    expect(handle.read().snapshot.revision).toBe(1);
+  });
+
+  it('renderer read 与 committed lineage 不一致时回滚并保留旧 public read', () => {
+    const renderer = createRendererHarness();
+    const originalRead = renderer.renderer;
+    void originalRead;
+
+    let stale: SceneRuntimeSnapshot | undefined;
+    const mismatching = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: snapshot => {
+        stale = snapshot;
+        return noopToken();
+      },
+      prepare: () => noopToken(),
+      read: () => {
+        if (stale === undefined) throw new Error('missing snapshot');
+        return Object.freeze({ snapshot: stale });
+      },
+      dispose: () => undefined,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => mismatching) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'stale' },
+      configuration: () => ({}),
+    });
+
+    const session = new SceneReconciler(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('A'));
+    const before = handle.read();
+
+    expect(() => session.updateTarget()).toThrowError(RetikzRenderError);
+    expect(session.read().revision).toBe(0);
+    expect(handle.read()).toBe(before);
+
+    expect(() => session.replace(scene('B'))).toThrowError(RetikzRenderError);
+    expect(session.read().revision).toBe(0);
+    expect(handle.read()).toBe(before);
+  });
+
+  it('结构等价但可变的第三方 snapshot 不会泄漏到 committed public read', () => {
+    let committed: SceneRuntimeSnapshot | undefined;
+    let exposedClone: SceneRuntimeSnapshot | undefined;
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: snapshot => {
+        committed = snapshot;
+        return noopToken();
+      },
+      prepare: (_patch, snapshot) => {
+        committed = snapshot;
+        return noopToken();
+      },
+      read: () => {
+        if (committed === undefined) throw new Error('missing committed snapshot');
+        exposedClone = structuredClone(committed);
+        return { snapshot: exposedClone };
+      },
+      dispose: () => undefined,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'mutable-read' },
+      configuration: () => ({}),
+    });
+
+    const session = new SceneReconciler(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('A'));
+    const read = handle.read();
+    if (exposedClone === undefined) throw new Error('expected renderer clone');
+
+    (exposedClone as unknown as { scene: { layout: { width: number } } }).scene.layout.width = 999;
+
+    expect(read.snapshot).not.toBe(exposedClone);
+    expect(read.snapshot.scene.layout.width).not.toBe(999);
+    expect(Object.isFrozen(read.snapshot.scene.layout)).toBe(true);
+  });
+
+  it('invalid renderer cleanup throw 不覆盖稳定 primary error', () => {
+    const disposeFailure = new Error('cleanup failed');
+    const mismatching = defineRenderer({
+      backend: 'canvas',
+      host: canvasHost,
+      capability: 'entity',
+      prepareMount: noopToken,
+      prepare: noopToken,
+      read: () => {
+        throw new Error('unused');
+      },
+      dispose: () => {
+        throw disposeFailure;
+      },
+    });
+
+    try {
+      createRenderTarget({
+        backend: 'svg',
+        host: svgHost,
+        rendererFactory: (() => mismatching) as unknown as RendererFactory,
+        immutableOptions: { backend: 'svg', idPrefix: 'mismatch' },
+        configuration: () => ({}),
+      });
+      throw new Error('expected renderer mismatch');
+    } catch (error) {
+      expect(error).toEqual(
+        expect.objectContaining({
+          code: RetikzRenderErrorCode.RuntimeRendererInvalid,
+          cause: expect.objectContaining({ renderer: mismatching, disposeFailure }),
+        }),
+      );
+    }
+  });
+
+  it('公开 Runtime 仅重试失败 renderer cleanup，成功后进入幂等 disposed 状态', () => {
+    const disposeFailure = new Error('dispose rejected');
+    let remainingFailures = 2;
+    const dispose = vi.fn(() => {
+      if (remainingFailures > 0) {
+        remainingFailures -= 1;
+        throw disposeFailure;
+      }
+    });
+    let current: SceneRuntimeSnapshot | undefined;
+
+    const prepare = (snapshot: SceneRuntimeSnapshot): ReconcilerPreparedCommit => {
+      const previous = current;
+      return Object.freeze({
+        commit: () => {
+          current = snapshot;
+        },
+        rollback: () => {
+          current = previous;
+        },
+        dispose: () => undefined,
+      });
+    };
+
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: prepare,
+      prepare: (_patch, snapshot) => prepare(snapshot),
+      read: () => {
+        if (current === undefined) throw new Error('renderer is not committed');
+        return Object.freeze({ snapshot: current });
+      },
+      dispose,
+    });
+
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'dispose-retry' },
+      configuration: () => ({}),
+    });
+
+    const session = new SceneReconciler(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('dispose'));
+
+    expect(() => session.dispose()).not.toThrow();
+    expect(dispose).toHaveBeenCalledTimes(1);
+    expect(session.diagnostics()).toEqual([
+      expect.objectContaining({ code: 'RECONCILER_CLEANUP_FAILED', cause: disposeFailure }),
+    ]);
+    expect(() => handle.read()).toThrowError(
+      expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch }),
+    );
+
+    expect(() => session.dispose()).not.toThrow();
+    expect(() => session.dispose()).not.toThrow();
+    expect(dispose).toHaveBeenCalledTimes(3);
+  });
+
+  it('在 factory 前拒绝 backend/host mismatch，并以 Render error 暴露 cause', () => {
+    const factory = vi.fn();
+
+    expect(() =>
+      createRenderTarget({
+        backend: 'svg',
+        host: Object.freeze({ tagName: 'canvas' }) as unknown as SVGSVGElement,
+        rendererFactory: factory as RendererFactory,
+        immutableOptions: { backend: 'svg', idPrefix: 'invalid' },
+        configuration: () => ({}),
+      }),
+    ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid }));
+    expect(factory).not.toHaveBeenCalled();
+  });
+
+  it('把 participant options getter throw 收敛为稳定 input error', () => {
+    const getterFailure = new Error('options getter failed');
+    const options = new Proxy({} as Parameters<typeof createRenderTarget>[0], {
+      get: () => {
+        throw getterFailure;
+      },
+    });
+
+    expect(() => createRenderTarget(options)).toThrowError(
+      expect.objectContaining({
+        code: RetikzRenderErrorCode.RuntimeParticipantInputInvalid,
+        cause: getterFailure,
+      }),
+    );
+  });
+
+  it('把 renderer 未知 prepare throw 包装为稳定 RetikzRenderError cause', () => {
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: () => {
+        throw new Error('renderer failed');
+      },
+      prepare: noopToken,
+      read: () => {
+        throw new Error('unused');
+      },
+      dispose: () => undefined,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'throw' },
+      configuration: () => ({}),
+    });
+
+    try {
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      );
+      throw new Error('expected create to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(RetikzRenderError);
+
+      const runtime = error as RetikzRenderError;
+
+      expect(runtime.code).toBe(RetikzRenderErrorCode.RuntimeRendererPrepareFailed);
+      expect(runtime.cause).toEqual(expect.objectContaining({ message: 'renderer failed' }));
+    }
+  });
+
+  it('保留 renderer prepare 已抛出的 RetikzRenderError identity 与 code', () => {
+    const expected = new RetikzRenderError({
+      code: RetikzRenderErrorCode.RuntimeScenePatchInvalid,
+      cause: Object.freeze({ fixture: true }),
+    });
+
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: () => {
+        throw expected;
+      },
+      prepare: noopToken,
+      read: () => {
+        throw new Error('unused');
+      },
+      dispose: () => undefined,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'session-error' },
+      configuration: () => ({}),
+    });
+
+    try {
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      );
+      throw new Error('expected create to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(RetikzRenderError);
+      expect(error).toBe(expected);
+    }
+  });
+
+  it('把 renderer read getter throw 包装为稳定 snapshot mismatch cause', () => {
+    const getterFailure = new Error('read getter failed');
+
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: noopToken,
+      prepare: noopToken,
+      read: () =>
+        new Proxy({} as RendererRead, {
+          get: () => {
+            throw getterFailure;
+          },
+        }),
+      dispose: () => undefined,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'read-getter' },
+      configuration: () => ({}),
+    });
+
+    try {
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      );
+      throw new Error('expected create to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(RetikzRenderError);
+
+      const runtime = error as RetikzRenderError;
+
+      expect(runtime.code).toBe(RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch);
+      expect(runtime.cause).toBe(getterFailure);
+    }
+  });
+
+  it('在 publish 前拒绝 malformed AnimationControls', () => {
+    let committed: SceneRuntimeSnapshot | undefined;
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: snapshot => {
+        committed = snapshot;
+        return noopToken();
+      },
+      prepare: noopToken,
+      read: () => {
+        if (committed === undefined) throw new Error('missing snapshot');
+        return { snapshot: committed, animation: {} as NonNullable<RendererRead['animation']> };
+      },
+      dispose: () => undefined,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'malformed-animation' },
+      configuration: () => ({}),
+    });
+
+    expect(() =>
+      new SceneReconciler({ onWarn: () => undefined }, { target: handle.target, captureProvenance: true }).mount(
+        scene('A'),
+      ),
+    ).toThrowError(
+      expect.objectContaining({
+        code: RetikzRenderErrorCode.RuntimeRendererInvalid,
+      }),
+    );
+  });
+
+  it('固定捕获 AnimationControls callback 与 data state，不保留可变容器 alias', () => {
+    let committed: SceneRuntimeSnapshot | undefined;
+    const originalPlay = vi.fn();
+    const replacementPlay = vi.fn();
+    const controls = {
+      play: originalPlay,
+      pause: vi.fn(),
+      seek: vi.fn(),
+      dispose: vi.fn(),
+      time: 12,
+      running: false,
+    };
+    const renderer = defineRenderer({
+      backend: 'svg',
+      host: svgHost,
+      capability: 'entity',
+      prepareMount: snapshot => {
+        committed = snapshot;
+        return noopToken();
+      },
+      prepare: noopToken,
+      read: () => {
+        if (committed === undefined) throw new Error('missing snapshot');
+        return { snapshot: committed, animation: controls };
+      },
+      dispose: () => undefined,
+    });
+    const handle = createRenderTarget({
+      backend: 'svg',
+      host: svgHost,
+      rendererFactory: (() => renderer) as unknown as RendererFactory,
+      immutableOptions: { backend: 'svg', idPrefix: 'animation-capture' },
+      configuration: () => ({}),
+    });
+
+    const session = new SceneReconciler(
+      { onWarn: () => undefined },
+      { target: handle.target, captureProvenance: true },
+    );
+    session.mount(scene('A'));
+    const animation = handle.read().animation;
+    if (animation === undefined) throw new Error('expected animation controls');
+
+    controls.play = replacementPlay;
+    controls.time = 99;
+    animation.play();
+
+    expect(originalPlay).toHaveBeenCalledTimes(1);
+    expect(replacementPlay).not.toHaveBeenCalled();
+    expect(animation.time).toBe(12);
+    expect(Object.isFrozen(animation)).toBe(true);
+  });
+});

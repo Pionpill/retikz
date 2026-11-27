@@ -11,6 +11,7 @@
 | 形式                                 | 作用                                                                    | 边界                                                                  |
 | ------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | `parseXxx`                           | 把 unknown、JSON、字符串或序列化 DSL 解析为 IR                          | 不接收编译 context，不承担 Vanilla authoring 组装                     |
+| `mergeXxx`                           | 按优先级合并多份同类配置，如 `mergeLayerOptions`                        | 即使补默认值或按模式筛选字段，也不因此称为 `resolve` 或 `normalize`   |
 | `normalizeXxx`                       | 在 Vanilla API 中把 `InputXxx` 组装为 IR                                | 不承担外部 unknown 校验或内部领域确定化                               |
 | `resolveXxx`                         | 结合窄语义上下文把内部数据确定为 Canonical / Resolution                 | 不依赖编译执行状态，不 parse unknown，不 emit Scene / primitive       |
 | `evaluateXxx`                        | 在 compile / pipeline 中结合运行时状态、引用结果或坐标变换对表达式求值  | 与 resolve 的配置确定化分开；不用于一般状态读写或调度，不新增处理阶段 |

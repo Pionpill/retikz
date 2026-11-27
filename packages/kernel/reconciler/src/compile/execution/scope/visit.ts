@@ -1,6 +1,7 @@
 import type { CompiledScope, IRScope, Transform } from '@retikz/core';
 import {
   compileScope,
+  compileScopeRectangleEnvelope,
   prepareScopePlacement,
   projectLayoutWithTransform,
   projectPublishedReference,
@@ -23,6 +24,19 @@ import type {
   ScopeExecutionOptions,
   ScopeExecutionSteps,
 } from './types';
+
+// ⚡当前 Core 契约要求提供几何；普通匿名分组内部复用空产物，不用于布局查询或发布
+const unusedEnvelope = compileScopeRectangleEnvelope(undefined);
+
+/** 当前契约下，具名、显式形状及依赖自身锚点的放置仍需包络 */
+export const needsScopeEnvelope = (
+  ir: Omit<IRScope, 'children'>,
+  preparation: ReturnType<typeof prepareScopePlacement>,
+): boolean =>
+  ir.id !== undefined ||
+  ir.boundingShape !== undefined ||
+  preparation.preliminaryTransforms === undefined ||
+  preparation.positionTarget !== undefined;
 
 /** 有 scope.id 时注册占位布局，返回后续替换所需的父 namespace frame 深度 */
 const registerScopeLayoutPlaceholder = (
@@ -87,8 +101,18 @@ export const prepareScopeExecution = (
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
+  // 生成 Scope 在此仅核对自身属性，不因外壳命中而跳过子项
   const canon =
     resolvedScope ??
+    (generatedOccurrence &&
+      output.compositeDispatcher?.resolveScope(
+        runtime,
+        generatedOccurrence,
+        ir,
+        createCompileChildPath(locatorPrefix, index),
+        frame.context,
+        themePath,
+      )) ??
     resolveScope(ir, {
       nodeDistance: runtime.context.layout.nodeDistance,
       parent: inheritedStyle,
@@ -122,6 +146,9 @@ export const prepareScopeExecution = (
     runtime.state.execution.namespaceStack.pushFrame();
   }
 
+  // ⚡匿名普通分组不读取自身包络；只有命名、显式外框或自身锚点才需要它
+  const needsEnvelope = needsScopeEnvelope(ir, preparation);
+  const skipChildGeometries = frame.context.skipGeometries === true && !needsEnvelope;
   const state: SubtreeCompileState = {
     primitives: [],
     geometries: [],
@@ -139,6 +166,7 @@ export const prepareScopeExecution = (
     const scopeFrame: SubtreeCompileRuntime = {
       context: {
         compositeInput,
+        skipGeometries: skipChildGeometries,
         layout: layoutContext,
         transformChains: preliminaryScopeChain,
         pathPrefix: createCompileChildPath(locatorPrefix, index),
@@ -157,7 +185,7 @@ export const prepareScopeExecution = (
 
   const compileContext = {
     ...scopeGeometryContext,
-    layouts: state.geometries,
+    layouts: needsEnvelope ? state.geometries : [],
     resolvedClipPath: preResolvedClipPath,
     registerClip: runtime.state.workspace.clipRegistry.register,
     registerClipPath: runtime.state.workspace.clipRegistry.registerPath,
@@ -193,15 +221,16 @@ export const prepareScopeExecution = (
       );
     }
 
-    const finalEnvelope =
-      scopeTransforms.length === 0
-        ? intrinsicLayout
-        : projectLayoutWithTransform(
-            intrinsicLayout,
-            runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
-          );
-    frameState.geometries.push(...projectScopeCompileLayouts(ir, intrinsicLayout, state.geometries, scopeTransforms));
+    if (!frame.context.skipGeometries)
+      frameState.geometries.push(...projectScopeCompileLayouts(ir, intrinsicLayout, state.geometries, scopeTransforms));
     if (ir.id !== undefined) {
+      const finalEnvelope =
+        scopeTransforms.length === 0
+          ? intrinsicLayout
+          : projectLayoutWithTransform(
+              intrinsicLayout,
+              runtime.state.execution.scopeTransformComposer.resolve(scopeTransforms),
+            );
       const globalEnvelope = projectLayoutWithTransform(
         finalEnvelope,
         runtime.state.execution.scopeTransformComposer.resolve(transformChains),
@@ -230,10 +259,8 @@ export const prepareScopeExecution = (
     }
 
     const structuralGuides = resolveStructuralAlignmentGuides(state.alignmentGuides);
-    const transformedGuides = transformAlignmentGuides(
-      structuralGuides,
-      scopeTransforms,
-      runtime.state.execution.scopeTransformComposer.resolve,
+    const transformedGuides = transformAlignmentGuides(structuralGuides, scopeTransforms, chain =>
+      runtime.state.execution.scopeTransformComposer.resolve(chain),
     );
     if (transformedGuides !== undefined) frameState.alignmentGuides.push(...transformedGuides);
   };
@@ -279,6 +306,7 @@ export const prepareScopeExecution = (
     childFrame: {
       context: {
         compositeInput,
+        skipGeometries: skipChildGeometries,
         layout: layoutContext,
         transformChains: preliminaryScopeChain,
         pathPrefix: scopeGeometryContext.irPath,
@@ -294,21 +322,62 @@ export const prepareScopeExecution = (
       return compiledScope;
     },
     preparation,
+    unusedEnvelope: needsEnvelope ? undefined : unusedEnvelope,
     canon,
     compileContext,
   };
 };
 
 /** 完整构建按语义顺序执行 Scope，增量更新将实际阶段操作交给驱动 */
-export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): void => {
+const compileScopeTree = (...args: Parameters<typeof prepareScopeExecution>): void => {
+  const [runtime, output, , ir, , frame, options] = args;
+  const occurrence = options?.generatedOccurrence;
+  const warnings = runtime.state.workspace.diagnosticCollector.warnings;
+  const start = warnings.length;
   const steps = prepareScopeExecution(...args);
   try {
     steps.children();
-    const compiled = compileScope(steps.canon, steps.compileContext, { layout: { preparation: steps.preparation } });
+    // 子项已处理，此处复用的是 Scope 自身的编译阶段，而非整块输出
+    const compiled =
+      (occurrence &&
+        output.compositeDispatcher?.compileScope(
+          runtime,
+          occurrence,
+          ir,
+          frame.context,
+          steps,
+          warnings.slice(start),
+        )) ??
+      compileScope(steps.canon, steps.compileContext, {
+        layout: { preparation: steps.preparation, envelope: steps.unusedEnvelope },
+      });
     steps.project(compiled);
     steps.paths();
   } finally {
     steps.dispose();
   }
   steps.publish();
+};
+
+/** 仅对输出阶段独立、已闭合的基础子树尝试整块复用 */
+export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): void => {
+  const [runtime, output, host, ir, index, frame, options] = args;
+  const occurrence = options?.generatedOccurrence;
+  const dispatcher = output.compositeDispatcher;
+  if (!dispatcher?.block || !occurrence || options.captureScopeTargets || runtime.state.execution.provenanceTracker) {
+    compileScopeTree(...args);
+    return;
+  }
+  const blockStage =
+    options.blockStage ??
+    (!options.compileNested && ir.children.every(child => !('namespace' in child) && child.type !== 'scope')
+      ? { input: [ir], layouts: [] }
+      : undefined);
+  if (!blockStage) {
+    compileScopeTree(...args);
+    return;
+  }
+  dispatcher.block(runtime, output, frame, occurrence, blockStage.input, blockStage.layouts, local =>
+    compileScopeTree(runtime, output, host, ir, index, local, options),
+  );
 };

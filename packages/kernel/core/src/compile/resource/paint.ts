@@ -7,8 +7,8 @@ import type {
   PatternEmitOutput,
   ScenePrimitive,
 } from '../../contract';
-import { createCompositeContractError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
-import type { InputPaintResolution, PaintResolution, PatternResolution } from '../../resolve';
+import { createContractViolationError, createLayoutProbeRecoverableError, safeThrownDetail } from '../../resolve';
+import type { InputPaintResolution, PaintResolution } from '../../resolve';
 import type { IRPatternLineStyle } from '../../schemas';
 import { materializeScenePrimitives } from '../shared';
 import { formatResourceId, serializeResourceContent, storeSceneResource } from './identity';
@@ -105,8 +105,14 @@ export type PaintRegistry = {
 };
 
 /** compile 仅消费 resolve 阶段已绑定的 pattern 并调用 provider emit */
-const emitPatternTile = (resolution: PatternResolution, round: (n: number) => number): CompiledPatternTile => {
-  const { spec, definition, size, style } = resolution;
+const emitPatternTile = (
+  resolution: Extract<PaintResolution, { pattern: unknown }>,
+  round: (n: number) => number,
+): CompiledPatternTile => {
+  const {
+    spec,
+    pattern: { definition, size, style },
+  } = resolution;
   const context: PatternEmitContext = {
     size,
     ...style.base,
@@ -129,14 +135,14 @@ const emitPatternTile = (resolution: PatternResolution, round: (n: number) => nu
 
   let tileSize = size;
   if ('resources' in emitted) {
-    throw createCompositeContractError(`Pattern '${spec.shape}' output: provider cannot declare resources.`);
+    throw createContractViolationError(`Pattern '${spec.shape}' output: provider cannot declare resources.`);
   }
   let emittedMotif: Iterable<ScenePrimitive>;
   // 同时检查两个字段，避免将携带单个同名元数据字段的 iterable 误判为完整 tile
   if ('tileSize' in emitted && 'motif' in emitted) {
     emittedMotif = emitted.motif;
     if (!Number.isFinite(emitted.tileSize) || emitted.tileSize <= 0) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `Pattern '${spec.shape}' emit returned an invalid tileSize (${String(emitted.tileSize)}); it must be a finite number greater than 0.`,
       );
     }
@@ -179,7 +185,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
 
     const resource: PaintResource =
       'pattern' in resolution
-        ? { kind: 'paint', id: '', spec: resolution.spec, tile: emitPatternTile(resolution.pattern, round) }
+        ? { kind: 'paint', id: '', spec: resolution.spec, tile: emitPatternTile(resolution, round) }
         : resolution.spec.kind === 'image'
           ? { kind: 'paint', id: '', spec: resolution.spec }
           : { kind: 'paint', id: '', spec: resolution.spec };

@@ -20,7 +20,7 @@ export const CustomPatternSizePreview = (values: CustomPatternSizePreviewValues)
   const background = values.background === 'transparent' ? undefined : values.background;
 
   return (
-    <Layout extensions={{ patterns: [dotsGrid] }}>
+    <Layout compile={{ patterns: [dotsGrid] }}>
       <Node
         id="a"
         position={[0, 0]}

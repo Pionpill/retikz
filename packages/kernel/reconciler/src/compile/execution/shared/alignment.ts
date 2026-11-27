@@ -1,5 +1,5 @@
 import type { ComposedScopeTransform, LayoutAlignmentGuide, Transform } from '@retikz/core';
-import { LayoutAlignmentGuideDimension, applyScopeTransform, createCompositeContractError } from '@retikz/core';
+import { LayoutAlignmentGuideDimension, applyScopeTransform, createContractViolationError } from '@retikz/core';
 
 /** 筛选子树中没有重名歧义的对齐参考线，供父布局使用 */
 export const resolveStructuralAlignmentGuides = (
@@ -60,7 +60,7 @@ export const transformAlignmentGuides = (
         : d * guide.position + f
       : applyScopeTransform(isX ? [guide.position, 0] : [0, guide.position], composed)[isX ? 0 : 1];
     if (!Number.isFinite(position)) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `Transformed alignment guide position must remain finite for '${guide.dimension}:${guide.name}'`,
       );
     }

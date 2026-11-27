@@ -111,9 +111,7 @@ const aggregateConstraints = (
     });
   }
 
-  return Object.freeze(
-    [...aggregated.values()].sort((first, second) => first.span - second.span || first.start - second.start),
-  );
+  return [...aggregated.values()].sort((first, second) => first.span - second.span || first.start - second.start);
 };
 
 /** 让指定 track 集合以等权或 fraction 权重吸收当前 constraint deficit */
@@ -204,7 +202,7 @@ const solveProfiles = (
     }
   }
 
-  return { minimum: Object.freeze(minimum), natural: Object.freeze(natural) };
+  return { minimum, natural };
 };
 
 /** 以 freeze-and-redistribute 求解 finite available size 下的 fraction tracks */
@@ -313,11 +311,11 @@ export const solveGridTracks = (
     ({ leading, between } = distributionOffsets(options.distribution, free, tracks.length, options.gap));
   }
 
-  return Object.freeze({
+  return {
     minimumProfile: profiles.minimum,
     naturalProfile: profiles.natural,
-    sizes: Object.freeze(sizes),
+    sizes,
     leading,
     between,
-  });
+  };
 };

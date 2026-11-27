@@ -39,7 +39,7 @@ description: 用 defineMark 定义局部图元，注册后通过 shape 和 param
 import { Draw, Layout } from '@retikz/react';
 import { ringMark } from './ring-mark';
 
-<Layout extensions={{ marks: [ringMark] }}>
+<Layout compile={{ marks: [ringMark] }}>
   <Draw
     way={[
       [0, 0],
@@ -57,7 +57,7 @@ HTML 中先准备 `<div id="diagram"></div>`，将定义放入 `mount` 的 `comp
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { ringMark } from './ring-mark';
 
 const input = scene({
@@ -71,7 +71,7 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input, {
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { marks: [ringMark] },
 });
 // 移除宿主时调用 view.dispose()
@@ -87,7 +87,9 @@ import { compileToScene } from '@retikz/vanilla';
 
 import { ringMark } from './ring-mark';
 
-const { scene } = compileToScene(
+const {
+  compileResult: { scene },
+} = compileToScene(
   {
     version: 1,
     type: 'scene',
@@ -144,7 +146,7 @@ const { scene } = compileToScene(
       description: '自定义参数、已解析样式与坐标精度函数。',
     },
     {
-      name: 'Layout.extensions.marks',
+      name: 'Layout.compile.marks',
       kind: 'property',
       type: 'ReadonlyArray<MarkDefinition>',
       description: 'React 宿主注册入口；Core 使用 CompileOptions.marks，Vanilla mount 使用 compile.marks。',

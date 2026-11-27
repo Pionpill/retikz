@@ -28,8 +28,7 @@ const scatterContributionOf = (chart: ReactElement) =>
     {
       id: 'chart',
       kind: ScatterChart.inputEmbedAdapter.kind,
-      layerId: 'main',
-      identityPath: ['main', 'chart'],
+      identityPath: ['chart'],
     },
   );
 

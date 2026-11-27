@@ -18,13 +18,9 @@ export const AbsoluteTargetSchema: ZodType<IRAbsoluteTarget, IRAbsoluteTarget> =
 
 /** 校验编译时从两端点按归一化比例求得的位置 */
 export const BetweenPositionSchema = object({
-  between: tuple([AbsoluteTargetSchema, AbsoluteTargetSchema]).describe(
-    'Two endpoints (AbsoluteTarget each; path-relative excluded)',
-  ),
+  between: tuple([AbsoluteTargetSchema, AbsoluteTargetSchema]).describe('Path-relative endpoints are not supported.'),
   fraction: NormalizedFractionSchema.describe('Proportion from the first endpoint to the second endpoint.'),
-}).describe(
-  'Proportional point between two endpoints, resolved at compile time. Allowed in node, coordinate, and path endpoint positions.',
-);
+}).describe('Interpolate between two absolute endpoints.');
 
 /** 不依赖上一段路径游标的目标位置，支持坐标、引用和嵌套定位 */
 export type IRAbsoluteTarget = IRPosition | PolarPosition | IRNodeTarget | IROffsetPosition | IRBetweenPosition;

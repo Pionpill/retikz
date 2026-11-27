@@ -9,7 +9,7 @@ description: Follow a node color change through input preparation, the Reconcile
   description="Incremental updates are experimental. Complete-input updates, basic-element batches and host commits have different boundaries; local recomputation is not guaranteed for every update."
 />
 
-When node A changes from orange to blue, what needs to run again? This page follows a Vanilla DOM retained update: Vanilla prepares input, a Reconciler session invokes Core, Render prepares and commits the drawing, and the new result is published only after success. React subscribes to processing results and displays them with its own host commit boundary.
+When node A changes from orange to blue, what needs to run again? This page follows a Vanilla DOM session update: Vanilla prepares input, a Reconciler session invokes Core, Render prepares and commits the drawing, and the new result is published only after success. React supplies the host root and draws through the same DOM render target.
 
 First read the IR, Scene and package roles in the [rendering pipeline](/kernel/components/runtime-mechanics/rendering-pipeline). For one compilation, see [Core compilation](/kernel/packages/core/compilation).
 
@@ -25,16 +25,15 @@ Ordinary React and Vanilla input updates use complete replacement. Reconciler ba
 
 ## Input preparation
 
-React converts component declarations into `InputScene`, which Vanilla normalizes into `IRScene`; existing IR enters processing directly. `prepareProcessingInput` also prepares compilation configuration and Composite inputs. The controller owns a `SceneReconciler`, calling `mount` initially and `replace` for ordinary subsequent input.
+React converts component declarations to an `InputScene`. `SceneRuntime` normalizes authoring input and binds Composite instance inputs; existing IR goes directly to the reconciler. Initial and subsequent full inputs both call `SceneReconciler.replace`: the first commit is a mount, and later commits are updates.
 
 This path does not use the generic Runtime package's Source / Computation registry graph. `replace` explicitly rebuilds compilation output; it does not promise to skip compilation for equal document contents. Configuration-only changes can use `updateTarget` to retain compilation output.
 
 <SourceLinks
   sources={[
-    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
     {
       label: 'Controller and session integration',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      path: 'packages/kernel/vanilla/src/runtime/runtime.ts',
     },
     { label: 'Replacement and configuration updates', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
   ]}
@@ -42,7 +41,7 @@ This path does not use the generic Runtime package's Source / Computation regist
 
 ## Compilation and reuse
 
-A non-incremental session uses the full traversal driver for mount and replace. Weave independently handles initial construction, complete replacement, and batch updates in incremental sessions. Initial construction computes all authored elements in a new candidate tree; updates select invalid stages. Both drivers share Core stages and output assembly. `incremental` defaults to `true`, retaining authored Weave nodes and actual stage products. With `false`, mount and replace run without retained caches, and calling update throws. The options type uses `incremental` as its discriminant: `updateStrategy` is available only in incremental mode, and TypeScript rejects invalid combinations. `@retikz/reconciler` also exports `FullSceneReconcilerOptions` and `IncrementalSceneReconcilerOptions` for declaring the options of each mode separately. Probes, instance inputs, and artifacts keep the same semantics in both modes.
+A non-incremental session uses the full traversal driver for mount and replace. Weave independently handles initial construction, complete replacement, and batch updates in incremental sessions. Initial construction computes all authored elements in a new candidate tree; updates select invalid stages. Both drivers share Core stages and output assembly. Choosing `ReconcilerMode.Incremental` retains authored Weave nodes and actual stage products. With the default `ReconcilerMode.Full`, mount and replace run without session caches, and calling update throws. The options type uses `mode` as its discriminant: `updateStrategy` is available only in incremental mode, and TypeScript rejects invalid combinations. `@retikz/reconciler` also exports `FullSceneReconcilerOptions` and `IncrementalSceneReconcilerOptions` for declaring the options of each mode separately. Probes, instance inputs, and artifacts keep the same semantics in both modes.
 
 <ComponentPreview files="update-reuse" size="md" hideCode type="flow" />
 
@@ -64,7 +63,7 @@ A Scope prepares inheritance, computes its envelope and final projection from ch
 
 Computation is separate from complete output assembly. Unrelated elements supply committed contributions without creating execution environments, checking reuse, or writing candidate state just for assembly. Clean Scopes assemble compiled results and child contributions without retaining another copy of all descendant output. Reads with multiple dependencies complete the relevant candidates first, avoiding a mix of old and new envelopes.
 
-Ordinary property updates retain address and name indexes. Insertions and removals refresh subsequent child addresses in the changed container; renaming and namespace changes maintain affected declarations and read subscriptions. Sorting, resources, diagnostics, and provenance for the complete Scene still require reading retained products, so total update cost is not necessarily local. Ordinary React and Vanilla input updates do not yet use this batch entry.
+Ordinary property updates retain address and name indexes. Insertions and removals refresh subsequent child addresses in the changed container; renaming and namespace changes maintain affected declarations and read subscriptions. Sorting, resources, diagnostics, and provenance for the complete Scene still require reading session products, so total update cost is not necessarily local. Ordinary React and Vanilla input updates do not yet use this batch entry.
 
 <SourceLinks
   sources={[
@@ -82,18 +81,21 @@ Ordinary property updates retain address and name indexes. Insertions and remova
 
 ## Host commits
 
-Vanilla DOM connects a renderer through `createRetainedRenderTarget`, combining host commits with `ProcessingResult` publication in the session's output target. The target prepares a new frame and configuration. Changed compilation output produces `replaceScene`; configuration-only updates produce an empty-operation Patch. This integration does not derive per-primitive Patches automatically from complete-result differences.
+Vanilla DOM connects a renderer through `createRenderTarget`, combining host commits with `ReconcilerResult` publication in the session's output target. The target prepares a new frame and configuration. Changed compilation output produces `replaceScene`; configuration-only updates produce an empty-operation Patch. This integration does not derive per-primitive Patches automatically from complete-result differences.
 
 Scene snapshots record primitive identities, owners and topology from compilation provenance for Render validation and hydration. These identities are not Weave batch node addresses and do not guarantee local host updates.
 
-React Layout subscribes to a successfully published `ProcessingResult` before constructing host output. Reconciler target rollback guarantees do not cover React's own commit cycle.
+React Layout passes the mounted root to the DOM render target and subscribes to successfully published results. Reconciler target rollback guarantees do not cover React's own commit cycle.
 
 <SourceLinks
   sources={[
-    { label: 'Vanilla DOM target assembly', path: 'packages/kernel/vanilla/src/dom/retained.ts' },
+    { label: 'Vanilla DOM target assembly', path: 'packages/kernel/vanilla/src/dom/view.ts' },
     { label: 'Candidate frames, Patches and commits', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'Scene snapshots and identities', path: 'packages/kernel/render/src/scene/snapshot.ts' },
-    { label: 'React displays processing results', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+    {
+      label: 'React displays processing results',
+      path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx',
+    },
   ]}
 />
 
@@ -111,7 +113,10 @@ Warning callbacks, tracing and commit-token cleanup failures after publication a
   sources={[
     { label: 'Publication, rollback and broken state', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     { label: 'Host state recovery', path: 'packages/kernel/render/src/runtime/target.ts' },
-    { label: 'React retains successful results', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    {
+      label: 'React retains successful results',
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+    },
   ]}
 />
 
@@ -121,7 +126,7 @@ This diagram locates an ordinary Vanilla DOM input replacement. Member names are
 
 <ComponentPreview files="update-implementation" size="lg" hideCode type="flow" />
 
-Start at `prepareProcessingInput` and the controller, then follow mode dispatch in `SceneReconciler.replace`: non-incremental sessions use full traversal, while incremental sessions create a new Weave tree and call `executeWeaveMount`. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
+Start at `SceneRuntime.replace` for either authoring input or IR, then follow mode dispatch in `SceneReconciler.replace`: non-incremental sessions use full traversal, while incremental sessions create a new Weave tree and call `executeWeaveMount`. `publish` prepares and commits the target; the Render target materializes candidate output as a host frame. The session then publishes its result and the controller notifies subscribers.
 
 ## Further reading
 

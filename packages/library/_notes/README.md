@@ -11,7 +11,7 @@
 
 - [`architecture/library-design.md`](./architecture/library-design.md)：Library 分组、Standard / Layout 能力轴与依赖方向
 - [`architecture/standard-library-design.md`](./architecture/standard-library-design.md)：Standard 横向绘图拓展与 Layout 消费边界
-- [`architecture/layout-library-design.md`](./architecture/layout-library-design.md)：Layout 排版模型、composition、inspection 与算法布局边界
+- [`architecture/layout-library-design.md`](./architecture/layout-library-design.md)：Layout 排版模型、composition 与算法布局边界
 - [`roadmaps/layout/v0/roadmap.md`](./roadmaps/layout/v0/roadmap.md)：Layout v0 总路线
 - [`decisions/layout/_v0.1/roadmap.md`](./decisions/layout/_v0.1/roadmap.md)：Layout v0.1 package family 路线
 - [`decisions/layout/_v0.1/001-layout-package-family.md`](./decisions/layout/_v0.1/001-layout-package-family.md)：Layout owner 迁移 ADR

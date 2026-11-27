@@ -4,7 +4,7 @@ import type { ClipDefinition } from '../../contract';
 import type { ProviderRegistry } from '../../providers';
 import { getProviderDefinition } from '../../providers';
 import type { IRClip } from '../../schemas';
-import { createCompositeContractError } from '../diagnostics';
+import { createContractViolationError } from '../diagnostics';
 import { parseProviderPayload } from '../provider';
 import type { ClipResolution } from './types';
 
@@ -29,12 +29,12 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
     value: clip,
   });
   if (params.kind !== kind) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Clip provider 'clip:${kind}' schema returned kind '${String(params.kind)}' instead of '${kind}'.`,
     );
   }
 
   const resolve = (nested: IRClip): ClipResolution => resolveClip(nested, context);
 
-  return { spec: clip, kind, definition, params, resolve };
+  return { spec: clip, definition, params, resolve };
 };

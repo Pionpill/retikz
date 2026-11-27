@@ -4,7 +4,7 @@ Core IR 只保存声明式动画数据：属性名、关键帧、时间参数和
 
 ## 预设与编排
 
-#### <ApiSourceLink label={"AnimationPresetOptions"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={5}>AnimationPresetOptions</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationPresetOptions"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={5}>AnimationPresetOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -38,7 +38,7 @@ export type AnimationPresetOptions = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"CameraToOptions"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={107}>CameraToOptions</ApiSourceLink>
+#### <ApiSourceLink label={"CameraToOptions"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={107}>CameraToOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -72,7 +72,7 @@ export type CameraToOptions = AnimationPresetOptions & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ColorShiftOptions"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={85}>ColorShiftOptions</ApiSourceLink>
+#### <ApiSourceLink label={"ColorShiftOptions"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={85}>ColorShiftOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -108,7 +108,7 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"LoopOptions"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={127}>LoopOptions</ApiSourceLink>
+#### <ApiSourceLink label={"LoopOptions"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={127}>LoopOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -138,7 +138,7 @@ export type LoopOptions = {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"ScaleInOptions"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={48}>ScaleInOptions</ApiSourceLink>
+#### <ApiSourceLink label={"ScaleInOptions"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={48}>ScaleInOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -172,7 +172,7 @@ export type ScaleInOptions = AnimationPresetOptions & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"SlideInOptions"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={67}>SlideInOptions</ApiSourceLink>
+#### <ApiSourceLink label={"SlideInOptions"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={67}>SlideInOptions</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -206,7 +206,7 @@ export type SlideInOptions = AnimationPresetOptions & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"cameraTo"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={115}>cameraTo</ApiSourceLink>
+#### <ApiSourceLink label={"cameraTo"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={115}>cameraTo</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -233,7 +233,7 @@ export declare const cameraTo: (opts: CameraToOptions) => IRAnimationTrack;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"colorShift"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={95}>colorShift</ApiSourceLink>
+#### <ApiSourceLink label={"colorShift"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={95}>colorShift</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -260,7 +260,7 @@ export declare const colorShift: (opts: ColorShiftOptions) => IRAnimationTrack;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"drawOn"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={38}>drawOn</ApiSourceLink>
+#### <ApiSourceLink label={"drawOn"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={38}>drawOn</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -287,7 +287,7 @@ export declare const drawOn: (opts?: AnimationPresetOptions) => IRAnimationTrack
 
 </DocTabs>
 
-#### <ApiSourceLink label={"fadeIn"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={28}>fadeIn</ApiSourceLink>
+#### <ApiSourceLink label={"fadeIn"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={28}>fadeIn</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -314,7 +314,7 @@ export declare const fadeIn: (opts?: AnimationPresetOptions) => IRAnimationTrack
 
 </DocTabs>
 
-#### <ApiSourceLink label={"loop"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={135}>loop</ApiSourceLink>
+#### <ApiSourceLink label={"loop"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={135}>loop</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -342,7 +342,7 @@ export declare const loop: (track: IRAnimationTrack, opts?: LoopOptions) => IRAn
 
 </DocTabs>
 
-#### <ApiSourceLink label={"scaleIn"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={56}>scaleIn</ApiSourceLink>
+#### <ApiSourceLink label={"scaleIn"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={56}>scaleIn</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -369,7 +369,7 @@ export declare const scaleIn: (opts?: ScaleInOptions) => IRAnimationTrack;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"slideIn"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={75}>slideIn</ApiSourceLink>
+#### <ApiSourceLink label={"slideIn"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={75}>slideIn</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -396,7 +396,7 @@ export declare const slideIn: (opts?: SlideInOptions) => IRAnimationTrack;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"stagger"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={145}>stagger</ApiSourceLink>
+#### <ApiSourceLink label={"stagger"} path={"packages/kernel/core/src/animation-presets.ts"} startLine={145}>stagger</ApiSourceLink>
 
 覆盖各 track 原有 delay（错峰编排以本 helper 为准）
 
@@ -433,7 +433,7 @@ export declare const stagger: (
 
 ## 动画声明
 
-#### <ApiSourceLink label={"IRAnimationTrack"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={195}>IRAnimationTrack</ApiSourceLink> / <ApiSourceLink label={"AnimationTrackSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={167}>AnimationTrackSchema</ApiSourceLink>
+#### <ApiSourceLink label={"IRAnimationTrack"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={194}>IRAnimationTrack</ApiSourceLink> / <ApiSourceLink label={"AnimationTrackSchema"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={166}>AnimationTrackSchema</ApiSourceLink>
 
 **公共属性**
 
@@ -502,7 +502,7 @@ export declare const stagger: (
 | 成员        | 类型                                                                                                                                                              | 默认值 | 说明 |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
 | `keyframes` | `Array<{ at: number; value: string; easing?: "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number] \| undefined; }>` | —      | —    |
-| `property`  | `"stroke" \| "fill"`                                                                                                                                              | —      | —    |
+| `property`  | `"fill" \| "stroke"`                                                                                                                                              | —      | —    |
 
 </ApiTable>
 
@@ -574,7 +574,7 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={198}>IRKeyframe</ApiSourceLink>
+#### <ApiSourceLink label={"IRKeyframe"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={197}>IRKeyframe</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -602,7 +602,7 @@ export type IRKeyframe = ZodInfer<typeof KeyframeSchema>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"AnimationDirection"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={49}>AnimationDirection</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationDirection"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={50}>AnimationDirection</ApiSourceLink>
 
 ```ts
 export const AnimationDirection = {
@@ -615,7 +615,7 @@ export const AnimationDirection = {
 export type AnimationDirection = ValueOf<typeof AnimationDirection>;
 ```
 
-#### <ApiSourceLink label={"AnimationFill"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={57}>AnimationFill</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationFill"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={58}>AnimationFill</ApiSourceLink>
 
 ```ts
 export const AnimationFill = {
@@ -628,7 +628,7 @@ export const AnimationFill = {
 export type AnimationFill = ValueOf<typeof AnimationFill>;
 ```
 
-#### <ApiSourceLink label={"AnimationTrigger"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={65}>AnimationTrigger</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationTrigger"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={66}>AnimationTrigger</ApiSourceLink>
 
 ```ts
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
@@ -636,7 +636,7 @@ export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'man
 export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;
 ```
 
-#### <ApiSourceLink label={"AnimationEasing"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={40}>AnimationEasing</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationEasing"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={41}>AnimationEasing</ApiSourceLink>
 
 ```ts
 export const AnimationEasing = {
@@ -650,7 +650,7 @@ export const AnimationEasing = {
 export type AnimationEasing = ValueOf<typeof AnimationEasing>;
 ```
 
-#### <ApiSourceLink label={"AnimationProperty"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={21}>AnimationProperty</ApiSourceLink>
+#### <ApiSourceLink label={"AnimationProperty"} path={"packages/kernel/core/src/schemas/scene/animation.ts"} startLine={22}>AnimationProperty</ApiSourceLink>
 
 `viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
 `pathDraw` 是 0..1 路径画出进度；`scaleX` / `scaleY` 是非均匀缩放（柱状图从基线长出等），`scale` 是均匀缩放；

@@ -1,8 +1,9 @@
 import { createDataTransformExecutor } from '@retikz/data';
-import { compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
+import { prepareTableData } from '@retikz/table';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { detailTable, embedTable, renderTable, renderTableAsync, tableInputEmbedAdapter } from '../src';
+import { detailTable, embedTable, renderTable, renderTableAsync } from '../src';
 
 const table = () =>
   detailTable({
@@ -53,17 +54,20 @@ describe('异步 Table 编写', () => {
     });
     const spec = table();
     spec.data.model = [{ name: 'value', type: 'continuous' }];
-    const input = (values: Array<number>) =>
-      embedTable(spec, { dataBindings: { rows: { kind: 'source', source: { values } } }, dataTransformExecutor });
-    const result = await compileToSceneAsync(scene({ children: [input([2, 6]), input([4])] }), {
-      adapters: [tableInputEmbedAdapter],
-    });
-    const svg = renderToSvgString(result.scene);
+    const input = async (values: Array<number>) => {
+      const task = await prepareTableData(spec, {
+        dataBindings: { rows: { kind: 'source', source: { values } } },
+        dataTransformExecutor,
+      });
+      return embedTable(spec, { preparedData: await task.execute() });
+    };
+    const result = compileToScene(scene({ children: await Promise.all([input([2, 6]), input([4])]) }));
+    const svg = renderToSvg(result.scene);
 
     expect(svg).toContain('0.25');
     expect(svg).toContain('0.75');
     expect(svg).toContain('0.5');
     expect(executions).toBe(2);
-    expect(result.compileResult.artifacts.filter(artifact => artifact.namespace === 'table')).toHaveLength(2);
+    expect(result.artifacts.filter(artifact => artifact.namespace === 'table')).toHaveLength(2);
   });
 });

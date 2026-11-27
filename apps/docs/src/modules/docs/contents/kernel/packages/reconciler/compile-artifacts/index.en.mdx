@@ -1,0 +1,69 @@
+---
+title: Execution / Output Provenance
+description: Follow node B into the Scene, drawing resources, domain artifacts, warnings and provenance records
+---
+
+In [Element Assembly](/kernel/packages/reconciler/compile-elements), the path connecting A to B reserves a slot and fills it once both nodes are ready. Now give the drawing to two consumers: a static SVG export draws B directly from the Scene; a retained renderer also uses compilation provenance to identify the primitives B emitted.
+
+## Overview
+
+The subtree delivers ordered primitives, visible bounds and domain data from composites. Reconciler combines them with resources from the current workspace to form a snapshot. The diagram shows where drawing data and domain data part ways.
+
+<ComponentPreview files="/kernel/packages/core/compilation-output/output-overview" size="lg" hideCode type="flow" />
+
+Given the <ApiSourceLink label="SceneCompilationSnapshot" path="packages/kernel/reconciler/src/compile/types.ts" startLine={127}>`SceneCompilationSnapshot`</ApiSourceLink> in the session result, choose the entry point by question:
+
+| Question                                             | Read from `compilation` | On successful compilation                                                        |
+| ---------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------- |
+| How do I draw the complete picture?                  | `result.scene`          | Always present; the Scene omits `resources` when no drawing resources are needed |
+| What else did a composite compute?                   | `result.artifacts`      | Always an array; `[]` if no instance returned a domain artifact                  |
+| What warnings did this run produce?                  | `diagnostics`           | Always an array; `[]` if there were no warnings                                  |
+| Which declaration directly emitted these primitives? | `provenance`            | Present only with `captureProvenance: true`; the field is omitted by default     |
+
+## Compiled primitives
+
+Compilation collects primitives and visible bounds from the subtrees and assembles `result.scene`. For field types and coordinate spaces, see Core’s [Compilation / Output Artifacts](/kernel/packages/core/compilation-output).
+
+### Drawing primitives
+
+**Render primarily consumes `scene.primitives`.** It receives an ordered drawing, not node declarations and connections it still needs to solve. For A, B and their connecting path, Core computes the nodes’ shapes, text layout and boundaries. The executor emits primitives from those results. Once both boundaries are available, it computes the path endpoints and fills the reserved slot. A rectangular node B with text can produce a group containing a rectangle and a text primitive.
+
+**Compilation determines paint order.** Within each level, a stable sort orders primitives by ascending `zIndex`, treating an omitted value as 0. Ties preserve the original order: a path declared first can be drawn behind the nodes even if its endpoints were computed last. Give that path a `zIndex` of 1 and leave both nodes at 0, and it paints over them where they overlap. Children sort inside their group; the group sorts as a unit in its parent. The final primitives carry no `zIndex`. Render draws them in array order.
+
+`layout` is the view obtained alongside the geometry: assembly combines visible bounds and padding to set the drawing’s extent, unless an explicit root `viewBox` supplies it. Render does not measure the nodes again.
+
+### Resources and animations
+
+These optional fields tell Render **what to paint or clip with** and **how the view changes over time**. Compilation registers resources and resolves tracks; it does not draw gradients or play animation frames.
+
+- **`resources`**: As primitives are compiled, paints such as gradients, patterns and images enter the paint registry; clipping paths enter the clip registry. Primitives keep references. Scene assembly collects both tables from this workspace and omits the field if both are empty.
+- **`animations`**: Scene assembly resolves animations on the root declaration and includes the valid camera tracks. They describe keyframes for the root `viewBox`, not a list of animations gathered from child primitives. Render uses the tracks during playback; without a root track it can use the static `layout`.
+
+## Domain artifacts
+
+`compilation.result.artifacts` holds data a composite explicitly returns in addition to its drawing. A counter, for example, can return a count without drawing a single primitive. Here is one example <ApiSourceLink label="CompositeArtifact" path="packages/kernel/reconciler/src/compile/shared/artifact.ts" startLine={12}>`CompositeArtifact`</ApiSourceLink> record:
+
+```json
+{
+  "namespace": "example",
+  "type": "counter",
+  "occurrence": { "sourcePath": ["children", 2], "expansionPath": [] },
+  "value": { "count": 1 }
+}
+```
+
+`namespace` and `type` identify the definition. Its `artifactSchema` describes the JSON data in `value`. The `occurrence` distinguishes instances of the same definition: this result came from the third child of the input root, with no nested expansion. An ordinary node does not produce an artifact just because it emits primitives. If no composite returns an artifact, the array is `[]`.
+
+## Primitive provenance
+
+`compilation.provenance` answers a different question: **which primitives did a declaration end up drawing?** Enable it when creating the session with `new SceneReconciler({}, { captureProvenance: true })`. The snapshot omits this field by default.
+
+The snapshot’s <ApiSourceLink label="CompileProvenanceSnapshot" path="packages/kernel/reconciler/src/compile/provenance/types.ts" startLine={42}>`ownerMap`</ApiSourceLink> records the declaration kind, its author-supplied ID (if any), and its direct primitive `emissions` for each owner. For a scene containing just the rectangular text node B, the owner with `id === 'B'` has these emissions:
+
+| Emission role (`role`) | Position in the final Scene (`primitivePath`) |
+| ---------------------- | --------------------------------------------- |
+| `node:group`           | `['primitives', 0]`                           |
+| `node:rect`            | `['primitives', 0, 'children', 0]`            |
+| `node:text`            | `['primitives', 0, 'children', 1]`            |
+
+Ownership is recorded at emission time; final positions are recorded after grouping and sorting. An artifact’s `occurrence` points to the **input instance that produced a domain value**. A `primitivePath` points to a **primitive in this output**. Owner keys and primitive positions are valid only within this snapshot.

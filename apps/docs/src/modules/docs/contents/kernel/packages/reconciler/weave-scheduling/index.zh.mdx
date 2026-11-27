@@ -1,0 +1,57 @@
+---
+title: 增量 / 依赖调度
+description: 跟随两条读取同一节点的路径，看 Weave 如何解析绑定、等待几何就绪并按读取结果传播变化
+---
+
+[变更追踪](/kernel/packages/reconciler/weave-changes)把直接变化的条目交给调度器。假设本批只把节点 A 的最小尺寸从 40 调到 80，另有两条路径以 A 为起点。一条从中心出发，另一条从朝向终点的边界出发。A 的声明只改了一处，为什么只需重新编译其中一条路径？
+
+## 名称绑定与实际读取
+
+```ts
+// 两条路径的起点，终点均为 [100, 0]
+const centerStart = { type: 'step', kind: 'move', to: { id: 'a', anchor: 'center' } } as const;
+const boundaryStart = { type: 'step', kind: 'move', to: { id: 'a' } } as const;
+```
+
+首次编译时，路径是**消费者**，节点 A 是**生产者**。计算起点时，两条路径都查询名称 `a`，但传给 `lookupReference` 的第二个参数不同：显式中心锚点传 `{ anchor: 'center', boundary: undefined }`，隐式边界传 `'boundary'`。这是编译器实际读取的几何类型，不是 Weave 从路径声明里猜出的依赖。
+
+<ComponentPreview files="path-starts" size="md" hideCode type="illustration" />
+
+路径编译器用 <ApiSourceLink label="observeReferences" path="packages/kernel/reconciler/src/weave/element/path/compile.ts" startLine={199}>`observeReferences`</ApiSourceLink> 包住 `compilePath`，记录这次端点查询。<ApiSourceLink label="recordComputed" path="packages/kernel/reconciler/src/weave/manager.ts" startLine={346}>`recordComputed`</ApiSourceLink> 将读取写入路径的候选状态，再由 <ApiSourceLink label="updateEntryReadDependencies" path="packages/kernel/reconciler/src/weave/state/tracker.ts" startLine={75}>`updateEntryReadDependencies`</ApiSourceLink> 更新正反两个方向的索引：
+
+| 状态字段                | 本例写入什么                                                   | 调度时如何使用                                     |
+| ----------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| 路径的 `referenceReads` | 名称 `a`、当时命中的绑定、读取种类，以及 `readiness: 'output'` | 检查旧路径能否复用时，重新查询并核对当时读过的结果 |
+| 路径的 `dependencies`   | 以 A 条目为键，值是这条路径从 A 读取的种类                     | A 变化时，只比较这条路径关心的几何                 |
+| A 的 `consumers`        | 两条路径的条目                                                 | 从 A 找到直接消费者，不必遍历场景中所有路径        |
+
+<ComponentPreview files="read-lifecycle" size="md" hideCode type="illustration" />
+
+这两个索引随实际读取更新。例如，一条路径改读 B 后，如果它不再以任何方式依赖 A，跟踪器会从路径的 `dependencies` 删除 A，也从 A 的 `consumers` 移除这条路径。
+
+## 按阶段就绪
+
+调度的最小单位是**条目和阶段**，不是整棵子树。<ApiSourceLink label="WeaveTaskQueue" path="packages/kernel/reconciler/src/weave/schedule/queue.ts" startLine={8}>`WeaveTaskQueue`</ApiSourceLink> 为同一批中的每个任务保存一条记录：
+
+| 队列操作                | 发生什么                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `request`（登记）       | 把条目的某个阶段列为待处理。重复登记同一阶段，不会增加第二份任务。                                                                         |
+| `require`（读取前就绪） | 消费者现在就要结果。如果生产者的相应阶段还没完成，就在当前调用中先完成它；已完成则直接返回。若再次要求正在执行的同一阶段，队列报告依赖环。 |
+| `flush`（推进）         | 依次处理队列，并继续处理执行中追加的任务。被读取方提前完成的阶段不再重复执行。                                                             |
+
+本次编辑直接改的是 A。调度器先为 A 登记 `compile` 和 `output` 两个任务，而不是先给两条路径都排队。反过来，如果路径先执行并读取 A，<ApiSourceLink label="lookup" path="packages/kernel/reconciler/src/weave/schedule/binding.ts" startLine={184}>`lookup`</ApiSourceLink> 会调用 `ensure(A)`：若 A 有待处理的请求，先核对其依赖，再在当前调用栈里 `require` A 的 `compile` 任务。绑定就绪后，查询优先取本批执行产生的 `bindings`；A 未在本批执行时，沿用 `A.current.contribution.bindings`。路径需要的是 A 的几何，不必等 A 完成绘制输出。
+
+## 只传播发生变化的读取
+
+A 的 `compile` 任务完成时，队列调用 <ApiSourceLink label="notifyConsumers" path="packages/kernel/reconciler/src/weave/schedule/dependency.ts" startLine={135}>`notifyConsumers`</ApiSourceLink>。它从 A 的候选状态读取 `consumers`，再逐条查询 `consumer.dependencies.get(A)`。对于本例中名称未变的绑定，<ApiSourceLink label="compareReferenceGeometry" path="packages/kernel/reconciler/src/weave/shared/reference.ts" startLine={36}>`compareReferenceGeometry`</ApiSourceLink> 比较的是 **A 上次提交的绑定几何** 和 **本批执行产生的绑定几何**：中心读取分别求出新旧中心坐标再比较；边界读取则比较形状与边界定义、矩形、边距及参数，并非只比最终端点。
+
+A 的位置不变，最小尺寸从 40 增至 80：
+
+| 路径读取的位置 | 读取结果       | 路径如何处理           |
+| -------------- | -------------- | ---------------------- |
+| 中心锚点       | 中心不动       | 沿用已有路径           |
+| 朝向终点的边界 | 右边界向外移动 | 用新的起点重新编译路径 |
+
+现有功能用例为两条路径分别统计编译回调：更新后，中心路径的调用次数不变，边界路径增加一次，最终结果与完整编译一致。
+
+中心读取相等，通知循环直接跳过这条路径。边界读取不同，`notify` 把边界路径上次的 `contribution` 作为待核对的结果，登记它的 `compile` 和 `output` 任务。**入队不等于丢弃缓存**：执行时，<ApiSourceLink label="matchWeaveReferences" path="packages/kernel/reconciler/src/weave/shared/reference.ts" startLine={21}>`matchWeaveReferences`</ApiSourceLink> 按路径保存的读取重新核对绑定和几何。本例的边界已变，整条旧路径不能直接复用。这也是为什么只需从直接变化的 A 开始调度。

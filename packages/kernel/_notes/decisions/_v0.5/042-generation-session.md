@@ -59,7 +59,7 @@ Session 表面：
 - `cancel()` 取消 scheduled prepare、丢弃 draft branch 并恢复正式 view；正式 Runtime 不变。
 - `accept()` 先确认正式 current revision 仍等于 base revision，再调用 definition `snapshot.toInput()` 取得完整 `TInput`、调用 `diff()` 取得领域 change array；Runtime 用已验证的 session base revision经 `createRuntimeChangeSet()` 封装，并以同一个 typed source token 调用 `createRuntimeSourceUpdate()`，squash 为一次正式 transaction。Definition 不能自行构造或伪造 ChangeSet revision，也不能把其它 owner 的 input/change 混入本次接受。成功后只有一个正式 revision；generation batch log 不自动进入 history。
 
-生成期间的可见预览由 adapter 显式选择 draft branch 作为 view source，并通过普通 Core Computation / retained renderer 编译。每个 draft revision 可以独立选择 atomic 或 progressive materialization；renderer batch 不能反向生成 generation operation，也不能推进 draft revision。
+生成期间的可见预览由 adapter 显式选择 draft branch 作为 view source，并通过普通 Core Computation / renderer 编译。每个 draft revision 可以独立选择 atomic 或 progressive materialization；renderer batch 不能反向生成 generation operation，也不能推进 draft revision。
 
 正式 current revision 在 generation 期间变化时，session 进入 `conflicted`：停止追加和接受，保留只读 draft / checkpoint 供导出或人工处理。本提案不自动 rebase、merge 或覆盖 current；调用方只能取消，或基于新正式 revision 创建新 session 并显式重放经 owner 验证的 operation
 

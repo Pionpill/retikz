@@ -83,14 +83,14 @@ Definition 是 React 与 Vanilla 共用的运行时对象，不会写进保存�
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
 
-通过 `Layout.extensions.clips` 注册 Definition；`Scope` 只写可保存的 `kind` 和参数。
+通过 `Layout.compile.clips` 注册 Definition；`Scope` 只写可保存的 `kind` 和参数。
 
 ```tsx
 import { Layout, Node, Scope } from '@retikz/react';
 import { roundedRectClip } from './rounded-rect-clip';
 
 const Demo = () => (
-  <Layout extensions={{ clips: [roundedRectClip] }}>
+  <Layout compile={{ clips: [roundedRectClip] }}>
     <Scope clip={{ kind: 'rounded-rect', params: { x: -150, y: -72, width: 300, height: 144, radius: 36 } }}>
       <Node
         position={[-88, -8]}
@@ -123,11 +123,11 @@ const Demo = () => (
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
 
-通过 `renderToSvgString` 的 `compile.clips` 注册相同 Definition；输入仍只包含 JSON-safe spec。
+通过 `compileToScene` 的 `compile.clips` 注册相同 Definition；输入仍只包含 JSON-safe spec。
 
 ```ts
 import type { InputScene } from '@retikz/vanilla';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 import { roundedRectClip } from './rounded-rect-clip';
 
 const input: InputScene = {
@@ -177,7 +177,8 @@ const input: InputScene = {
     },
   ],
 };
-const svg = renderToSvgString(input, { compile: { clips: [roundedRectClip] } });
+const compileResult = compileToScene(input, { compile: { clips: [roundedRectClip] } });
+const svg = renderToSvg(compileResult.scene);
 ```
 
 </DocTab>
@@ -190,20 +191,22 @@ import { compileToScene } from '@retikz/vanilla';
 
 import { roundedRectClip } from './rounded-rect-clip';
 
-const { scene } = compileToScene(ir, { compile: { clips: [roundedRectClip] } });
+const {
+  compileResult: { scene },
+} = compileToScene(ir, { compile: { clips: [roundedRectClip] } });
 ```
 
 provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出完整 Definition，并与显式 `clips` 参与相同的冲突检查。
 
 ## 错误与限制
 
-| 情况                          | 结果                                                                                               |
-| ----------------------------- | -------------------------------------------------------------------------------------------------- |
-| 重复 kind                     | registry 报 definition conflict，不覆盖已有项                                                      |
-| 未注册的 `clip.kind`          | 报 kind，并提示通过 Core `options.clips`、React `extensions.clips` 或 Vanilla `compile.clips` 注入 |
-| definition / spec kind 不一致 | 在 `lower` 前作为 provider contract violation 失败                                                 |
-| spec 不符合 schema            | 报 provider key、对应 schema 阶段与校验 cause                                                      |
-| 递归超过 `maxClipDepth`       | 失败；根声明与递归子声明共享 32 次转换预算，每次调用计一次                                         |
+| 情况                          | 结果                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| 重复 kind                     | registry 报 definition conflict，不覆盖已有项                                                   |
+| 未注册的 `clip.kind`          | 报 kind，并提示通过 Core `options.clips`、React `compile.clips` 或 Vanilla `compile.clips` 注入 |
+| definition / spec kind 不一致 | 在 `lower` 前作为 provider contract violation 失败                                              |
+| spec 不符合 schema            | 报 provider key、对应 schema 阶段与校验 cause                                                   |
+| 递归超过 `maxClipDepth`       | 失败；根声明与递归子声明共享 32 次转换预算，每次调用计一次                                      |
 
 复合 shape 会按 authored order 累积 child commands，并应用外层 `fillRule`；它不是几何交集。需要交集时使用嵌套 `<Scope clip>`。
 
@@ -234,7 +237,7 @@ provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出
       description: '提供精度取整与子裁剪声明的路径生成方法',
     },
     {
-      name: 'Layout.extensions.clips',
+      name: 'Layout.compile.clips',
       kind: 'property',
       type: 'ReadonlyArray<ClipDefinition>',
       description: 'React 宿主的裁剪注册入口',

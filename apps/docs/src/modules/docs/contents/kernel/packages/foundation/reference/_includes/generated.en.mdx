@@ -438,7 +438,7 @@ export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createOpenStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={30}>createOpenStringSchema</ApiSourceLink>
+#### <ApiSourceLink label={"createOpenStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={26}>createOpenStringSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -797,6 +797,40 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 </DocTabs>
 
+#### <ApiSourceLink label={"pickDefined"} path={"packages/kernel/foundation/src/objects.ts"} startLine={141}>pickDefined</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name      | Type / signature               | Description                                                                                          |
+| --------------- | --------- | ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Type parameters | `TSource` | `extends object`               | —                                                                                                    |
+|                 | `TKey`    | `extends keyof TSource`        | —                                                                                                    |
+| Parameters      | `source`  | `TSource`                      | Source object to read                                                                                |
+|                 | `fields`  | `ReadonlyArray<TKey>`          | Property keys to read                                                                                |
+| Returns         | —         | `Partial<Pick<TSource, TKey>>` | A new object containing only selected properties with defined values                                 |
+| Throws          | —         | —                              | Throws RetikzFoundationError if reading a property fails, preserving the original exception as cause |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const pickDefined: <TSource extends object, TKey extends keyof TSource>(
+  source: TSource,
+  fields: ReadonlyArray<TKey>,
+) => Partial<Pick<TSource, TKey>>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 #### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={79}>mergeDefinedProperties</ApiSourceLink>
 
 Skips undefined sources and property values while retaining null, false, 0, and empty strings; later defined values win, without recursive merging or input mutation
@@ -983,26 +1017,26 @@ export declare const parseStaticCssColor: (input: string) => ParsedCssColor | nu
 
 <ZodSchema name="JsonValueSchema" />
 
-#### <ApiSourceLink label={"NonBlankStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={17}>NonBlankStringSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NonBlankStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={15}>NonBlankStringSchema</ApiSourceLink>
 
 <ZodSchema name="NonBlankStringSchema" />
 
-#### <ApiSourceLink label={"PositiveNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={38}>PositiveNumberSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PositiveNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={34}>PositiveNumberSchema</ApiSourceLink>
 
 <ZodSchema name="PositiveNumberSchema" />
 
-#### <ApiSourceLink label={"NonNegativeNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={41}>NonNegativeNumberSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NonNegativeNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={37}>NonNegativeNumberSchema</ApiSourceLink>
 
 <ZodSchema name="NonNegativeNumberSchema" />
 
-#### <ApiSourceLink label={"PositiveIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={44}>PositiveIntegerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PositiveIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={40}>PositiveIntegerSchema</ApiSourceLink>
 
 <ZodSchema name="PositiveIntegerSchema" />
 
-#### <ApiSourceLink label={"NonNegativeIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={47}>NonNegativeIntegerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NonNegativeIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={43}>NonNegativeIntegerSchema</ApiSourceLink>
 
 <ZodSchema name="NonNegativeIntegerSchema" />
 
-#### <ApiSourceLink label={"NormalizedFractionSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={50}>NormalizedFractionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NormalizedFractionSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={46}>NormalizedFractionSchema</ApiSourceLink>
 
 <ZodSchema name="NormalizedFractionSchema" />

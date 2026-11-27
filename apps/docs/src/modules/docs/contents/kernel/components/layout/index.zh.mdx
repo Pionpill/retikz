@@ -27,7 +27,7 @@ Layout 可以接收组件树，也可以显示已经保存的 IR（可序列化�
 
 Layout 是绘图入口，不是自动排版算法：节点位置仍由图元与定位规则描述。需要 Flex、Grid 等排列能力时，使用 [Layout 布局包](/library/layout)。
 
-一张图中的局部分组使用 [Scope](/kernel/components/scope) 管理变换、默认样式和裁剪；扩展裁剪形状阅读[自定义裁剪区](/kernel/components/scope/custom)。观察控制点和边界等辅助信息使用 [Inspect](/kernel/packages/inspect)。
+一张图中的局部分组使用 [Scope](/kernel/components/scope) 管理变换、默认样式和裁剪；扩展裁剪形状阅读[自定义裁剪区](/kernel/components/scope/custom)。
 
 初次使用先阅读基础用法。需要理解根作用域、视框、显示尺寸或主题覆盖时，再阅读实现原理；完整属性和场景字段按需查表，无需先通读。
 

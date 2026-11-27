@@ -34,7 +34,7 @@ describe('Standard 形状事件全链 DOM 派发', () => {
     const root = createRoot(container);
     const onDiagnostic = vi.fn();
     const render = (innerRadius?: number) => (
-      <Layout renderer="svg" runtime={{ onDiagnostic }} width={200} height={200}>
+      <Layout renderer="svg" onDiagnostic={onDiagnostic} width={200} height={200}>
         <Sector id="sector" center={[0, 0]} radius={30} innerRadius={innerRadius} startAngle={0} endAngle={90} />
       </Layout>
     );

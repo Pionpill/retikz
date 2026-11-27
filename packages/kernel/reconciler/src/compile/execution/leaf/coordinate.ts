@@ -1,8 +1,9 @@
 import { resolveCoordinate, compileCoordinate } from '@retikz/core';
-import type { IRCoordinate, CompiledCoordinate } from '@retikz/core';
+import type { CompileOccurrenceLocator, IRCoordinate, CompiledCoordinate } from '@retikz/core';
 
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
+import type { TreeOutputState } from '../shared';
 import { createTreePositionContext } from '../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 
@@ -12,9 +13,16 @@ export const visitCoordinate = (
   ir: IRCoordinate,
   index: number,
   frame: SubtreeCompileRuntime,
+  occurrence: CompileOccurrenceLocator,
+  output: TreeOutputState,
 ): void => {
-  const canon = resolveCoordinate(ir, runtime.context.layout);
-  const compiled = compileCoordinate(canon, createTreePositionContext(runtime, frame.context.transformChains));
+  // 生成坐标可复用编译结果，但仍须在当前作用域注册名称并汇总几何
+  const compiled = output.compositeDispatcher
+    ? output.compositeDispatcher.coordinate(runtime, occurrence, ir, frame.context)
+    : compileCoordinate(
+        resolveCoordinate(ir, runtime.context.layout),
+        createTreePositionContext(runtime, frame.context.transformChains),
+      );
   assembleCoordinate(runtime, ir, index, frame, compiled);
 };
 
@@ -44,5 +52,5 @@ export const assembleCoordinate = (
   });
   publications.push(coordinateLayout);
   allocations.push({ boundsPoints: [localCenter], skipAllocation: layout?.skipAllocation });
-  geometries.push(compiled);
+  if (!frame.context.skipGeometries) geometries.push(compiled);
 };

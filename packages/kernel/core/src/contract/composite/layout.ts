@@ -241,9 +241,10 @@ export type LayoutMeasurementProbe =
 /**
  * 复合组件返回的完整布局结果或按需尺寸贡献
  * @template TArtifact 完整布局结果可携带的 JSON 产物类型，默认 never 表示不声明产物
+ * @template TMemo 组件在两次编译间保留的私有数据
  */
-export type CompositeEvaluationResult<TArtifact extends JsonValue = never> =
-  | CompositeCompileResult<TArtifact>
+export type CompositeEvaluationResult<TArtifact extends JsonValue = never, TMemo extends object = never> =
+  | CompositeCompileResult<TArtifact, TMemo>
   | CompositeContributionResult;
 
 /** 复合组件可见的受限编译上下文 */
@@ -306,13 +307,15 @@ export type CompositeCompileContext = CompositeRuntimeInputContext &
 /**
  * 复合组件的编译输出
  * @template TArtifact 可选 JSON 产物的类型，默认 never 表示不声明产物
+ * @template TMemo 组件在两次编译间保留的私有数据
  */
-export type CompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
+export type CompositeCompileResult<TArtifact extends JsonValue = never, TMemo extends object = never> = Readonly<{
   /** 普通 IR、绑定子项或当前回调创建的运行时输出 */
   children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
+  /** 供同一作者实例下一轮使用的私有状态；不可原地修改已提交状态或保存回调句柄 */
+  memo?: TMemo;
   /** 组件对父布局声明的布局占用；省略时合并最终子项 */
   allocationBounds?: Readonly<BoundsRect>;
   /** 当前组件局部坐标中的对齐线 */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
-}> &
-  ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
+}> & { artifact?: TArtifact };

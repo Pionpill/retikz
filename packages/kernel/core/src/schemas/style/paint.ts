@@ -1,4 +1,4 @@
-import type { ValueOf, OpenString } from '@retikz/foundation';
+import type { ValueOf } from '@retikz/foundation';
 import {
   createOpenStringSchema,
   NormalizedFractionSchema,
@@ -57,37 +57,37 @@ export const GradientStopSchema = object({
   color: lazy(() => CssColorSchema).describe('CSS color for this stop.'),
   opacity: lazy(() => OpacitySchema)
     .optional()
-    .describe('Stop opacity. Omitted fields are fully opaque.'),
-}).describe('A single gradient color stop');
+    .describe('Opacity of this stop.'),
+});
 
 /** 校验至少含两个色标的线性渐变及可选方向角 */
 export const LinearGradientPaintSchema = object({
-  kind: literal('linearGradient').describe('Discriminator for linear gradient paint.'),
-  stops: array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
+  kind: literal('linearGradient'),
+  stops: array(GradientStopSchema).min(2),
   angle: number()
     .optional()
     .describe('Gradient direction angle in degrees. Omitted fields use the paint backend default.'),
-}).describe('Linear gradient paint server');
+});
 
 /** 校验径向渐变；中心与半径采用对象包围盒坐标 */
 export const RadialGradientPaintSchema = object({
-  kind: literal('radialGradient').describe('Discriminator for radial gradient paint.'),
-  stops: array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
+  kind: literal('radialGradient'),
+  stops: array(GradientStopSchema).min(2),
   center: tuple([number(), number()])
     .optional()
     .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
   radius: PositiveNumberSchema.optional().describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
-}).describe('Radial gradient paint server');
+});
 
 /** 校验锥形渐变的色标、中心及起始角 */
 export const ConicGradientPaintSchema = object({
-  kind: literal('conicGradient').describe('Discriminator for conic gradient paint.'),
-  stops: array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
+  kind: literal('conicGradient'),
+  stops: array(GradientStopSchema).min(2),
   center: tuple([number(), number()])
     .optional()
     .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
   angle: number().optional().describe('Start angle in degrees. Omitted fields use 0.'),
-}).describe('Conic gradient paint server');
+});
 
 /** 校验线状图案的局部样式覆盖；显式虚线序列优先于预设 */
 export const PatternLineStyleSchema = strictObject({
@@ -126,7 +126,7 @@ export const PatternLineStyleCycleSchema = strictObject({
     .int()
     .min(2)
     .max(MAX_PATTERN_LINE_STYLE_PERIOD)
-    .describe('Number of adjacent line slots in one style cycle, from 2 through 512.'),
+    .describe('Number of adjacent line slots before the cycle repeats.'),
   overrides: array(PatternLineStyleOverrideSchema)
     .min(1)
     .describe('Sparse line-style overrides keyed by zero-based cycle index.'),
@@ -157,7 +157,7 @@ export const PatternLineStyleCycleSchema = strictObject({
 
 /** 校验图案填充的提供者名称、基础尺寸及样式覆盖 */
 export const PatternPaintSchema = object({
-  kind: literal('pattern').describe('Discriminator for pattern paint.'),
+  kind: literal('pattern'),
   shape: PatternShapeNameSchema.describe(
     'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
   ),
@@ -195,7 +195,7 @@ export const PatternPaintSchema = object({
 
 /** 校验以图片填充形状的资源地址与适配方式 */
 export const ImagePaintSchema = object({
-  kind: literal('image').describe('Discriminator for image paint.'),
+  kind: literal('image'),
   href: NonBlankStringSchema.describe('Image URL (http(s) or data URI)'),
   fit: zodEnum(ImageFit)
     .optional()
@@ -209,7 +209,7 @@ export const PaintSchema = discriminatedUnion('kind', [
   ConicGradientPaintSchema,
   PatternPaintSchema,
   ImagePaintSchema,
-]).describe('Paint server spec: gradient / pattern / image. Solid color stays a plain string on `fill` / `stroke`.');
+]).describe('Use a plain color on fill or stroke for solid paint.');
 
 /** 渐变 stop 类型 */
 export type IRGradientStop = ZodInfer<typeof GradientStopSchema>;
@@ -225,6 +225,3 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 
 /** Pattern 相邻线条的稀疏周期样式 */
 export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchema>;
-
-/** 图案形状名称，支持内置名称和已注册的自定义名称 */
-export type PatternShapeName = OpenString<BuiltinPatternShape>;

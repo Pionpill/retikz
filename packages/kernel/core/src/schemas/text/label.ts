@@ -16,9 +16,7 @@ export const createLabelVisualStyleShape = (descriptions: LabelVisualStyleDescri
   textColor: ContextualColorSchema.optional().describe(
     descriptions.textColor ?? 'Label text color override. Missing values inherit from host defaults.',
   ),
-  opacity: OpacitySchema.optional().describe(
-    descriptions.opacity ?? 'Label opacity factor multiplied by host opacity; omitted values use 1.',
-  ),
+  opacity: OpacitySchema.optional().describe(descriptions.opacity ?? 'Multiplies the host opacity.'),
   font: FontSchema.optional().describe(
     descriptions.font ?? 'Label font overrides. Missing fields inherit from host defaults.',
   ),
@@ -36,7 +34,10 @@ export const BoundaryLabelSchema = strictObject({
   align: TextAlignSchema.default('middle').describe('Alignment along the attachment tangent.'),
   placement: zodEnum(['outside', 'inside']).default('outside').describe('Side of the boundary support line.'),
   distance: NonNegativeNumberSchema.default(4).describe('Gap from the support line to the rotated label box.'),
-  rotate: union([zodEnum(['none', 'radial', 'tangent']), number().describe('Angle in degrees.')])
+  rotate: union([
+    zodEnum(['none', 'radial', 'tangent']),
+    number().describe('Degrees clockwise in host-local coordinates.'),
+  ])
     .default('none')
     .describe('Text rotation: none, outward radial, radial plus 90 degrees, or an explicit angle.'),
   keepUpright: boolean().default(false).describe('Flip upside-down text in host-local coordinates.'),

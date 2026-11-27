@@ -23,21 +23,21 @@ import { Layout, Node } from '@retikz/react';
 </Layout>;
 ```
 
-**Vanilla（浏览器）**——`mountCanvas` 把图挂成 `<canvas>`，返回的 view 包含 Canvas 侧的水合与坐标映射：
+**Vanilla（浏览器）**——`mountSceneView` 把图挂成 `<canvas>`，可通过返回的视图绑定事件：
 
 ```ts
-import { mountCanvas } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
-const view = mountCanvas(container, ir);
-// view.root 是 <canvas>；view.update(next) 走所选 static 或 retained processing；view.dispose() 卸载
+const view = mountSceneView(container, ir, { renderer: 'canvas' });
+// view.root 是 <canvas>；view.replace(next) 完整替换场景；view.dispose() 卸载
 ```
 
 两个入口的输入能力不同：
 
-| 入口                  | 接收的输入                               | 输出       |
-| --------------------- | ---------------------------------------- | ---------- |
-| React `<Layout>`      | JSX `children`<br />或 `IRScene`         | `<canvas>` |
-| Vanilla `mountCanvas` | `Scene` / `IRScene`<br />或 `InputScene` | `<canvas>` |
+| 入口                     | 接收的输入                       | 输出       |
+| ------------------------ | -------------------------------- | ---------- |
+| React `<Layout>`         | JSX `children`<br />或 `IRScene` | `<canvas>` |
+| Vanilla `mountSceneView` | `IRScene`                        | `<canvas>` |
 
 `devicePixelRatio` 缺省读取 `globalThis.devicePixelRatio`，再回退到 1，让高清屏保留足够的位图分辨率。
 
@@ -46,7 +46,7 @@ const view = mountCanvas(container, ir);
 Canvas 没有 DOM 图元，定位靠**坐标命中查询**：把指针的 client 像素逆映射回 Scene 坐标，再做几何命中得到图元 `id`。这套定位封装在 `view.hydrate` 里，handler 注册表与 SVG 相同：
 
 ```ts
-const view = mountCanvas(container, ir);
+const view = mountSceneView(container, ir, { renderer: 'canvas' });
 const handle = view.hydrate({
   handlers: { box: { click: event => toggle('box') } },
 });
@@ -57,7 +57,7 @@ const handle = view.hydrate({
 
 <ComponentAlert
   title="底层绘制 / 命中（自定义集成用）"
-  description="@retikz/render/canvas 暴露 renderToCanvas(canvas, scene)（直接画进 HTMLCanvasElement）、drawScene（往 2D context 画）、hitTest(scene, point)（坐标 → 图元 id）。自己管理画布 / 离屏渲染 / 命中逻辑时用这层；普通用法用上面的 mountCanvas 即可。"
+  description="@retikz/render/canvas 暴露 renderToCanvas(canvas, scene)（直接画进 HTMLCanvasElement）、drawScene（往 2D context 画）、hitTest(scene, point)（坐标 → 图元 id）。自己管理画布 / 离屏渲染 / 命中逻辑时用这层；普通用法用上面的 mount 即可。"
 />
 
 ## 已知边界
@@ -65,7 +65,7 @@ const handle = view.hydrate({
 Canvas 支持范围取决于宿主提供的 2D API 与资源加载能力。底层 `drawScene` 可用 `warnUnsupported` 接收诊断；未提供时，诊断写入 `console.warn`。
 
 - 宿主没有 `createConicGradient` 时，圆锥渐变会跳过绘制并告警。
-- image paint 需要 `getImage` 返回已解码图片。React `<Layout renderer="canvas">` 会自带 loader，并在图片就绪后重绘；v0.4 的 Vanilla `mountCanvas` 尚未暴露 `getImage`，因此 image paint 会跳过并告警。自定义宿主可给 `renderToCanvas` / `drawScene` 提供 loader，并在图片就绪后自行重绘。
+- image paint 需要 `getImage` 返回已解码图片。React `<Layout renderer="canvas">` 会自带 loader，并在图片就绪后重绘；v0.4 的 Vanilla `mountSceneView` 尚未暴露 `getImage`，因此 image paint 会跳过并告警。自定义宿主可给 `renderToCanvas` / `drawScene` 提供 loader，并在图片就绪后自行重绘。
 - 直接调用 `drawScene` 时，pattern 和精确的非均匀 gradient stroke 依赖 `createOffscreen`；浏览器 `renderToCanvas` 会提供默认离屏 context，其他宿主需要自行注入。
 - Scene 引用了缺失或当前不支持的 paint / clip 资源时，相应效果会跳过并告警。
 
@@ -82,7 +82,9 @@ import { compileToScene } from '@retikz/vanilla';
 
 import { renderSceneToImage } from '@retikz/render/canvas-node';
 
-const { scene } = compileToScene(ir);
+const {
+  compileResult: { scene },
+} = compileToScene(ir);
 const png = await renderSceneToImage(scene, {
   width: 960,
   height: 540,

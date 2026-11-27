@@ -1,4 +1,4 @@
-import {
+﻿import {
   projectLayoutWithTransform,
   projectPublishedReference,
   registerFatalProbeError,
@@ -17,7 +17,13 @@ import type {
   SubtreeCompileContext,
   SubtreeCompileRuntime,
 } from '../../compile';
-import { assembleCompileSubtree, CompileElementExecutor, createDuplicateWarning, NamespaceStack } from '../../compile';
+import {
+  needsScopeEnvelope,
+  assembleCompileSubtree,
+  CompileElementExecutor,
+  createDuplicateWarning,
+  NamespaceStack,
+} from '../../compile';
 import type { WeaveEntry, WeaveRoot, WeaveScopeEntry } from '../shared';
 import type { WeaveNameIndex, WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
@@ -38,8 +44,7 @@ type WeaveBindingFlowContext = {
   requireProjection: (entry: WeaveScopeEntry) => void;
   requireTask: (address: WeaveTaskAddress) => void;
   prepareAddress: (entry: WeaveEntry) => WeaveTaskAddress;
-  pending: Map<string, WeaveUpdateRequest>;
-  keyOf: (entry: WeaveEntry) => string;
+  pending: Map<WeaveEntry, WeaveUpdateRequest>;
   scopeIds: IdAllocator;
 };
 
@@ -59,7 +64,6 @@ export const createWeaveBindingFlow = ({
   requireTask,
   prepareAddress,
   pending,
-  keyOf,
   scopeIds,
 }: WeaveBindingFlowContext) => {
   const composer = runtime.state.execution.scopeTransformComposer;
@@ -84,6 +88,8 @@ export const createWeaveBindingFlow = ({
     const transforms = state.compile?.context.preparation.preliminaryTransforms;
     return {
       ...outer,
+      skipGeometries:
+        outer.skipGeometries === true && !needsScopeEnvelope(state.origin.own, state.compile!.context.preparation),
       inheritance: state.resolve!.value.inheritance,
       pathPrefix: paths.get(parent)!,
       compileOwner: ownerOf(parent),
@@ -181,13 +187,29 @@ export const createWeaveBindingFlow = ({
     return { ...entry, geometry };
   };
 
+  // ⚡只跳过本批已重新编译且未发布名称的连续实例；保留的贡献在 output 阶段仍可能重新编译
+  const previousCandidates = new Map<number, number>();
+  const previousCandidate = (index: number, entry: WeaveEntry) => {
+    const previous = previousCandidates.get(index);
+    if (previous !== undefined) return previous;
+    const execution = executions.get(entry);
+    if (!execution?.bindingsReady || execution.retained !== undefined || execution.bindings.length !== 0) return index;
+    const candidate = previousCandidates.get(index - 1) ?? index - 1;
+    previousCandidates.set(index, candidate);
+    return candidate;
+  };
   const lookup = (consumer: WeaveEntry, name: string, closed: boolean): NamespaceEntry | undefined => {
-    const binding = names.lookup({ consumer, name, visibility: closed ? 'closed' : 'declaration' }, entry => {
-      if (entry === consumer) return executions.get(entry)?.bindings ?? [];
-      ensure(entry);
-      if (executions.has(entry) && !executions.get(entry)!.bindingsReady) requireTask(prepareAddress(entry));
-      return executions.get(entry)?.bindings ?? entry.current?.contribution?.bindings ?? [];
-    });
+    const binding = names.lookup(
+      { consumer, name, visibility: closed ? 'closed' : 'declaration' },
+      entry => {
+        if (entry === consumer) return executions.get(entry)?.bindings ?? [];
+        ensure(entry);
+        if (executions.has(entry) && !executions.get(entry)!.bindingsReady) requireTask(prepareAddress(entry));
+        return executions.get(entry)?.bindings ?? entry.current?.contribution?.bindings ?? [];
+      },
+      false,
+      previousCandidate,
+    );
     if (binding === undefined) return;
     const producer = binding.entry;
     if (producer.type === 'scope' && ancestorsOf(consumer).includes(producer)) {
@@ -232,7 +254,7 @@ export const createWeaveBindingFlow = ({
     const existing = executions.get(entry);
     if (existing !== undefined) return existing;
     const parent = transaction.readState(entry).parent;
-    if (parent.type !== 'root' && pending.has(keyOf(parent))) requireTask(prepareAddress(parent));
+    if (parent.type !== 'root' && pending.has(parent)) requireTask(prepareAddress(parent));
     const parentContext = contextOf(parent);
     const state = transaction.editState(entry);
     state.origin = { ...state.origin, context: parentContext.inheritance };
@@ -269,7 +291,14 @@ export const createWeaveBindingFlow = ({
       const facts = scopeFacts(parent);
       chains = composer.append(facts.context.transformChains, facts.transforms);
     }
-    const frame = { context: { ...parentContext, transformChains: chains }, state: executor.createRootRuntime().state };
+    const frame = {
+      context: {
+        ...parentContext,
+        transformChains: chains,
+        skipGeometries: entry.type === 'scope' && parentContext.skipGeometries,
+      },
+      state: executor.createRootRuntime().state,
+    };
     const execution = { runtime: candidate, executor, frame, bindings: [] };
     executions.set(entry, execution);
     return execution;

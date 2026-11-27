@@ -58,7 +58,7 @@ for (const kind of ['simple', 'inherited', 'contrast', 'pattern', 'labels'] as c
             ]);
           }
           if (kind === 'pattern')
-            expect(result.style.fill).toMatchObject({ kind: 'paint', pattern: { name: 'dots', size: 8 } });
+            expect(result.style.fill).toMatchObject({ kind: 'paint', spec: { shape: 'dots' }, pattern: { size: 8 } });
           if (kind === 'labels') {
             expect(result.labels).toHaveLength(16);
             expect(result.labels.at(-1)).toMatchObject({

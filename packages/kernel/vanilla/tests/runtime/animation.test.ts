@@ -2,12 +2,12 @@
 import type { IRScene } from '@retikz/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { renderToSvgString } from '../../src';
-import { mountCanvas, mountSvg } from '../../src/dom';
+import { compileToScene, renderToSvg } from '../../src';
+import { mountSceneView } from '../../src/dom';
 
 /*
- * runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
- *   {animation:{enabled:false}} + prefers-reduced-motion 降级；view.animation 句柄
+ * runtime 播放控制（jsdom）：mount load→CSS 自播 / 交互→WAAPI 桥；mount rAF 时钟 + trigger；
+ *   {animate:false} + prefers-reduced-motion 降级；view.animation 句柄
  */
 
 /** 录制型 2d context（jsdom 无 2d backend） */
@@ -103,23 +103,23 @@ const manualIr: IRScene = {
   ],
 };
 
-describe('mountSvg 动画', () => {
+describe('mount 动画', () => {
   it('load track → 内联 <style> 含 @keyframes（CSS 自播）', () => {
-    const view = mountSvg(document.createElement('div'), loadIr);
+    const view = mountSceneView(document.createElement('div'), loadIr);
     const style = view.root.querySelector('style');
 
     expect(style).not.toBeNull();
     expect(style!.textContent).toContain('@keyframes');
   });
 
-  it('{animation:{enabled:false}} → 无 <style>（静态 base）', () => {
-    const view = mountSvg(document.createElement('div'), loadIr, { animation: { enabled: false } });
+  it('{animate:false} → 无 <style>（静态 base）', () => {
+    const view = mountSceneView(document.createElement('div'), loadIr, { animate: false });
 
     expect(view.root.querySelector('style')).toBeNull();
   });
 
   it('交互 track（manual）→ WAAPI 桥调 element.animate + view.animation 句柄', () => {
-    const view = mountSvg(document.createElement('div'), manualIr);
+    const view = mountSceneView(document.createElement('div'), manualIr);
 
     expect(animateSpy).toHaveBeenCalled();
     expect(view.animation).toBeDefined();
@@ -127,74 +127,82 @@ describe('mountSvg 动画', () => {
 
   it('prefers-reduced-motion → 静态（无 <style>）', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
-    const view = mountSvg(document.createElement('div'), loadIr);
+    const view = mountSceneView(document.createElement('div'), loadIr);
 
     expect(view.root.querySelector('style')).toBeNull();
   });
 
-  it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
+  it('{animate:true} 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
-    const view = mountSvg(document.createElement('div'), loadIr, { animation: { enabled: true } });
+    const view = mountSceneView(document.createElement('div'), loadIr, { animate: true });
 
     expect(view.root.querySelector('style')).not.toBeNull();
   });
 
-  it('renderToSvgString 缺省跟随 prefers-reduced-motion', () => {
+  it('renderToSvg 缺省跟随 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
 
-    expect(renderToSvgString(loadIr)).not.toContain('@keyframes');
+    expect(renderToSvg(compileToScene(loadIr).scene)).not.toContain('@keyframes');
   });
 
-  it('renderToSvgString 显式 enabled:true 覆盖 prefers-reduced-motion', () => {
+  it('renderToSvg 显式 enabled:true 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
 
-    expect(renderToSvgString(loadIr, { animation: { enabled: true } })).toContain('@keyframes');
+    expect(renderToSvg(compileToScene(loadIr).scene, { animation: { enabled: true } })).toContain('@keyframes');
   });
 });
 
 describe('SVG 静态截帧 {at:t}', () => {
-  it('renderToSvgString({at}) → 烘焙静态 opacity、无 @keyframes（SSR 海报帧）', () => {
-    const settled = renderToSvgString(loadIr, { animation: { snapshotAt: 999 } });
+  it('renderToSvg({at}) → 烘焙静态 opacity、无 @keyframes（SSR 海报帧）', () => {
+    const settled = renderToSvg(compileToScene(loadIr).scene, { animation: { snapshotAt: 999 } });
 
     expect(settled).not.toContain('@keyframes');
     expect(settled).toContain('opacity="1"'); // 末态 = base
 
-    const start = renderToSvgString(loadIr, { animation: { snapshotAt: 0 } });
+    const start = renderToSvg(compileToScene(loadIr).scene, { animation: { snapshotAt: 0 } });
 
     expect(start).toContain('opacity="0"'); // 起点帧
   });
 
-  it('mountSvg({at}) → 定格帧、无 <style>', () => {
-    const view = mountSvg(document.createElement('div'), loadIr, { animation: { snapshotAt: 0 } });
+  it('mountSceneView({at}) → 定格帧、无 <style>', () => {
+    const view = mountSceneView(document.createElement('div'), loadIr, { snapshotAt: 0 });
 
     expect(view.root.querySelector('style')).toBeNull();
     expect(view.root.querySelector('[data-retikz-id="a"]')?.getAttribute('opacity')).toBe('0');
   });
 });
 
-describe('mountCanvas 动画', () => {
+describe('mount 动画', () => {
   it('load track → 起 rAF 时钟 + view.animation 句柄', () => {
-    const view = mountCanvas(document.createElement('div'), loadIr, { output: { width: 100, height: 100 } });
+    const view = mountSceneView(document.createElement('div'), loadIr, {
+      renderer: 'canvas',
+      width: 100,
+      height: 100,
+    });
 
     expect(rafSpy).toHaveBeenCalled();
     expect(view.animation).toBeDefined();
   });
 
-  it('{animation:{enabled:false}} → 不起 rAF、无 animation 句柄（静态）', () => {
-    const view = mountCanvas(document.createElement('div'), loadIr, {
-      output: { width: 100, height: 100 },
-      animation: { enabled: false },
+  it('{animate:false} → 不起 rAF、无 animation 句柄（静态）', () => {
+    const view = mountSceneView(document.createElement('div'), loadIr, {
+      renderer: 'canvas',
+      width: 100,
+      height: 100,
+      animate: false,
     });
 
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeUndefined();
   });
 
-  it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
+  it('{animate:true} 覆盖 prefers-reduced-motion', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
-    const view = mountCanvas(document.createElement('div'), loadIr, {
-      output: { width: 100, height: 100 },
-      animation: { enabled: true },
+    const view = mountSceneView(document.createElement('div'), loadIr, {
+      renderer: 'canvas',
+      width: 100,
+      height: 100,
+      animate: true,
     });
 
     expect(rafSpy).toHaveBeenCalled();
@@ -202,7 +210,11 @@ describe('mountCanvas 动画', () => {
   });
 
   it('manual-only track → 不自动起 rAF，但有 view.animation 句柄；play() 起时钟', () => {
-    const view = mountCanvas(document.createElement('div'), manualIr, { output: { width: 100, height: 100 } });
+    const view = mountSceneView(document.createElement('div'), manualIr, {
+      renderer: 'canvas',
+      width: 100,
+      height: 100,
+    });
 
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeDefined();
@@ -218,14 +230,18 @@ describe('mountCanvas 动画', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'a', position: [0, 0], text: 'x' }],
     };
-    const view = mountCanvas(document.createElement('div'), plainIr, { output: { width: 100, height: 100 } });
+    const view = mountSceneView(document.createElement('div'), plainIr, {
+      renderer: 'canvas',
+      width: 100,
+      height: 100,
+    });
 
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeUndefined();
   });
 });
 
-describe('mountCanvas visible-trigger 监听合帧', () => {
+describe('mount visible-trigger 监听合帧', () => {
   const visibleIr: IRScene = {
     version: 1,
     type: 'scene',
@@ -257,7 +273,7 @@ describe('mountCanvas visible-trigger 监听合帧', () => {
     document.body.appendChild(container);
 
     // visible-only scene 不自动起播放时钟；挂载会排一帧首测相交
-    mountCanvas(container, visibleIr, { output: { width: 100, height: 100 } });
+    mountSceneView(container, visibleIr, { renderer: 'canvas', width: 100, height: 100 });
     const baseline = rafSpy.mock.calls.length;
 
     // 同一帧内（rafSpy 不真回调，已排的 rAF 不会清空）连发多次 scroll/resize → 不应再排新 rAF
@@ -269,4 +285,29 @@ describe('mountCanvas visible-trigger 监听合帧', () => {
 
     container.remove();
   });
+});
+
+it('跟随系统偏好时只刷新宿主，不重新编译，释放视图后停止监听', () => {
+  const media = Object.assign(new EventTarget(), { matches: false });
+  const remove = vi.spyOn(media, 'removeEventListener');
+  vi.stubGlobal('matchMedia', () => media);
+  const view = mountSceneView(document.createElement('div'), loadIr);
+  const initial = view.compileResult;
+  expect(view.root.querySelector('style')).not.toBeNull();
+  media.matches = true;
+  media.dispatchEvent(new Event('change'));
+  expect(view.compileResult).toBe(initial);
+  expect(view.root.querySelector('style')).toBeNull();
+  media.matches = false;
+  media.dispatchEvent(new Event('change'));
+  expect(view.root.querySelector('style')).not.toBeNull();
+  view.replace(loadIr, { animate: true });
+  expect(remove).toHaveBeenCalledTimes(1);
+  media.matches = true;
+  media.dispatchEvent(new Event('change'));
+  expect(view.root.querySelector('style')).not.toBeNull();
+  view.replace(loadIr, { animate: undefined });
+  expect(view.root.querySelector('style')).toBeNull();
+  view.dispose();
+  expect(remove).toHaveBeenCalledTimes(2);
 });

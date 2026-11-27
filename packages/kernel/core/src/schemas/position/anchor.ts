@@ -5,7 +5,7 @@ import { NodeTargetSchema, AnchorRefSchema } from './target';
 
 /** Node 锚点对锚点定位结构 */
 export const AnchorPositionSchema = strictObject({
-  kind: literal('anchor').describe('Discriminator for anchor-to-anchor node positioning.'),
+  kind: literal('anchor'),
   target: NodeTargetSchema.describe(
     'Already-laid-out Node, Coordinate, or resolved Scope target. An omitted target anchor means center in this context.',
   ),

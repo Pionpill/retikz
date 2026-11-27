@@ -97,7 +97,7 @@ provider contribution 以 Path operation 为 root 时，provider catalog 必须�
 - 失败与诊断：无效 spec 由对应 Standard schema 诊断；缺少 operation/shape provider、重复 kind、非法 shape output、递归 cycle/depth 与非法 canonical path 沿 [Core v0.5 ADR-030](../../../../../kernel/_notes/decisions/_v0.5/030-extensible-clip-shapes.md) 的统一错误边界处理。Standard 不捕获后降级为 `rect`、跳过 clip 或偷偷安装定义
 - 兼容性 / breaking：`CircleClipShape`、`EllipseClipShape`、`PolygonClipShape`、`PathClipShape`、`CompoundClipShape` 改从 `@retikz/standard/clip` 导入；Circle/Ellipse Clip spec 与 definitions 也改从该子入口取得。旧 Core 导出和默认内置被删除，不保留 alias。既有 Standard Polygon/Path/Compound ClipDefinition 名称保持，但调用方必须同时装配 shape definitions/providers
 - Layout：零尺寸 allocation 继续裁掉全部内容，但统一通过 Core `rect` 表达；Layout 不声明 Standard provider root，也不要求宿主预装 `@retikz/standard/clip`
-- React / Vanilla 等价性：Standard React/Vanilla 不新增 ClipShape registry；它们与 Surface、Chart、Table 等 consumer 只声明 Core provider roots/catalog，并由同一个 Core resolver 物化两级 definitions。相同 IR 和 contribution 在直接 Core、React、Vanilla、SSR 与 retained processing 中得到相同 Scene 和诊断
+- React / Vanilla 等价性：Standard React/Vanilla 不新增 ClipShape registry；它们与 Surface、Chart、Table 等 consumer 只声明 Core provider roots/catalog，并由同一个 Core resolver 物化两级 definitions。相同 IR 和 contribution 在直接 Core、React、Vanilla、SSR 与 session processing 中得到相同 Scene 和诊断
 
 ## 实施结论
 

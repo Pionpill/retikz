@@ -15,15 +15,13 @@ import { FlowDiagram } from '@retikz/diagram-react/flow';
 import type { AssertEqual } from '@retikz/foundation';
 import type { PlotLineageProps } from '@retikz/plot-react';
 import { Plot } from '@retikz/plot-react';
-import type { LayoutExtensions, LayoutProps } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
 import { resolveInputEmbedAdapter } from '@retikz/react';
-import type { ReactNode } from 'react';
+import type { CompileOptions } from '@retikz/reconciler';
+import type { ReactElement, ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
-type PlotStandaloneProps = Pick<
-  LayoutProps & LayoutExtensions,
-  'className' | 'style' | 'renderer' | 'themeDefinitions'
-> &
+type PlotStandaloneProps = Pick<LayoutProps & CompileOptions, 'className' | 'style' | 'renderer' | 'themeDefinitions'> &
   PlotLineageProps;
 
 const PLOT_STANDALONE_PROP_KEYS = [
@@ -47,9 +45,9 @@ type PreviewHostDimensions = Pick<LayoutProps, 'width' | 'height'>;
 
 const FLOW_HOST_PROP_KEYS = [
   'authoring',
-  'compileDriver',
   'handlers',
-  'runtime',
+  'reconciler',
+  'onDiagnostic',
   'width',
   'height',
   'viewBox',
@@ -123,7 +121,7 @@ const preparePreviewChartProps = (
 
 /** 把 standalone 预览根投影为同一组件 InputEmbed 可消费的内容 props */
 export const previewEmbedPropsOf = (
-  component: unknown,
+  component: ReactElement['type'],
   props: Readonly<Record<string, unknown>>,
 ): Readonly<Record<string, unknown>> => {
   const adapter = resolveInputEmbedAdapter(component);
@@ -150,8 +148,8 @@ export const previewEmbedPropsOf = (
 
 /** 读取预览根最终交给外层 Layout 的输出尺寸 */
 export const previewHostDimensionsOf = (
-  component: unknown,
-  props: Readonly<Record<string, unknown>>,
+  component: ReactElement['type'],
+  props: Readonly<Record<string, unknown>> & PreviewHostDimensions,
 ): PreviewHostDimensions => {
   const adapter = resolveInputEmbedAdapter(component);
   if (
@@ -169,7 +167,7 @@ export const previewHostDimensionsOf = (
     return preparePreviewChartProps(props).host;
 
   return {
-    ...(props.width === undefined ? {} : { width: props.width as LayoutProps['width'] }),
-    ...(props.height === undefined ? {} : { height: props.height as LayoutProps['height'] }),
+    ...(props.width === undefined ? {} : { width: props.width }),
+    ...(props.height === undefined ? {} : { height: props.height }),
   };
 };

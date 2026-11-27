@@ -19,11 +19,14 @@ export type WeaveNameBinding = Readonly<{
   generated?: NamespaceFrameChange;
 }>;
 
+type CompositeEntry = Extract<WeaveEntry, { type: 'composite' }>;
+
 /** 从候选声明事实建立本批可见性索引，不保存编译栈或领域计算闭包 */
 export class WeaveNameIndex {
   /** 名称与可能生成名称的作者声明，结构地址由共享索引提供 */
   private readonly declarations: WeaveLookup<string, ReadonlySet<WeaveEntry>>;
   private readonly composites: WeaveLookup<Extract<WeaveEntry, { type: 'composite' }>, true>;
+  private ordered?: Array<{ entry: CompositeEntry; path: PropertyPath }>;
   /** 前一候选声明的反向索引，支持同批连续改名 */
   private readonly memberships: WeaveLookup<WeaveEntry, ReadonlyArray<string>>;
 
@@ -100,6 +103,7 @@ export class WeaveNameIndex {
     query: WeaveNameQuery,
     generatedBindings: (entry: Extract<WeaveEntry, { type: 'composite' }>) => ReadonlyArray<NamespaceFrameChange>,
     committed = false,
+    previousCandidate?: (index: number, entry: CompositeEntry) => number,
   ): WeaveNameBinding | undefined {
     const read = committed ? readWeaveCurrent : readWeaveCandidate;
     let namespace = this.namespaceOf(query.consumer, committed);
@@ -113,9 +117,7 @@ export class WeaveNameIndex {
     let closed = query.visibility === 'closed';
     let inclusive = false;
     for (;;) {
-      const visible = (entry: WeaveEntry) => {
-        if (this.namespaceOf(entry, committed) !== namespace) return false;
-        const path = this.paths.get(entry)!;
+      const withinBoundary = (path: PropertyPath) => {
         if (closed && boundary.every((part, index) => path[index] === part)) return true;
         const order = this.compare(path, boundary);
         return order < 0 || (inclusive && order === 0);
@@ -123,18 +125,36 @@ export class WeaveNameIndex {
       let authored: WeaveNameBinding | undefined;
       for (const entry of this.declarations.get(query.name) ?? []) {
         if (
-          !visible(entry) ||
+          this.namespaceOf(entry, committed) !== namespace ||
+          !withinBoundary(this.paths.get(entry)!) ||
           (authored !== undefined && this.compare(this.paths.get(entry)!, this.paths.get(authored.entry)!) <= 0)
         )
           continue;
         const alias = entry.type === 'node' ? (read(entry).origin.own.aliasIds?.indexOf(query.name) ?? -1) : -1;
         authored = { entry, path: [...this.paths.get(entry)!, ...(alias < 0 ? ['id'] : ['aliasIds', alias])] };
       }
-      const composites = [...this.composites.keys()]
-        .filter(visible)
-        .sort((left, right) => this.compare(this.paths.get(right)!, this.paths.get(left)!));
-      for (const entry of composites) {
-        if (authored !== undefined && this.compare(this.paths.get(entry)!, this.paths.get(authored.entry)!) < 0) break;
+      // ⚡地址快照内只排一次声明顺序，二分跳过消费位置之后不可见的生产者
+      const ordered = (this.ordered ??= Array.from(this.composites.keys(), entry => ({
+        entry,
+        path: this.paths.get(entry)!,
+      })).sort((left, right) => this.compare(left.path, right.path)));
+      let start = 0;
+      let end = ordered.length;
+      while (start < end) {
+        const middle = Math.floor((start + end) / 2);
+        if (withinBoundary(ordered[middle].path)) start = middle + 1;
+        else end = middle;
+      }
+      for (let cursor = start - 1; cursor >= 0;) {
+        const { entry, path } = ordered[cursor];
+        const candidate = previousCandidate?.(cursor, entry) ?? cursor;
+        if (candidate < cursor) {
+          cursor = candidate;
+          continue;
+        }
+        cursor--;
+        if (authored !== undefined && this.compare(path, this.paths.get(authored.entry)!) < 0) break;
+        if (this.namespaceOf(entry, committed) !== namespace) continue;
         const bindings = generatedBindings(entry);
         for (let index = bindings.length - 1; index >= 0; index--) {
           const binding = bindings[index];

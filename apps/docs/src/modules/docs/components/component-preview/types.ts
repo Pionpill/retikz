@@ -1,4 +1,5 @@
 import type { IRScene } from '@retikz/core';
+import type { RenderMode } from '@retikz/render/runtime';
 import type { FC, ReactNode } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -10,9 +11,6 @@ export type Transform = { x: number; y: number; scale: number };
 
 /** 源码视图切换：React 源码 / IR JSON / Vanilla Input 代码 */
 export type SourceView = 'react' | 'ir' | 'vanilla' | 'config';
-
-/** demo 渲染目标：SVG DOM 或 Canvas 2D。 */
-export type RendererMode = 'svg' | 'canvas';
 
 /** ComponentPreview 向单文件 demo 注入的当前文档语言 */
 export type ComponentPreviewDemoProps = Readonly<{ lang?: Lang }>;
@@ -49,7 +47,7 @@ export type PreviewControlRuntime = {
   /** 重新挂载演示子树。 */
   remount: () => void;
   /** 当前渲染目标。 */
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   /** 渲染区 DOM，用于读取 svg / canvas / animation 状态。 */
   renderPane: HTMLElement | null;
   /** 预览区是否处于 hover 状态。 */
@@ -490,9 +488,9 @@ export type SourceViewData = {
   /** 该视图的源码文件。 */
   files: Array<ComponentSourceFile>;
   /** 该视图固定使用的渲染目标；缺省时跟随预览面板的局部选择。 */
-  rendererMode?: RendererMode;
+  rendererMode?: RenderMode;
   /** 用对应 runtime 渲染该视图的产物；缺省则复用 React demo 渲染。 */
-  render?: (mode: RendererMode) => ReactNode;
+  render?: (mode: RenderMode) => ReactNode;
 };
 
 /** 演示卡的源码视图集合。 */

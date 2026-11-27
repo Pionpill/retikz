@@ -4,7 +4,6 @@ import * as react from '../src';
 
 const PUBLIC_RUNTIME_EXPORTS = [
   'Layout',
-  'LayoutRuntimeMode',
   'Node',
   'Path',
   'Step',
@@ -12,7 +11,6 @@ const PUBLIC_RUNTIME_EXPORTS = [
   'Coordinate',
   'Scope',
   'Draw',
-  'convertIRToReactNode',
   'RendererModeProvider',
   'AnimationModeProvider',
 ];
@@ -45,7 +43,12 @@ describe('@retikz/react 公共 API', () => {
   });
 
   it('不暴露已迁移到 Vanilla 的 IR builder 与 processing owner', () => {
-    for (const name of ['convertReactNodeToIR', 'buildIR', 'buildIRWithContributions', 'LayoutCompileDriver']) {
+    for (const name of [
+      'convertReactNodeToIR',
+      'buildIR',
+      'buildIRWithContributions',
+      'LayoutCompileResultExtension',
+    ]) {
       expect(react).not.toHaveProperty(name);
     }
   });

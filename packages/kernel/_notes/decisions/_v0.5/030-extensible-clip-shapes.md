@@ -125,7 +125,7 @@ Core 的 canonical path 只有一个 fill rule，因此复合裁剪的稳定语�
 - 失败与诊断：缺少 ClipDefinition 时报告 operation kind 与 `CompileOptions.clips`；operation 返回的 shape kind 未注册时报告该 kind 与 `CompileOptions.clipShapes`。无效 authored spec、缺失 provider 及 provider callback 主动抛出的领域错误沿既有 layout-probe recoverable 边界传播，只有 probe 明确隔离失败时才可回退候选；普通 public compile 仍向调用方抛出。重复 registry key、definition/schema/callback kind 不一致、非 JSON provider 输出、shape schema 或 canonical path contract violation、递归 cycle / depth overflow 属于 fatal provider contract error，不得被 probe 吞掉。所有路径都不得静默降级为矩形或跳过裁剪
 - Scene 与 renderer：Scene 只保存 canonical `SceneClipPath`；SVG、Canvas、Node Canvas、hit-test 和 visual bounds 消费同一命令序列与 fill rule，不接收 runtime definition 或后端 callback
 - 兼容性 / breaking：Core 删除 `CircleClipShape`、`EllipseClipShape`、`PolygonClipShape`、`PathClipShape`、`CompoundClipShape` 及对应内置 clip。`ClipResource.shape` 被 `ClipResource.path` 取代；旧 Scene 与 ScenePatch resource 在当前 validator / renderer 边界明确拒绝，不提供资源迁移或双读。旧 IR 输入必须显式装配 Standard 或第三方两级 provider；不保留 alias、自动安装、动态发现或旧 shape fallback
-- React / Vanilla 等价性：两者只收集并转交同一个 Core provider contribution 闭包；不建立 adapter 私有 shape registry。直接 JSON、Vanilla、React、SSR 与 retained processing 对相同 definitions 产生相同 Scene 和诊断
+- React / Vanilla 等价性：两者只收集并转交同一个 Core provider contribution 闭包；不建立 adapter 私有 shape registry。直接 JSON、Vanilla、React、SSR 与 session processing 对相同 definitions 产生相同 Scene 和诊断
 
 ## 实施结论与最终边界
 

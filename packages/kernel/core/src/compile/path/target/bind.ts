@@ -141,9 +141,17 @@ const restorePathStepTargets = (
 ): Array<CanonicalPathStep> =>
   steps.map((step, index) => {
     const targetAt = (field: string, target: IRTarget, pointIndex?: number): IRTarget =>
-      targets.get(
-        encodePropertyPath([...prefix, 'children', index, field, ...(pointIndex === undefined ? [] : [pointIndex])]),
-      )?.target ?? target;
+      targets.size === 0
+        ? target
+        : (targets.get(
+            encodePropertyPath([
+              ...prefix,
+              'children',
+              index,
+              field,
+              ...(pointIndex === undefined ? [] : [pointIndex]),
+            ]),
+          )?.target ?? target);
     switch (step.kind) {
       case 'cycle':
       case 'circlePath':

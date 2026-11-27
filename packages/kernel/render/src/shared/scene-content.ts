@@ -74,7 +74,6 @@ export const resolveSceneResourceMap = (scene: Scene): ReadonlyMap<string, Scene
 
 /** 在渲染器发布任何输出前检查 Scene 的资源引用闭包 */
 const assertSceneContent = (scene: Scene): void => {
-  if (runtimeContentCache.has(scene)) return;
   try {
     visitSceneContent(scene);
   } catch (cause) {

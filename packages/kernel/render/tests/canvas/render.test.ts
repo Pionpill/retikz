@@ -1,8 +1,7 @@
 import type { Scene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { renderFrameToCanvas, renderToCanvas } from '../../src/canvas';
-import type { RenderReadonlyLayer } from '../../src/runtime';
+import { renderToCanvas } from '../../src/canvas';
 
 type CanvasCall = {
   /** 记录的 Canvas API 方法名 */
@@ -117,122 +116,6 @@ const frameScene: Scene = {
 };
 
 describe('renderToCanvas 规格', () => {
-  it('render frame 在同一 fit/DPR transform 下先绘制 primary、再顺序绘制 readonly layers', () => {
-    const context = createSpyCanvasContext();
-    const { canvas } = createCanvas(context as unknown as CanvasRenderingContext2D);
-    const layers: ReadonlyArray<RenderReadonlyLayer> = [
-      {
-        key: 'first',
-        transform: [1, 0, 0, 1, 12, 8],
-        scene: {
-          layout: { x: 0, y: 0, width: 26, height: 8 },
-          resources: {
-            paints: [
-              {
-                kind: 'paint',
-                id: 'paint-1',
-                spec: {
-                  kind: 'linearGradient',
-                  stops: [
-                    { offset: 0, color: '#7c3aed' },
-                    { offset: 1, color: '#ffffff' },
-                  ],
-                },
-              },
-            ],
-            clips: [],
-          },
-          primitives: [
-            {
-              type: 'path',
-              commands: [
-                { kind: 'move', to: [0, 0] },
-                { kind: 'line', to: [20, 0] },
-              ],
-              stroke: '#7c3aed',
-              dashPattern: [1, 4],
-            },
-            {
-              type: 'rect',
-              x: 22,
-              y: 2,
-              width: 4,
-              height: 6,
-              fill: { kind: 'resourceRef', id: 'paint-1' },
-            },
-          ],
-        },
-      },
-      {
-        key: 'second',
-        transform: [1, 0, 0, 1, -4, 6],
-        scene: {
-          layout: { x: 0, y: 0, width: 12, height: 12 },
-          resources: {
-            paints: [
-              {
-                kind: 'paint',
-                id: 'paint-1',
-                spec: { kind: 'pattern', shape: 'lines', size: 8 },
-                tile: {
-                  size: 8,
-                  motif: [
-                    {
-                      type: 'path',
-                      commands: [
-                        { kind: 'move', to: [0, 0] },
-                        { kind: 'line', to: [8, 8] },
-                      ],
-                      stroke: '#dc2626',
-                      strokeWidth: 1,
-                    },
-                  ],
-                },
-              },
-            ],
-            clips: [],
-          },
-          primitives: [
-            {
-              type: 'rect',
-              x: 0,
-              y: 0,
-              width: 12,
-              height: 12,
-              fill: { kind: 'resourceRef', id: 'paint-1' },
-            },
-          ],
-        },
-      },
-    ];
-    const offscreen = createSpyCanvasContext();
-    Object.assign(offscreen, { canvas: {} });
-
-    renderFrameToCanvas(
-      canvas,
-      { primary: frameScene, layers },
-      {
-        devicePixelRatio: 2,
-        createOffscreen: () => offscreen as unknown as CanvasRenderingContext2D,
-      },
-    );
-
-    const rectIndex = context.calls.findIndex(call => call.name === 'rect');
-    const lineIndex = context.calls.findIndex(call => call.name === 'lineTo');
-
-    expect(rectIndex).toBeGreaterThanOrEqual(0);
-    expect(lineIndex).toBeGreaterThan(rectIndex);
-
-    const fillIndices = context.calls.flatMap((call, index) => (call.name === 'fill' ? [index] : []));
-
-    expect(fillIndices).toHaveLength(3);
-    expect(context.calls.some(call => call.name === 'createLinearGradient')).toBe(true);
-    expect(context.calls.some(call => call.name === 'createPattern')).toBe(true);
-    expect(context.calls).toContainEqual(expect.objectContaining({ name: 'transform', args: [1, 0, 0, 1, 12, 8] }));
-    expect(context.calls.filter(call => call.name === 'setTransform')).toHaveLength(2);
-    expect(context.calls.filter(call => call.name === 'setTransform')[1].args).toEqual([3, 0, 0, 3, -30, -60]);
-  });
-
   it('render-to-canvas-frame：获取 2d context，按 DPR 和 viewBox 设置帧，再 clear 后绘制', () => {
     const context = createSpyCanvasContext();
     const { canvas, getContext } = createCanvas(context as unknown as CanvasRenderingContext2D);

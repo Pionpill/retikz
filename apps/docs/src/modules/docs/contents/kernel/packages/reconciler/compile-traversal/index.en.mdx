@@ -1,0 +1,149 @@
+---
+title: Execution / Scope Traversal
+description: 'Trace a subtree carried by a scope through full compilation: what children inherit, which names paths can resolve, and what drawing returns to the parent'
+---
+
+The Reconciler traverses declarations one subtree at a time. It starts with the scene root’s `children`, visits them in declaration order, and collects their layout and drawing output. A scope is one way to declare a nested subtree. When traversal reaches a scope, the executor visits its `children` with the effective defaults and coordinate transforms for that level. If `localNamespace` is enabled, it also opens a local frame for names in that subtree.
+
+## Overview
+
+Using the structures from [Runtime State](/kernel/packages/reconciler/compile-state), follow five questions through a full traversal:
+
+- **Default styles:** How do children inherit defaults, and how far does an inner override reach?
+- **Coordinate transforms:** Which transforms can pass down on entry, and which depend on child layout?
+- **Scope envelope:** When do child layouts determine the group boundary, and which geometry reaches the parent?
+- **Name visibility:** Where does the executor look up a name referenced by a path?
+- **Subtree output:** When are pending paths filled, and how do primitives and visible bounds reach the parent?
+
+## Traversing a scope’s subtree
+
+Full compilation starts with <ApiSourceLink label="compileRootChildren" path="packages/kernel/reconciler/src/compile/execution/subtree/element.ts" startLine={95}>`compileRootChildren`</ApiSourceLink> visiting the root children. When traversal reaches a scope, <ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink> schedules the three stages below for its subtree. The parent resumes at the next sibling only after the inner visit finishes.
+
+1. **Enter:** Prepare a child execution frame from the parent settings, push a local name frame if requested, then visit children in declaration order.
+2. **Return from the children:** Use the collected layouts to calculate the scope’s bounds and final transforms, update the geometry, and resolve this scope’s pending paths.
+3. **Exit:** Leave the scope and pop any local name frame pushed on entry. After a successful visit, pass the drawing and its visible bounds to the parent frame.
+
+The diagram maps these stages to the calls in the executor. Paths are resolved before exit, while local names are visible. Publication follows cleanup; even if traversal throws, the executor leaves the scope in `finally`.
+
+<ComponentPreview files="scope-visit" size="lg" hideCode type="flow" />
+
+## Default styles
+
+Suppose the outer scope sets the default node fill to blue. On entry to the inner scope, <ApiSourceLink label="prepareScopeExecution" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={57}>`prepareScopeExecution`</ApiSourceLink> reads the parent frame’s effective settings. Core merges in the current scope’s settings, and the child frame passes the result to its children as `inheritance`. With no fill override, the inner node A uses blue.
+
+The child frame’s `context.inheritance` refers to a <ApiSourceLink label="CanonicalScopeInheritance" path="packages/kernel/core/src/resolve/scope/types.ts" startLine={13}>`CanonicalScopeInheritance`</ApiSourceLink>. Its two fields hold the effective child defaults and the current theme:
+
+```ts
+export type CanonicalScopeInheritance = Readonly<{
+  defaults: MergedScopeDefaults;
+  theme: CanonicalTheme;
+}>;
+```
+
+The <ApiSourceLink label="MergedScopeDefaults" path="packages/kernel/core/src/resolve/style/types.ts" startLine={13}>`MergedScopeDefaults`</ApiSourceLink> type groups defaults by element kind. In this example, blue lives at `defaults.node.style.fill`: it affects nodes and leaves the path fill unchanged.
+
+```ts
+export type MergedScopeDefaults = Readonly<{
+  node?: Readonly<{
+    geometry: Readonly<Omit<IRNodeDefault, 'style' | 'layout' | 'label'>>;
+    style: Readonly<IRNodeStyle>;
+    layout: Readonly<IRNodeLayout>;
+    label?: Readonly<IRNodeLabelDefault>;
+  }>;
+  path?: Readonly<{
+    geometry: Readonly<Omit<IRPathDefault, 'style' | 'label' | 'arrow'>>;
+    style: Readonly<IRPathStyle>;
+    label?: Readonly<IRPathLabelDefault>;
+    arrow?: Readonly<IRArrowDetail>;
+  }>;
+}>;
+```
+
+The diagram compares two frames during the same visit, showing only the fill and theme. The outer frame refers to I₁, whose node fill is blue. The inner scope overrides just that fill, so its frame refers to I₂ with a red fill. Both still refer to the same theme T.
+
+<ComponentPreview files="scope-inheritance" size="md" hideCode type="illustration" />
+
+The inner node A gets red from I₂. After traversal returns, the next sibling gets blue from the outer frame’s I₁; no fill needs to be restored. If the inner scope supplies no defaults and leaves the theme unchanged, its frame can reuse I₁ directly.
+
+## Coordinate transforms
+
+A node declares its position in local coordinates. If A is centered at [10, 5], the outer scope translates 100 units to the right, and the inner scope adds no transform, A’s registered global center is [110, 5]. The executor knows about the outer translation because each child frame receives its ancestors’ transform chain in `context.transformChains: ReadonlyArray<Transform>`.
+
+On entry, Core checks which transforms it can already determine. The source type <ApiSourceLink label="ScopePlacementPreparation" path="packages/kernel/core/src/compile/scope/types.ts" startLine={12}>`ScopePlacementPreparation`</ApiSourceLink> separates the placement target resolved in parent coordinates (`positionTarget`) from the scope’s own transforms that can be used before its bounds are known (`preliminaryTransforms`). Rotation about the origin is available immediately; rotation about the group’s center needs its child bounds.
+
+```ts
+export type ScopePlacementPreparation = Readonly<{
+  positionTarget?: IRPosition;
+  preliminaryTransforms?: Array<Transform>;
+}>;
+```
+
+Reconciler prepares the child chain as follows. When the scope’s transforms are still unknown, the child starts with the parent chain. Otherwise the executor appends the known transforms. The resulting chain becomes the child frame’s `context.transformChains`.
+
+```ts
+const preliminaryScopeChain =
+  preliminaryTransforms === undefined
+    ? transformChains
+    : runtime.state.execution.scopeTransformComposer.append(transformChains, preliminaryTransforms);
+```
+
+In the diagram, the inner scope now adds a 90° rotation about the origin. The rows on the left show the arrays passed to children of the outer and inner scopes. The right side shows the composed result for each chain. The outer chain contains only translation T; the inner chain contains [T, R]. Projecting an inner node into global coordinates applies rotation R locally, then the outer translation T. Nodes using the same chain can reuse its composed transform.
+
+<ComponentPreview
+  files="/kernel/packages/reconciler/compile-state/transform-cache"
+  size="md"
+  hideCode
+  type="illustration"
+/>
+
+Now change the inner pivot to **the group’s center**. The executor cannot locate that center on entry. Once the children return their layouts, Core can determine the pivot and the final transform. Then <ApiSourceLink label="project" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={166}>`project`</ApiSourceLink> updates the registered geometry and inserts the newly determined transforms into each pending path’s chain immediately after the parent chain. When the path is filled, it uses the same coordinates as its target without applying the outer translation twice.
+
+## Scope envelope
+
+The envelope is the geometric boundary used to position the group or connect a path to it as a whole. On entry, the executor knows whether the scope uses a rectangle or a circle. Its dimensions and center depend on the layouts returned by the children.
+
+During full traversal, Reconciler passes the child frame’s `state.geometries` to Core’s <ApiSourceLink label="compileScope" path="packages/kernel/core/src/compile/scope/compile.ts" startLine={16}>`compileScope`</ApiSourceLink> as `context.layouts`. Core computes the envelope in local coordinates before resolving placement that depends on the group’s own boundary. For example, a rotation about the group’s center uses the center calculated here. For the rectangle and circle calculations on the same child layouts, see [Core: Building the Envelope](/kernel/packages/core/scope-compilation#building-the-envelope).
+
+The diagram compares two returns for the same child layouts A and B. The top row shows the child frame’s geometry array on the left and Core’s local envelope E and scope transforms T on the right. The bottom row shows only the entries appended to the parent frame’s `state.geometries`: two for an anonymous scope (left), or one for a named scope (right).
+
+<ComponentPreview files="envelope-layouts" size="md" hideCode type="illustration" />
+
+On return, a named scope contributes its own envelope as one layout to the parent. Its final geometry replaces the placeholder in the name frame so a path can connect to the group. An anonymous scope passes the transformed child layouts up instead. Both accumulate visible bounds separately: a shadow can enlarge the canvas without changing the scope envelope used for connections.
+
+## Name visibility
+
+Now give the root its own A and enable `localNamespace` on the inner scope. A path p inside it and a sibling path q in the outer scope both refer to A. To see why they find different nodes, distinguish the child execution frame from the name frame:
+
+| Frame                                                                                                                                                                                                   | When it is created                      | Role in the example                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Child execution frame (<ApiSourceLink label="SubtreeCompileRuntime" path="packages/kernel/reconciler/src/compile/execution/subtree/compile.ts" startLine={155}>`SubtreeCompileRuntime`</ApiSourceLink>) | For every scope                         | Passes down effective settings, transforms, and the declaration path; collects this scope’s primitives, child layouts, and pending paths. |
+| Name frame                                                                                                                                                                                              | When the scope enables `localNamespace` | The outer scope shares the root frame. The inner scope pushes a frame and registers its A at the top of the stack.                        |
+
+The diagram traces the lookup. When p is evaluated, the inner frame is on top, so p finds the inner A at [110, 5]. After that frame is popped, q still inherits the outer translation but finds the root binding for A.
+
+<ComponentPreview files="/kernel/packages/reconciler/compile-state/execution-lookup" size="md" hideCode type="flow" />
+
+If the scope itself has a name, the executor first registers a placeholder for it in the **parent name frame**, then pushes a local frame if requested. Once child layout is complete, the scope’s final geometry replaces the placeholder. An outside path can therefore target the named scope even when its children use local names.
+
+## Subtree output
+
+If p is declared before the inner A, the executor reserves a primitive slot for p on its first visit. After A’s geometry is registered and the scope’s transforms are known, the executor computes the endpoints and fills that slot. Although p is evaluated later, it still draws below A in declaration order.
+
+After the inner paths are resolved, <ApiSourceLink label="dispose" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={241}>`dispose`</ApiSourceLink> leaves the scope and pops the local name frame pushed on entry. Then <ApiSourceLink label="publish" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={248}>`publish`</ApiSourceLink> emits the inner drawing into the parent execution frame and adds its projected visible bounds to the parent. The parent receives assembled output without revisiting A or p.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Runtime State',
+      description: 'Inspect the name frames and transform chains used during the visit',
+      url: '/kernel/packages/reconciler/compile-state',
+    },
+    {
+      title: 'Scope Compilation',
+      description: 'See how Core derives the scope bounds and placement',
+      url: '/kernel/packages/core/scope-compilation',
+    },
+  ]}
+/>

@@ -13,7 +13,7 @@ Import a Definition such as `circleClipDefinition` from `@retikz/extension`, or 
 
 <ComponentPreview files="entry" size="sm" hideCode />
 
-The four forms below clip the same node to a circle. React uses `Layout.extensions.clips`; Vanilla uses `compile.clips`.
+The four forms below clip the same node to a circle. React uses `Layout.compile.clips`; Vanilla uses `compile.clips`.
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -23,7 +23,7 @@ import { circleClipDefinition } from '@retikz/extension';
 import { Layout, Node, Scope } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ clips: [circleClipDefinition] }}>
+  <Layout compile={{ clips: [circleClipDefinition] }}>
     <Scope clip={{ kind: 'circle', params: { cx: 0, cy: 0, r: 50 } }}>
       <Node layout={{ minimumSize: { width: 160, height: 120 } }} />
     </Scope>
@@ -50,7 +50,7 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ clips: [circleClipDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ clips: [circleClipDefinition] }} />;
 ```
 
 </DocTab>
@@ -58,7 +58,7 @@ export const Example = () => <Layout ir={ir} extensions={{ clips: [circleClipDef
 
 ```ts
 import { circleClipDefinition } from '@retikz/extension';
-import { node, renderToSvgString, scene, scope } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvg, scene, scope } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -67,7 +67,8 @@ const input = scene({
     ]),
   ],
 });
-const svg = renderToSvgString(input, { compile: { clips: [circleClipDefinition] } });
+const compileResult = compileToScene(input, { compile: { clips: [circleClipDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -77,7 +78,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { circleClipDefinition } from '@retikz/extension';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -90,7 +91,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { clips: [circleClipDefinition] } });
+const compileResult = compileToScene(ir, { compile: { clips: [circleClipDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

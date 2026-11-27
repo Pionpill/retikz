@@ -65,11 +65,13 @@ React 使用 Layout.snapshotAt，Vanilla 输出或挂载选项使用 animation.s
 
 ### 播放策略
 
-| 意图     | React             | Vanilla                  |
-| -------- | ----------------- | ------------------------ |
-| 跟随系统 | 省略 animate      | 省略 animation.enabled   |
-| 强制开启 | `animate={true}`  | animation.enabled: true  |
-| 强制关闭 | `animate={false}` | animation.enabled: false |
+| 意图     | React             | Vanilla DOM    |
+| -------- | ----------------- | -------------- |
+| 跟随系统 | 省略 animate      | 省略 animate   |
+| 强制开启 | `animate={true}`  | animate: true  |
+| 强制关闭 | `animate={false}` | animate: false |
+
+SVG 字符串导出仍使用 `animation.enabled` 与 `animation.snapshotAt`。
 
 显式开启会覆盖系统减少动态效果偏好，应由应用的可访问性策略决定。关闭动画且未指定截帧时显示基础属性，不是求最后一帧。
 

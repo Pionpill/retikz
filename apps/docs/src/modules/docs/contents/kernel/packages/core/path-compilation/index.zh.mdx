@@ -1,5 +1,5 @@
 ---
-title: Path 编译
+title: 编译 / Path
 description: 沿目标绑定、路径定义与内置 stroke 追踪几何、箭头、标记、标签和最终输出
 ---
 
@@ -69,7 +69,7 @@ export type CanonicalPath = Omit<
   };
 
 export type PathResolution = Readonly<{
-  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
+  stroke?: StrokeProviderBindings;
   irPath: PropertyPath;
   canon: CanonicalPath;
   definition: AnyPathDefinition;

@@ -22,7 +22,7 @@ describe('Path 三层复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [path] };
     const session = new WeaveManager(source);
     const mounted = session.mount();
-    const node = readWeaveCurrent(mounted.root).children[0];
+    const node = readWeaveCurrent(session.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
     const previous = readWeaveCurrent(node).compile?.value;
     const snapshot = structuredClone(mounted.compilation.result);
@@ -31,9 +31,9 @@ describe('Path 三层复用', () => {
       [5, true],
     ] as const) {
       const next: IRPathBase = { ...path, cornerRadius };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
-          { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'corner' }, input: next },
+          { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'corner' }, input: next },
         ],
       });
       expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
@@ -79,11 +79,11 @@ describe('Path 三层复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [path] };
     const options = { paths: [definition] };
     const session = new WeaveManager(source, options);
-    const mounted = session.mount();
+    session.mount();
     const next = { ...path, cornerRadius: 0 };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'conditional' }, input: next },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'conditional' }, input: next },
       ],
     });
     expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }, options));
@@ -121,9 +121,9 @@ describe('Path 三层复用', () => {
       [],
     ]) {
       const next: IRPathBase = { ...path, marks };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
-          { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'painted' }, input: next },
+          { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'painted' }, input: next },
         ],
       });
       expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
@@ -153,21 +153,21 @@ describe('Path 三层复用', () => {
       children: [{ type: 'coordinate', id: 'endpoint', position: [100, 0] }, path],
     };
     const session = new WeaveManager(source);
-    const mounted = session.mount();
+    session.mount();
     const next: IRPathBase = { ...path, marks: [{ shape: 'star', pos: 0.8 }] };
-    const placement = session.update({
+    const placement = session.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'linked' }, input: next },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'linked' }, input: next },
       ],
     });
     placement.commit();
     placement.finish();
     const coordinate = { type: 'coordinate', id: 'endpoint', position: [200, 50] } as const;
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'endpoint' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'endpoint' },
           input: { ...coordinate, position: [200, 50] },
         },
       ],
@@ -193,8 +193,8 @@ describe('Path 三层复用', () => {
     };
     const source: IRScene = { type: 'scene', version: 1, children: [path] };
     const session = new WeaveManager(source);
-    const mounted = session.mount();
-    const node = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const node = readWeaveCurrent(session.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
     const previous = readWeaveCurrent(node).compile?.value;
     expect(previous?.targets).toBeDefined();
@@ -207,9 +207,9 @@ describe('Path 三层复用', () => {
       [0.6, 'step', 'original'],
     ] as const) {
       const next: IRPathBase = { ...path, marks: [{ shape: 'star', pos, positionMode, positionGeometry }] };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
-          { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'moving' }, input: next },
+          { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'moving' }, input: next },
         ],
       });
       expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
@@ -235,8 +235,8 @@ describe('Path 三层复用', () => {
     };
     const source: IRScene = { type: 'scene', version: 1, children: [path] };
     const session = new WeaveManager(source);
-    const mounted = session.mount();
-    const entry = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const entry = readWeaveCurrent(session.root).children[0];
     if (entry.type !== 'path') throw new Error('Expected path');
     const previous = readWeaveCurrent(entry).compile?.value;
     const measurement = previous?.stroke?.layout?.labels?.host?.[0]?.measurement;
@@ -244,9 +244,9 @@ describe('Path 三层复用', () => {
     expect(previous?.stroke?.layout?.geometry).toBeDefined();
     for (const text of ['label', 'renamed']) {
       const next: IRPathBase = { ...path, label: [{ text, position: 0.8 }] };
-      const update = session.update({
+      const update = session.prepareUpdate({
         operations: [
-          { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'line' }, input: next },
+          { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'line' }, input: next },
         ],
       });
       expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));
@@ -271,14 +271,14 @@ describe('Path 三层复用', () => {
     };
     const session = new WeaveManager({ type: 'scene', version: 1, children: [path] });
     const mounted = session.mount();
-    const node = readWeaveCurrent(mounted.root).children[0];
+    const node = readWeaveCurrent(session.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
     const previous = readWeaveCurrent(node).compile?.value;
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'line' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'line' },
           input: { ...path, kind: 'stroke' },
         },
       ],
@@ -309,9 +309,9 @@ describe('Path 三层复用', () => {
     };
     const source: IRScene = { type: 'scene', version: 1, children: [path] };
     const session = new WeaveManager(source, { paths: [definition] });
-    const mounted = session.mount();
+    session.mount();
     const before = calls;
-    const node = readWeaveCurrent(mounted.root).children[0];
+    const node = readWeaveCurrent(session.root).children[0];
     if (node.type !== 'path') throw new Error('Expected path');
     const previous = readWeaveCurrent(node).compile?.value;
     const explicit: IRPathBase = {
@@ -325,11 +325,11 @@ describe('Path 三层复用', () => {
         blendMode: 'normal',
       },
     };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'line' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'line' },
           input: explicit,
         },
       ],

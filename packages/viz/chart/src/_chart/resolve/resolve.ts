@@ -30,15 +30,15 @@ const assertConsumedSlots = (
 };
 
 /**
- * 将 typed Chart Source 解析为唯一完整 Plot 与固定 presentation 结果
+ * 解析数据准备与正式编译共用的 Plot 声明
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export const resolveSelectedChart = <TSource extends IRChartSource>(
+export const resolveSelectedChartPlot = <TSource extends IRChartSource>(
   source: TSource,
-  context: SelectedChartResolveContext<TSource>,
-): ChartResolution => {
+  context: Pick<SelectedChartResolveContext<TSource>, 'recipe' | 'runtime'>,
+  defaultPlot?: ChartResolution['theme']['defaultPlot'],
+): Pick<ChartResolution, 'plot' | 'warnings'> => {
   const recipe = context.recipe;
-  const theme = resolveChartTheme(source, context);
   const encodingResolution = recipe.resolveEncodings({
     source,
     encodings: source.recipe.encodings,
@@ -60,9 +60,19 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     encodingResolution,
     semanticMarkResolution.marks,
     context.runtime,
-    theme.defaultPlot,
+    defaultPlot,
   );
+  return { plot, warnings: semanticMarkResolution.warnings };
+};
+
+/** 使用当前位置的主题生成正式 Plot 与 Chart 外观 */
+export const resolveSelectedChart = <TSource extends IRChartSource>(
+  source: TSource,
+  context: SelectedChartResolveContext<TSource>,
+): ChartResolution => {
+  const theme = resolveChartTheme(source, context);
+  const { plot, warnings } = resolveSelectedChartPlot(source, context, theme.defaultPlot);
   const presentation = resolveChartPresentation(source, plot, theme.defaults);
 
-  return { source, theme, plot, warnings: semanticMarkResolution.warnings, presentation };
+  return { source, theme, plot, warnings, presentation };
 };

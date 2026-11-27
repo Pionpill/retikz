@@ -1,6 +1,6 @@
 import { compileNode, evaluatePosition, evaluatePositionTargetWorld, resolveNode } from '@retikz/core';
 import type { CanonicalNode, NodeCompileContext, CompiledNode, IRNode } from '@retikz/core';
-import { compareProperties } from '@retikz/foundation';
+import { jsonStructuralEquals } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileRuntime, SubtreeCompileContext } from '../../../compile';
@@ -12,7 +12,7 @@ import {
   restoreWeaveResources,
   retainWeaveReads,
 } from '../../shared';
-import type { WeaveNodeState, WeaveReferenceRead } from '../../shared';
+import type { WeaveStages, WeaveNodeState, WeaveReferenceRead } from '../../shared';
 import {
   compareCanonicalNodes,
   compareNodeLayoutInputs,
@@ -54,7 +54,7 @@ export const executeWeaveNode = (
   child: IRNode,
   path: PropertyPath,
   context: SubtreeCompileContext,
-  previous?: WeaveNodeState,
+  previous?: WeaveStages<WeaveNodeState>,
 ): {
   resolve: NonNullable<WeaveNodeState['resolve']>;
   compile: NonNullable<WeaveNodeState['compile']>;
@@ -70,30 +70,41 @@ export const executeWeaveNode = (
   const compileInputs = { scopeChain: context.transformChains, proposal: context.layout?.childProposal };
   const previousCompile = previous?.compile;
   const previousReads = previous?.referenceReads ?? [];
-  const before = previous?.resolve?.value;
-  const observation = createWeaveObservation(runtime);
+  const priorResolve = previous?.resolve;
+  const before = priorResolve?.value;
+  let observation: ReturnType<typeof createWeaveObservation> | undefined;
+  let canon = before;
 
-  // 1. 输入与解析上下文相同时复用 canon，否则重新解析并保留等价子产物
-  const canon =
-    before != null &&
-    previousCompile?.diagnostics.length === 0 &&
-    compareProperties({ child: previous!.resolve!.input, ...previous!.resolve!.context }, resolveInputs, { depth: 2 })
-      ? before
-      : retainCanonicalNode(before, resolveNode(child, createNodeResolveContext(observation.runtime, path, context)));
+  // 1. 未命中解析阶段时才创建资源与诊断收集器
+  if (
+    priorResolve?.value == null ||
+    previousCompile?.diagnostics.length !== 0 ||
+    priorResolve.context.mode !== resolveInputs.mode ||
+    !jsonStructuralEquals(priorResolve.context.nodeDefaults, resolveInputs.nodeDefaults) ||
+    !jsonStructuralEquals(priorResolve.input, resolveInputs.child)
+  ) {
+    observation = createWeaveObservation(runtime);
+    canon = retainCanonicalNode(
+      before,
+      resolveNode(child, createNodeResolveContext(observation.runtime, path, context)),
+    );
+  } else {
+    canon = priorResolve.value;
+  }
 
   // 2. 核对引用、编译上下文与解析结果，并要求新旧诊断均允许整体复用
   const referencesValid =
     previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
-  // ⚡只展开上下文包装、变换项及双轴提案的标量字段，不做无界递归
   const canRetain =
     previousCompile?.diagnostics.length === 0 &&
-    compareProperties(previousCompile.context, compileInputs, { depth: 3 });
+    jsonStructuralEquals(previousCompile.context.scopeChain, compileInputs.scopeChain) &&
+    jsonStructuralEquals(previousCompile.context.proposal, compileInputs.proposal);
   if (
     before != null &&
     previous?.compile?.value != null &&
     canRetain &&
     referencesValid &&
-    observation.diagnostics.length === 0 &&
+    !observation?.diagnostics.length &&
     compareCanonicalNodes(before, canon)
   ) {
     restoreWeaveResources(runtime, previousCompile.resources);
@@ -109,21 +120,25 @@ export const executeWeaveNode = (
     };
   }
 
+  observation ??= createWeaveObservation(runtime);
   // 3. 整体不能复用时，选择仍有效的测量或布局产物参与重新编译
   const reusable =
-    before != null && previous?.compile?.value != null && canRetain
-      ? { canon: before, compiled: previous.compile.value }
+    before != null &&
+    previousCompile?.value != null &&
+    previousCompile.diagnostics.length === 0 &&
+    jsonStructuralEquals(previousCompile.context.proposal, compileInputs.proposal)
+      ? { canon: before, compiled: previousCompile.value }
       : undefined;
   const compiled = runtime.state.execution.namespaceStack.observeReferences(observation.read, () =>
     compileWeaveNode(
       canon,
       createNodeCompileContext(observation.runtime, canon, path, context),
       reusable,
-      referencesValid,
+      referencesValid && canRetain,
     ),
   );
   // 局部复用可能跳过原有读取，保留仍有效的依赖事实
-  if (referencesValid && reusable !== undefined) retainWeaveReads(observation.reads, previousReads);
+  if (canRetain && referencesValid && reusable !== undefined) retainWeaveReads(observation.reads, previousReads);
   return {
     resolve: {
       input: child,

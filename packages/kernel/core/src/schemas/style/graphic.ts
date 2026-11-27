@@ -39,15 +39,13 @@ export const StrokeDashPatternSchema = array(NonNegativeNumberSchema)
   .describe('Stroke dash pattern lengths in user units.');
 
 /** 校验用户单位下的虚线相位偏移，允许有限负值 */
-export const StrokeDashOffsetSchema = number().describe(
-  'Stroke dash offset in user units. Positive and negative finite values are allowed.',
-);
+export const StrokeDashOffsetSchema = number().describe('Stroke dash offset in user units.');
 
 /** 校验路径端点的线帽形状关键字 */
-export const PathLineCapSchema = zodEnum(PathLineCap).describe('Path stroke endpoint cap keyword.');
+export const PathLineCapSchema = zodEnum(PathLineCap);
 
 /** 校验路径拐角的连接样式关键字 */
-export const PathLineJoinSchema = zodEnum(PathLineJoin).describe('Path stroke corner join keyword.');
+export const PathLineJoinSchema = zodEnum(PathLineJoin);
 
 /** 校验用户单位下的非负描边宽度 */
 export const StrokeWidthSchema = NonNegativeNumberSchema.describe('Stroke width in user units.');
@@ -60,7 +58,7 @@ export const StrokeCapJoinSchema = strictObject({
   lineJoin: PathLineJoinSchema.optional().describe(
     'Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.',
   ),
-}).describe('Stroke endpoint caps and corner joins.');
+});
 
 /** 校验精确 CSS 颜色或基于有效主色计算的归一化权重 */
 export const ContextualColorSchema = union([CssColorSchema, NormalizedFractionSchema]).describe(
@@ -68,26 +66,24 @@ export const ContextualColorSchema = union([CssColorSchema, NormalizedFractionSc
 );
 
 /** 校验上下文颜色或结构化渐变、图案填充 */
-export const PaintValueSchema = union([ContextualColorSchema, lazy(() => PaintSchema)]).describe(
-  'Paint value: a contextual color or an IRPaint object.',
-);
+export const PaintValueSchema = union([ContextualColorSchema, lazy(() => PaintSchema)]);
 
 /** 校验供主体几何及其装饰继承的主色 */
 export const GraphicColorSchema = strictObject({
   color: CssColorSchema.optional().describe(
     'Master color for primary geometry. Stroke, fill, labels, and arrows may inherit it unless individually overridden.',
   ),
-}).describe('Master color inherited by primary geometry and its decorations.');
+});
 
 /** 校验作用于整个主体图形的不透明度 */
 export const GraphicElementOpacitySchema = strictObject({
   opacity: OpacitySchema.optional().describe('Whole-element opacity applied to primary geometry.'),
-}).describe('Whole-element opacity for primary geometry.');
+});
 
 /** 校验填充颜色 */
 export const GraphicFillSchema = strictObject({
   fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: contextual color or IRPaint.'),
-}).describe('Fill paint for primary geometry.');
+});
 
 /** 校验描边颜色、线宽与虚线样式 */
 export const GraphicStrokeSchema = strictObject({
@@ -96,18 +92,9 @@ export const GraphicStrokeSchema = strictObject({
   dashPattern: StrokeDashPatternSchema.optional().describe(
     'Stroke dash pattern lengths in user units. Omitted fields mean solid line.',
   ),
-  dashOffset: StrokeDashOffsetSchema.optional().describe(
-    'Stroke dash offset in user units. Positive and negative finite values are allowed.',
-  ),
+  dashOffset: StrokeDashOffsetSchema.optional().describe('Stroke dash offset in user units.'),
   stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: contextual color or IRPaint.'),
-}).describe('Graphic stroke paint, width, dash pattern, and dash offset.');
-
-/** 校验主体几何共享的主色、填充与描边字段 */
-export const GraphicPaintSchema = strictObject({
-  ...GraphicColorSchema.shape,
-  fill: GraphicFillSchema.shape.fill,
-  stroke: GraphicStrokeSchema.shape.stroke,
-}).describe('Graphic paint fields shared by primary geometry.');
+});
 
 /** 校验可独立继承的整体、填充与描边不透明度 */
 export const GraphicOpacityValueSchema = union([
@@ -128,15 +115,13 @@ export const GraphicOpacitySchema = strictObject({
 export const GraphicEffectsSchema = strictObject({
   shadow: union([zodEnum(ShadowPreset), lazy(() => DropShadowSchema)])
     .optional()
-    .describe(
-      'Drop shadow on the emitted primary geometry. A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`) or an explicit drop-shadow object.',
-    ),
+    .describe('Drop shadow on the primary geometry.'),
   blendMode: zodEnum(BlendMode)
     .optional()
     .describe(
       'How the emitted primary geometry blends with content already drawn beneath it. Omitted / `normal` means ordinary source-over.',
     ),
-}).describe('Graphic effect fields shared by primary geometry.');
+});
 
 /** 校验节点和可绘制几何的共同视觉样式 */
 export const GraphicStyleSchema = strictObject({
@@ -145,7 +130,7 @@ export const GraphicStyleSchema = strictObject({
   ...GraphicStrokeSchema.shape,
   ...GraphicOpacitySchema.shape,
   ...GraphicEffectsSchema.shape,
-}).describe('Graphic style fields for primary node / drawable geometry.');
+});
 
 /** 校验可向节点和路径后代级联继承的图形样式 */
 export const CascadingGraphicStyleSchema = strictObject({

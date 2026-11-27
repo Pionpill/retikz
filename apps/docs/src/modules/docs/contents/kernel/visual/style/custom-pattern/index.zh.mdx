@@ -9,11 +9,11 @@ description: 自定义图案通过 PatternDefinition 生成重复单元，使用
 
 `defaultSize` 必须为有限正数；`definePattern` 在定义时校验，非法值会立即抛错。直接提供定义对象时，由作者保证满足同一约束。
 
-下面定义 cross，将它传给 Layout.extensions.patterns，并通过 fill.shape 引用同一名称。
+下面定义 cross，将它传给 Layout.compile.patterns，并通过 fill.shape 引用同一名称。
 
 <ComponentPreview files="custom-pattern-basic" size="sm" />
 
-React 使用 `extensions={{ patterns: [cross] }}`；Vanilla 在 mount / renderToSvgString 的 `compile: { patterns: [cross] }` 中注入。Core 编译时使用 CompileOptions.patterns。定义属于宿主配置，不能把 emit 函数写进 IR。
+React 使用 `compile={{ patterns: [cross] }}`；Vanilla 在 mount / compileToScene 的 `compile: { patterns: [cross] }` 中注入。Core 编译时使用 CompileOptions.patterns。定义属于宿主配置，不能把 emit 函数写进 IR。
 
 ## 控制重复周期
 
@@ -39,7 +39,7 @@ React 使用 `extensions={{ patterns: [cross] }}`；Vanilla 在 mount / renderTo
 <ComponentProps
   items={[
     {
-      name: 'extensions.patterns',
+      name: 'compile.patterns',
       kind: 'property',
       type: 'Array<PatternDefinition>',
       description:

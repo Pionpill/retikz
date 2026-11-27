@@ -21,7 +21,7 @@ import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime, NamespaceStack } from '../../runtime';
 import type { CompositeArtifact } from '../../shared';
 import type { PendingPathEmission } from '../leaf';
-import type { InternalScenePrimitive } from '../shared';
+import type { CompositeElementDispatcher, InternalScenePrimitive } from '../shared';
 import { CompileElementExecutor } from './element';
 
 /** 子树向父布局提供的尺寸、占位与对齐信息 */
@@ -54,10 +54,14 @@ export type SubtreeCompilation = {
 
 /** 子树调度继承的初始位置和执行策略，不持有工作区或会话 */
 export type SubtreeCompileOptions = {
+  /** 隔离试算沿用同一实例的元素阶段，不共享回调句柄 */
+  compositeDispatcher?: CompositeElementDispatcher;
   /** 仅作用于本次执行根组件的需求 */
   measurementAxis?: LayoutMeasurementAxis;
   /** 查询 probe 在 Scope 出栈前读取最终引用环境，不向公共 context 暴露可变状态 */
   captureScopeTargets?: (child: IRScope, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
+  /** Scene 根不消费向上的局部几何 */
+  skipRootGeometries?: boolean;
   /** 当前执行是否为 layoutChild 隔离 probe */
   probe?: boolean;
   /** probe 继承的当前 scope chain */
@@ -106,12 +110,16 @@ type CompileSubtree = (
 
 /** 子树编译器所需的宿主调度能力，不暴露具体管理器 */
 export type SubtreeCompileHost = {
+  /** 增量驱动提供的生成元素与试算阶段 */
+  compositeDispatcher?: CompositeElementDispatcher;
   /** 在同一会话内执行隔离子树 */
   compileSubtree: CompileSubtree;
 };
 
 /** 当前递归子树的继承环境和布局输入 */
 export type SubtreeCompileContext = Readonly<{
+  /** 父通道无人消费局部几何，命名发布与视觉边界仍独立处理 */
+  skipGeometries?: boolean;
   /** 当前原始 Source 子树及其组件运行时输入绑定，生成的普通 child 不继承 */
   compositeInput?: CompositeInputScope;
   /** 子树的布局约束与父布局占位策略，省略时使用默认行为 */
@@ -169,7 +177,6 @@ export const assembleCompileSubtree = (
     ...options,
     compileSubtree: assembleCompileSubtree,
   });
-  const frame = executor.createRootRuntime();
-  executor.compileChildren(children, frame, true);
-  return executor.finish(frame.state);
+  executor.output.compositeDispatcher = options.compositeDispatcher;
+  return executor.finish(executor.compileRootChildren());
 };

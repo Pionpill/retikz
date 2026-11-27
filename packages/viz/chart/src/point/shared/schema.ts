@@ -29,11 +29,7 @@ const PointPositionDomainPaddingRangeSchema = strictObject({
 
 /** 复用间距字段并将比例限制在 1 以下 */
 const createRatioSpacingSchema = (field: keyof typeof BoxSpacingSchema.shape) =>
-  BoxSpacingSchema.shape[field]
-    .unwrap()
-    .lt(1)
-    .optional()
-    .describe(BoxSpacingSchema.shape[field].description ?? '');
+  BoxSpacingSchema.shape[field].unwrap().lt(1).optional();
 
 const PointPositionDomainPaddingObjectSchema = discriminatedUnion('kind', [
   PointPositionDomainPaddingRangeSchema,
@@ -47,9 +43,11 @@ const PointPositionDomainPaddingObjectSchema = discriminatedUnion('kind', [
     top: createRatioSpacingSchema('top'),
     bottom: createRatioSpacingSchema('bottom'),
   }),
-]).refine(value => pointPositionDomainPaddingFields.some(field => value[field as keyof typeof value] !== undefined), {
-  message: 'at least one position domain padding value is required',
-});
+])
+  .refine(value => pointPositionDomainPaddingFields.some(field => value[field as keyof typeof value] !== undefined), {
+    message: 'at least one position domain padding value is required',
+  })
+  .meta({ description: BoxSpacingSchema.description });
 
 /** 校验位置尺度的共享或按轴分别设置的连续定义域留白 */
 export const PointPositionDomainPaddingSchema = union([

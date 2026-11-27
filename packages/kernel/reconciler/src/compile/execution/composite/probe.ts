@@ -19,6 +19,7 @@ import {
   RetikzCoreErrorCode,
   calculateBoundsOfPrimitives,
 } from '@retikz/core';
+import { jsonStructuralEquals } from '@retikz/foundation';
 
 import { CompileProvenanceTracker } from '../../provenance';
 import type { CompileRuntime, CompositeCompileOwner, CompositeReplayTransaction, NamespaceStack } from '../../runtime';
@@ -34,6 +35,30 @@ import { createTreePositionContext, createLayoutTargetResolver } from '../shared
 import type { SubtreeCompileHost } from '../subtree';
 import { boundsRectOf, snapshotAllocationBounds } from './layout';
 import { resolveLayoutSlotSize } from './proposal';
+
+/** 每次调用绑定当时的可见名称，不保存上一轮的名称环境 */
+const createProbeTargetResolver = (
+  runtime: CompileRuntime,
+  queryNamespace: NamespaceStack,
+  targetChain: ReadonlyArray<Transform>,
+  theme: CanonicalTheme,
+) => {
+  queryNamespace.setPhase('resolving');
+  return createLayoutTargetResolver(
+    createTreePositionContext(runtime, targetChain, queryNamespace),
+    {
+      ...createPathResolveContext(runtime, {
+        irPath: ['query'],
+        scopeDefaults: {},
+        theme,
+      }),
+      // 查询仅绑定目标，不消费绘制默认值或向已完成的试算追加诊断
+      warn: undefined,
+      scopeDefaults: undefined,
+    },
+    targetChain,
+  );
+};
 
 /** 单次组件回调的隔离试编译依赖 */
 export type CompositeProbeContext = {
@@ -54,7 +79,7 @@ export type CompositeProbeContext = {
 /** 在隔离工作区执行子布局并收集未提交贡献 */
 export const evaluateCompositeLayout = (
   probeContext: CompositeProbeContext,
-  clonedChild: IRChild,
+  child: IRChild,
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
@@ -62,6 +87,8 @@ export const evaluateCompositeLayout = (
   probeTheme: CanonicalTheme,
   probeInputs?: CompositeInputScope,
   measurementAxis?: LayoutMeasurementAxis,
+  compositeDispatcher = probeContext.host.compositeDispatcher?.probe(probeOccurrence, false).begin(),
+  observeDependencies = false,
 ) => {
   const { key, occurrence, compositeDepth, runtime, host } = probeContext;
 
@@ -106,7 +133,7 @@ export const evaluateCompositeLayout = (
   const sandboxRuntime: CompileRuntime = {
     context: {
       ...runtime.context,
-      compositeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
+      compositeInputs: probeInputs ?? { source: child, bindings: [] },
       theme: probeTheme,
       padding: undefined,
     },
@@ -130,48 +157,42 @@ export const evaluateCompositeLayout = (
 
   let targetNamespace: NamespaceStack | undefined;
   let targetChain = probeScopeChain;
-  const laid = host.compileSubtree([clonedChild], sandboxRuntime, {
-    transformChains: probeScopeChain,
-    scopeDefaults: probeScopeDefaults,
-    occurrence: probeOccurrence,
-    compositeDepth: compositeDepth + 1,
-    generated: true,
-    probe: true,
-    skipAllocation: false,
-    proposal: clonedProposal,
-    ...(measurementAxis === undefined ? {} : { measurementAxis }),
-    ...(measurementAxis === undefined
-      ? {
-          captureScopeTargets: (scope, namespace, chain) => {
-            if (scope !== clonedChild) return;
-            targetNamespace = namespace.fork();
-            // 查询者位于子项外部，但可读取其根局部名称；真正祖先仍不可引用
-            targetNamespace.leaveScope();
-            targetChain = chain;
-          },
-        }
-      : {}),
-  });
+  let readReference = false;
+  const compile = () =>
+    host.compileSubtree([child], sandboxRuntime, {
+      transformChains: probeScopeChain,
+      scopeDefaults: probeScopeDefaults,
+      occurrence: probeOccurrence,
+      compositeDepth: compositeDepth + 1,
+      compositeDispatcher,
+      generated: true,
+      probe: true,
+      skipAllocation: false,
+      proposal: clonedProposal,
+      ...(measurementAxis === undefined ? {} : { measurementAxis }),
+      ...(measurementAxis === undefined
+        ? {
+            captureScopeTargets: (scope, namespace, chain) => {
+              if (scope !== child) return;
+              targetNamespace = namespace.fork();
+              // 查询者位于子项外部，但可读取其根局部名称；真正祖先仍不可引用
+              targetNamespace.leaveScope();
+              targetChain = chain;
+            },
+          }
+        : {}),
+    });
 
+  const laid = observeDependencies
+    ? namespaceStack.observeReferences(() => {
+        readReference = true;
+      }, compile)
+    : compile();
   /** 仅完整布局保存查询能力；尺寸贡献不构造或保留额外的引用环境 */
   let resolvePathTargets;
   if (measurementAxis === undefined) {
     const queryNamespace = targetNamespace ?? namespaceStack.fork();
-    queryNamespace.setPhase('resolving');
-    resolvePathTargets = createLayoutTargetResolver(
-      createTreePositionContext(sandboxRuntime, targetChain, queryNamespace),
-      {
-        ...createPathResolveContext(sandboxRuntime, {
-          irPath: ['query'],
-          scopeDefaults: probeScopeDefaults,
-          theme: probeTheme,
-        }),
-        // 查询仅绑定目标，不消费绘制默认值或向已完成的试算追加诊断
-        warn: undefined,
-        scopeDefaults: undefined,
-      },
-      targetChain,
-    );
+    resolvePathTargets = createProbeTargetResolver(sandboxRuntime, queryNamespace, targetChain, probeTheme);
   }
   return {
     resolvePathTargets,
@@ -184,13 +205,15 @@ export const evaluateCompositeLayout = (
     probeOccurrence,
     warnings,
     probeProvenanceTracker,
+    targetChain,
+    readReference,
   };
 };
 
 /** 将隔离布局结果封装为可选择重放的事务 */
 export const probeCompositeLayout = (
   probeContext: CompositeProbeContext,
-  clonedChild: IRChild,
+  child: IRChild,
   clonedProposal: LayoutProposal,
   probeOccurrence: CompileOccurrenceLocator,
   probeScopeChain: ReadonlyArray<Transform>,
@@ -205,7 +228,40 @@ export const probeCompositeLayout = (
     query: Parameters<CompositeCompileContext['resolvePathTargets']>[1],
   ) => ReturnType<CompositeCompileContext['resolvePathTargets']>;
 }> => {
-  const { owner, key } = probeContext;
+  const { owner, key, runtime, host } = probeContext;
+  // 同一出现位置分开记录原始试算与变换后的重放；命中只借用局部产物，replay 凭据仍属于本轮
+  const probeStage = host.compositeDispatcher?.probe(probeOccurrence, scopeChainApplied);
+  const eligible =
+    probeStage !== undefined && probeInputs === undefined && runtime.state.execution.provenanceTracker === undefined;
+  const previous = probeStage?.current;
+  const token = Object.freeze({}) as CompositeReplay;
+  if (
+    eligible &&
+    previous &&
+    jsonStructuralEquals(previous.child, child) &&
+    jsonStructuralEquals(previous.proposal, clonedProposal) &&
+    (jsonStructuralEquals(previous.chain, probeScopeChain) || (scopeChainApplied && previous.localPlacement)) &&
+    jsonStructuralEquals(previous.contribution.defaults, probeScopeDefaults) &&
+    jsonStructuralEquals(previous.contribution.theme, probeTheme)
+  ) {
+    const namespace = runtime.state.execution.namespaceStack.fork();
+    return {
+      layoutResult: Object.freeze({ ...previous.layout, replay: token }),
+      transaction: {
+        ...previous.contribution,
+        layoutIdentity: previous.layout,
+        owner,
+        originOccurrence: probeOccurrence,
+        used: false,
+      },
+      resolvePathTargets: createProbeTargetResolver(
+        runtime,
+        namespace,
+        previous.localPlacement ? probeScopeChain : previous.targetChain,
+        probeTheme,
+      ),
+    };
+  }
 
   const {
     laid,
@@ -217,17 +273,21 @@ export const probeCompositeLayout = (
     resolvePathTargets,
     warnings,
     probeProvenanceTracker,
+    targetChain,
+    readReference,
   } = evaluateCompositeLayout(
     probeContext,
-    clonedChild,
+    child,
     clonedProposal,
     probeOccurrence,
     probeScopeChain,
     probeScopeDefaults,
     probeTheme,
     probeInputs,
+    undefined,
+    probeStage?.begin(),
+    eligible,
   );
-  const token = Object.freeze({}) as CompositeReplay;
   const resources: SceneResources = {
     paints: workspace.paintRegistry.getResources(),
     clips: workspace.clipRegistry.getResources(),
@@ -235,7 +295,7 @@ export const probeCompositeLayout = (
   const namespaceChanges = namespaceStack.diffTopFrame(namespaceBaseline);
   const probeFrameDepth = namespaceStack.depth - 1;
   const allocationBounds = snapshotAllocationBounds(boundsRectOf(laid), key, probeOccurrence);
-  const layoutResult: LayoutChildResult = Object.freeze({
+  const layout = {
     allocationBounds,
     slotSize: resolveLayoutSlotSize(allocationBounds, clonedProposal),
     visualBounds:
@@ -243,13 +303,10 @@ export const probeCompositeLayout = (
     ...(laid.layout.alignmentGuides === undefined
       ? {}
       : { alignmentGuides: Object.freeze(laid.layout.alignmentGuides.map(guide => Object.freeze({ ...guide }))) }),
-    replay: token,
-  });
+  };
+  const layoutResult = Object.freeze({ ...layout, replay: token });
 
-  const transaction: CompositeReplayTransaction = {
-    owner,
-    originOccurrence: probeOccurrence,
-    used: false,
+  const contribution = {
     primitives: laid.primitives,
     primitiveZIndices: laid.primitiveZIndices,
     geometries: laid.geometries,
@@ -263,11 +320,51 @@ export const probeCompositeLayout = (
     resources,
     warnings: [...warnings],
     artifacts: laid.artifacts,
-    styleFingerprint: JSON.stringify(probeScopeDefaults),
-    themeFingerprint: JSON.stringify(probeTheme),
+    defaults: probeScopeDefaults,
+    theme: probeTheme,
     ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
   };
 
+  const transaction: CompositeReplayTransaction = {
+    ...contribution,
+    owner,
+    originOccurrence: probeOccurrence,
+    used: false,
+  };
+  // 嵌套组件可读取回调环境，不能按普通 IR 的输入判断整次试算有效
+  const isPrimitiveTree = (element: IRChild): boolean =>
+    !('namespace' in element) && (element.type !== 'scope' || element.children.every(isPrimitiveTree));
+
+  // 显式局部点定位的 Node 与纯分组不消费祖先变换；名称读写和诊断另在实际执行时核对
+  const hasLocalPlacement = (element: IRChild): boolean => {
+    if ('namespace' in element) return false;
+    if (element.type === 'node') return Array.isArray(element.position);
+    return (
+      element.type === 'scope' &&
+      element.position === undefined &&
+      element.transforms === undefined &&
+      element.children.every(hasLocalPlacement)
+    );
+  };
+
+  if (
+    eligible &&
+    !readReference &&
+    registrationOccurrences.size === 0 &&
+    warnings.length === 0 &&
+    isPrimitiveTree(child)
+  ) {
+    transaction.layoutIdentity = layout;
+    probeStage.store({
+      child,
+      proposal: clonedProposal,
+      chain: probeScopeChain,
+      localPlacement: scopeChainApplied && hasLocalPlacement(child),
+      targetChain,
+      layout,
+      contribution,
+    });
+  }
   // 此入口固定执行完整布局，始终具有结果查询能力
   return { layoutResult, transaction, resolvePathTargets: resolvePathTargets! };
 };

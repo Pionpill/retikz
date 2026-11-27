@@ -1,16 +1,16 @@
 import type { InputOverlayLayoutItemConfig } from '@retikz/layout';
 import { createOverlayLayout, overlayLayoutProvider } from '@retikz/layout';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputOverlayLayout } from './normalize';
-import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
+import { normalizeLayoutItems } from './normalize';
 
 /** Vanilla Overlay 布局嵌入项的稳定类别 */
 const overlayLayoutEmbedKind = 'layout.overlayLayout';
 
 /** Layout Overlay 布局的 InputEmbed adapter */
-export const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>> = {
+export const overlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayout> = {
   kind: overlayLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
@@ -26,35 +26,16 @@ export const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputO
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };
   },
-  prepare: async (props, context) => {
-    const { children, ...input } = props;
-    const execute = await prepareLayoutItems<InputOverlayLayoutItemConfig>(children, context);
-
-    return {
-      execute: async () => {
-        const normalized = await execute();
-        return {
-          node: createOverlayLayout({ ...input, children: normalized.items }),
-          runtimeInputs: normalized.runtimeInputs,
-          providerDependencies: {
-            roots: [overlayLayoutProvider.key, ...normalized.providerDependencies.roots],
-            providers: [overlayLayoutProvider, ...normalized.providerDependencies.providers],
-          },
-          ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
-        };
-      },
-    };
-  },
 };
 
 /** 创建OverlayLayout 嵌入项
  * @param input 容器与子项输入，保留传入对象引用
- * @param authoring 交给编译驱动的不透明声明数据；省略时不附加声明
+ * @param authoring 归一化时保留的不透明声明数据；省略时不附加声明
  * @returns 由布局适配器消费的 InputEmbed，不在创建时求解布局
  */
-export const overlayLayout = (input: InputOverlayLayout, authoring?: unknown): InputEmbed<InputOverlayLayout> => ({
-  type: 'embed',
-  kind: overlayLayoutEmbedKind,
-  props: input,
-  ...(authoring === undefined ? {} : { authoring }),
-});
+export const overlayLayout = (input: InputOverlayLayout, authoring?: unknown): InputEmbed<InputOverlayLayout> =>
+  embed({
+    adapter: overlayLayoutInputEmbedAdapter,
+    props: input,
+    ...(authoring === undefined ? {} : { authoring }),
+  });

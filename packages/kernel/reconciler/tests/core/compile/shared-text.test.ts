@@ -41,11 +41,11 @@ describe('正文和标签共享文本能力', () => {
     const initial = { ...pathOf({ text: 'abcd', font }), id: 'path-text' };
     const input: IRScene = { type: 'scene', version: 1, children: [initial] };
     const manager = new WeaveManager(input, { measureText });
-    const mounted = manager.mount();
+    manager.mount();
     const next = { ...pathOf({ text: 'abcdef', font, ...layout, opacity: 0.5 }), id: 'path-text' };
-    const update = manager.update({
+    const update = manager.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'path-text' }, input: next },
+        { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'path-text' }, input: next },
       ],
     });
     expect(update.compilation.result).toEqual(compileTestResult({ ...input, children: [next] }, { measureText }));
@@ -92,7 +92,7 @@ describe('正文和标签共享文本能力', () => {
     };
     const input: IRScene = { type: 'scene', version: 1, children: [initial] };
     const manager = new WeaveManager(input, { measureText });
-    const mounted = manager.mount();
+    manager.mount();
     for (const width of [10, 30]) {
       const next: IRNode = {
         ...initial,
@@ -100,9 +100,9 @@ describe('正文和标签共享文本能力', () => {
         layout: { ...layout, maxTextWidth: width },
         label: { text: 'label\nnext', ...layout, maxTextWidth: width, opacity: 0.5 },
       };
-      const update = manager.update({
+      const update = manager.prepareUpdate({
         operations: [
-          { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'text' }, input: next },
+          { kind: 'update', target: { kind: 'id', scopeId: manager.root.scopeId, id: 'text' }, input: next },
         ],
       });
       expect(update.compilation.result).toEqual(compileTestResult({ ...input, children: [next] }, { measureText }));

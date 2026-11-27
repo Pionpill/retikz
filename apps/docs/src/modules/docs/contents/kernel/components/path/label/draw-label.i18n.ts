@@ -1,7 +1,7 @@
 /** 预览控件双语文案 */
 export const drawLabelControlsI18n = {
   zh: {
-    drawEdgeLabel: 'Draw 边标注',
+    drawStepLabel: 'Draw 边标注',
     segmentAndPosition: '路径与位置',
     segmentKind: '段类型',
     line: '直线',
@@ -32,7 +32,7 @@ export const drawLabelControlsI18n = {
     maxTextWidth: '折行宽度',
   },
   en: {
-    drawEdgeLabel: 'Draw edge label',
+    drawStepLabel: 'Draw edge label',
     segmentAndPosition: 'Segment and position',
     segmentKind: 'Segment kind',
     line: 'Line',

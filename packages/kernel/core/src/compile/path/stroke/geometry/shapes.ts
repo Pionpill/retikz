@@ -10,7 +10,7 @@ import {
 import type { CanonicalPathStep } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
 import { BuiltinCompileWarningCode } from '../../../shared';
-import { clipTarget, pointOfTarget, isSamePoint } from '../../target';
+import { clipTarget, isSamePoint } from '../../target';
 import { isAutoBoundaryTarget } from '../../target';
 import type { StrokeLoweringContext } from '../types';
 import { nodeIdFromResolvableTarget } from './helpers';
@@ -63,7 +63,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
     const previous = cursor.previous();
     if (!moveTo || (!previous && !usedOverride)) return true;
 
-    const moveAnchor = pointOfTarget(moveTo, targetView, scopeChain);
+    const moveAnchor = targetView.pointOfTarget(moveTo, scopeChain);
     if (!moveAnchor) return false;
 
     const fromClip =
@@ -89,8 +89,8 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
   }
 
   if (step.kind === 'rectangle') {
-    const from = pointOfTarget(step.from, targetView, scopeChain);
-    const to = pointOfTarget(step.to, targetView, scopeChain);
+    const from = targetView.pointOfTarget(step.from, scopeChain);
+    const to = targetView.pointOfTarget(step.to, scopeChain);
     if (!from || !to) {
       const fromId = nodeIdFromResolvableTarget(step.from);
       const toId = nodeIdFromResolvableTarget(step.to);
@@ -156,7 +156,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
   if (step.kind === 'arc') {
     let center: IRPosition;
     if (step.center !== undefined) {
-      const resolved = pointOfTarget(step.center, targetView, scopeChain);
+      const resolved = targetView.pointOfTarget(step.center, scopeChain);
       if (!resolved) {
         const centerId = nodeIdFromResolvableTarget(step.center);
         if (centerId !== undefined) {
@@ -345,7 +345,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: St
 
   for (let pointIndex = 0; pointIndex < step.points.length; pointIndex++) {
     const point = step.points[pointIndex];
-    const resolved = pointOfTarget(point, targetView, scopeChain);
+    const resolved = targetView.pointOfTarget(point, scopeChain);
     if (!resolved) {
       const pointId = nodeIdFromResolvableTarget(point);
       if (pointId !== undefined) {

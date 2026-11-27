@@ -23,11 +23,9 @@ export const CURRENT_IR_VERSION = 1 as const;
 export const ChildSchema: ZodType<IRChild> = lazy(() =>
   union([
     discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema, ScopeSchema]).describe(
-      'Tier 1 scene child: node, path, coordinate, or scope. Discriminator field is `type`.',
+      'Built-in scene primitive.',
     ),
-    CompositeNodeSchema.describe(
-      'Tier 2 composite node with `namespace` and `type`. Registered domain schemas validate additional fields at compile time.',
-    ),
+    CompositeNodeSchema.describe('A registered domain definition validates additional fields at compile time.'),
   ]),
 );
 
@@ -35,28 +33,22 @@ registerRecursiveChildSchema(ChildSchema);
 
 /** 校验场景可见矩形的左上角与正数宽高 */
 export const ViewBoxSchema = strictObject({
-  x: number().describe('Left edge in scene coordinate units; must be finite and may be negative.'),
-  y: number().describe('Top edge in scene coordinate units; must be finite and may be negative.'),
-  width: PositiveNumberSchema.describe('Width in scene coordinate units; must be finite and greater than zero.'),
-  height: PositiveNumberSchema.describe('Height in scene coordinate units; must be finite and greater than zero.'),
-}).describe('Visible scene rectangle, specified by its top-left corner, width, and height.');
+  x: number().describe('Left edge in scene units.'),
+  y: number().describe('Top edge in scene units.'),
+  width: PositiveNumberSchema.describe('Visible width in scene units.'),
+  height: PositiveNumberSchema.describe('Visible height in scene units.'),
+}).describe('Visible scene rectangle.');
 
 /** 校验可序列化的绘图根场景及有序子项、主题和可选取景范围 */
 export const SceneSchema = strictObject({
   type: literal('scene').describe('Discriminator marking this object as the root scene'),
-  version: literal(CURRENT_IR_VERSION).describe(
-    `Scene data format version; currently must be ${CURRENT_IR_VERSION}, independent of the package version.`,
-  ),
+  version: literal(CURRENT_IR_VERSION).describe('Scene format version, independent of package version.'),
   theme: ThemeSchema.optional().describe('Root theme selection; sets only the name and mode fields to override.'),
   children: array(ChildSchema).describe('Ordered top-level scene children; an empty array is allowed.'),
   viewBox: ViewBoxSchema.optional().describe(
     'Explicit framing; when omitted, bounds are computed from content plus padding.',
   ),
-  animations: array(AnimationTrackSchema)
-    .optional()
-    .describe(
-      'Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks.',
-    ),
+  animations: array(AnimationTrackSchema).readonly().optional().describe('Root tracks can animate the viewBox.'),
 }).describe('JSON-serializable scene data describing one drawing.');
 
 /**

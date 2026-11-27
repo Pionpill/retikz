@@ -434,7 +434,7 @@ export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<
 
 </DocTabs>
 
-#### <ApiSourceLink label={"createOpenStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={30}>createOpenStringSchema</ApiSourceLink>
+#### <ApiSourceLink label={"createOpenStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={26}>createOpenStringSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -793,6 +793,40 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 </DocTabs>
 
+#### <ApiSourceLink label={"pickDefined"} path={"packages/kernel/foundation/src/objects.ts"} startLine={141}>pickDefined</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                    | 说明                                                           |
+| ------ | --------- | ------------------------------ | -------------------------------------------------------------- |
+| 泛型   | `TSource` | `extends object`               | —                                                              |
+|        | `TKey`    | `extends keyof TSource`        | —                                                              |
+| 参数   | `source`  | `TSource`                      | 待读取的源对象                                                 |
+|        | `fields`  | `ReadonlyArray<TKey>`          | 要读取的属性键                                                 |
+| 返回值 | —         | `Partial<Pick<TSource, TKey>>` | 仅包含选中且有定义的属性的新对象                               |
+| 错误   | —         | —                              | 属性读取失败时抛出 RetikzFoundationError，原始异常保留为 cause |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const pickDefined: <TSource extends object, TKey extends keyof TSource>(
+  source: TSource,
+  fields: ReadonlyArray<TKey>,
+) => Partial<Pick<TSource, TKey>>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 #### <ApiSourceLink label={"mergeDefinedProperties"} path={"packages/kernel/foundation/src/objects.ts"} startLine={79}>mergeDefinedProperties</ApiSourceLink>
 
 跳过 undefined 源和属性值，保留 null、false、0 和空字符串；后面的有效值优先，不递归合并或修改输入
@@ -979,26 +1013,26 @@ export declare const parseStaticCssColor: (input: string) => ParsedCssColor | nu
 
 <ZodSchema name="JsonValueSchema" description="递归 JSON 值：字符串、有限数值、布尔值、null、数组或对象。" />
 
-#### <ApiSourceLink label={"NonBlankStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={17}>NonBlankStringSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NonBlankStringSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={15}>NonBlankStringSchema</ApiSourceLink>
 
 <ZodSchema name="NonBlankStringSchema" description="至少包含一个非空白字符的 string。" />
 
-#### <ApiSourceLink label={"PositiveNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={38}>PositiveNumberSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PositiveNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={34}>PositiveNumberSchema</ApiSourceLink>
 
 <ZodSchema name="PositiveNumberSchema" description="严格大于 0 的有限 number。" />
 
-#### <ApiSourceLink label={"NonNegativeNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={41}>NonNegativeNumberSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NonNegativeNumberSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={37}>NonNegativeNumberSchema</ApiSourceLink>
 
 <ZodSchema name="NonNegativeNumberSchema" description="大于或等于 0 的有限 number。" />
 
-#### <ApiSourceLink label={"PositiveIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={44}>PositiveIntegerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"PositiveIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={40}>PositiveIntegerSchema</ApiSourceLink>
 
 <ZodSchema name="PositiveIntegerSchema" description="严格大于 0 的安全整数。" />
 
-#### <ApiSourceLink label={"NonNegativeIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={47}>NonNegativeIntegerSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NonNegativeIntegerSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={43}>NonNegativeIntegerSchema</ApiSourceLink>
 
 <ZodSchema name="NonNegativeIntegerSchema" description="大于或等于 0 的安全整数。" />
 
-#### <ApiSourceLink label={"NormalizedFractionSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={50}>NormalizedFractionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"NormalizedFractionSchema"} path={"packages/kernel/foundation/src/schema.ts"} startLine={46}>NormalizedFractionSchema</ApiSourceLink>
 
 <ZodSchema name="NormalizedFractionSchema" description="闭区间 0..1 内的 number。" />

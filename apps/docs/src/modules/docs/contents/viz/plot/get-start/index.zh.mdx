@@ -108,6 +108,8 @@ document.getElementById('plot')!.innerHTML = renderPlot(
 
 接入自己的数据时，替换 `measurements`，并将 `time`、`value` 改成真实字段名。这个例子使用数值字段；分类字段的排列方式见[比例尺](/viz/plot/scale)。
 
+需要追踪图元对应的数据时，独立的 `<Plot>` 可通过 `onLineage` 在 React 提交后接收来源信息。在普通 Vanilla 场景里嵌入 Plot 不会自动通知；可在宿主成功后显式读取 Plot 的 lineage。独立的 `renderPlot` 和 `renderPlotAsync` 可通过 `lineage` 选项同时返回 SVG 和来源信息。
+
 ## 延伸阅读
 
 <LinkedSections

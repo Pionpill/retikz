@@ -1,6 +1,5 @@
 import type { SceneClipPath } from '@retikz/core';
-import { comparePropertyPaths, encodePropertyPath } from '@retikz/foundation';
-import { readPropertyPath } from '@retikz/foundation';
+import { comparePropertyPaths, encodePropertyPath, readPropertyPath } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
 
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
@@ -13,8 +12,8 @@ import type {
   SceneRuntimeSnapshot,
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
+  SceneIdentity,
 } from '../scene';
-import type { SceneIdentity } from '../scene';
 import { sceneIdentityEquals } from '../scene';
 import type { SceneIdentityMap } from './shared';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
@@ -228,8 +227,6 @@ const assertTopology = (
       !isSceneIdentity(node.identity) ||
       !isSceneIdentity(node.semanticOwner) ||
       !isSceneIdentity(node.parent) ||
-      !Number.isSafeInteger(node.order) ||
-      node.order < 0 ||
       !isDenseArray(
         node.primitivePath,
         index => typeof index === 'string' || (typeof index === 'number' && Number.isSafeInteger(index) && index >= 0),
@@ -254,8 +251,8 @@ const assertTopology = (
 
     const parentPath = path.slice(0, -2);
     const parent = parentPath.length === 0 ? root : byPath.get(encodePropertyPath(parentPath))?.identity;
-    if (parent === undefined || !sceneIdentityEquals(node.parent, parent) || node.order !== path.at(-1)) {
-      topologyError({ reason: 'parent-order-mismatch', node });
+    if (parent === undefined || !sceneIdentityEquals(node.parent, parent)) {
+      topologyError({ reason: 'parent-mismatch', node });
     }
   }
 };
@@ -285,8 +282,6 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
       !isSceneIdentity(node.identity) ||
       !isSceneIdentity(node.semanticOwner) ||
       (node.parent !== undefined && !isSceneIdentity(node.parent)) ||
-      !Number.isSafeInteger(node.order) ||
-      node.order < 0 ||
       !isDenseArray(
         node.primitivePath,
         index => typeof index === 'string' || (typeof index === 'number' && Number.isSafeInteger(index) && index >= 0),
@@ -310,12 +305,11 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
     const parentPath = path.slice(0, -2);
     const parent = path.length === 0 ? undefined : byPath.get(encodePropertyPath(parentPath))?.identity;
     if (
-      (node.parent === undefined
+      node.parent === undefined
         ? parent !== undefined
-        : parent === undefined || !sceneIdentityEquals(node.parent, parent)) ||
-      node.order !== (path.length === 0 ? 0 : path.at(-1))
+        : parent === undefined || !sceneIdentityEquals(node.parent, parent)
     ) {
-      topologyError({ reason: 'subtree-parent-order-mismatch', node });
+      topologyError({ reason: 'subtree-parent-mismatch', node });
     }
   }
 
@@ -323,8 +317,7 @@ const assertSubtree = (subtree: SceneRuntimeSubtree): void => {
   if (
     rootNode === undefined ||
     !sceneIdentityEquals(rootNode.identity, subtree.root) ||
-    rootNode.parent !== undefined ||
-    rootNode.order !== 0
+    rootNode.parent !== undefined
   ) {
     topologyError({ reason: 'subtree-root-mismatch', subtree });
   }
@@ -495,7 +488,6 @@ const materializeTopology = (root: MutableSceneRoot): Array<SceneRuntimeNode> =>
       identity: node.identity,
       semanticOwner: node.semanticOwner,
       parent: node.parent.identity,
-      order: path.at(-1) as number,
       primitivePath: path,
       ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
     });
@@ -518,9 +510,8 @@ const operationRank = (operation: ScenePatchOperation): number => {
 };
 
 const operationTarget = (operation: ScenePatchOperation): SceneIdentity | undefined => {
-  if (operation.kind === 'insert') return operation.subtree.root;
-  if (operation.kind === 'update' || operation.kind === 'remove' || operation.kind === 'move')
-    return operation.identity;
+  if (operation.kind === 'insert' || operation.kind === 'update') return operation.subtree.root;
+  if (operation.kind === 'remove' || operation.kind === 'move') return operation.identity;
 
   return undefined;
 };
@@ -563,9 +554,7 @@ const assertOperationShape = (operation: ScenePatchOperation): void => {
   }
 
   if (kind === 'update') {
-    const identity = Reflect.get(candidate, 'identity');
     const subtree = Reflect.get(candidate, 'subtree');
-    if (!isSceneIdentity(identity)) return patchError(operation);
 
     assertSubtree(subtree as SceneRuntimeSubtree);
 
@@ -668,7 +657,7 @@ const createNextPlacementIndex = (next: SceneRuntimeSnapshot): SceneIdentityMap<
     const siblings = siblingsByParent.get(parent);
     if (siblings === undefined) continue;
 
-    siblings.sort((left, right) => left.order - right.order);
+    siblings.sort((left, right) => Number(left.primitivePath.at(-1)) - Number(right.primitivePath.at(-1)));
     siblings.forEach((node, index) => {
       const before = index + 1 < siblings.length ? siblings[index + 1].identity : undefined;
       placements.set(
@@ -710,13 +699,12 @@ export const sceneRuntimeSnapshotEquals = (left: SceneRuntimeSnapshot, right: Sc
       sceneIdentityEquals(node.identity, other.identity) &&
       sceneIdentityEquals(node.semanticOwner, other.semanticOwner) &&
       sceneIdentityEquals(node.parent, other.parent) &&
-      node.order === other.order &&
       node.publicId === other.publicId &&
       runtimeStructuralEquals(node.primitivePath, other.primitivePath)
     );
   });
 
-/** 校验完整 Runtime Scene snapshot 的 topology 双射与 parent/order 契约 */
+/** 校验完整 Runtime Scene snapshot 的 拓扑路径双射与父子关系 */
 const assertSceneRuntimeSnapshotInternal = (snapshot: SceneRuntimeSnapshot): void => {
   const candidate: unknown = snapshot;
   const candidateScene =
@@ -740,7 +728,7 @@ const assertSceneRuntimeSnapshotInternal = (snapshot: SceneRuntimeSnapshot): voi
   assertTopology(snapshot.scene.primitives, snapshot.root, snapshot.topology);
 };
 
-/** 校验完整 Runtime Scene snapshot 的 topology 双射与 parent/order 契约 */
+/** 校验完整 Runtime Scene snapshot 的 拓扑路径双射与父子关系 */
 export const assertSceneRuntimeSnapshot = (snapshot: SceneRuntimeSnapshot): void => {
   try {
     assertSceneRuntimeSnapshotInternal(snapshot);
@@ -795,10 +783,7 @@ const assertScenePatchInternal = (
   const tree = buildMutableTree(current);
   const index = indexMutableTree(tree);
   const nextPlacements = createNextPlacementIndex(next);
-  let scene: RuntimeScene = {
-    ...current.scene,
-    primitives: materializeChildren(tree),
-  };
+  let scene: RuntimeScene = current.scene;
 
   for (const operation of patch.operations) {
     if (operation.kind === 'setResources') {
@@ -839,8 +824,7 @@ const assertScenePatchInternal = (
 
     if (operation.kind === 'update') {
       assertSubtree(operation.subtree);
-      if (!sceneIdentityEquals(operation.identity, operation.subtree.root)) patchError(operation);
-      const previous = index.get(operation.identity);
+      const previous = index.get(operation.subtree.root);
       if (previous === undefined) return patchError({ reason: 'update-missing', operation });
 
       const parent = previous.parent;

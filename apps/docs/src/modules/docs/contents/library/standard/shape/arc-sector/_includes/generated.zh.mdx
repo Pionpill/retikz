@@ -313,13 +313,13 @@ export type InputSector = InputShape<IRSector>;
 #### <ApiSourceLink label={"arcInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/arc.ts"} startLine={12}>arcInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const arcInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArc & { id?: string }>;
+export declare const arcInputEmbedAdapter: InputEmbedAdapter<InputArc & { id?: string }>;
 ```
 
 #### <ApiSourceLink label={"sectorInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/shape/sector.ts"} startLine={12}>sectorInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const sectorInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSector & { id?: string }>;
+export declare const sectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { id?: string }>;
 ```
 
 **持久化配置**

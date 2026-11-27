@@ -6,7 +6,7 @@
 >
 > 关联：[`性能与增量运行时设计`](./performance-design.md) · [`Editor 编辑运行时架构设计`](./editor-design.md) · [`画板交互控件与状态持久化讨论记录`](./interactive-controls-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/_v0.5/roadmap.md)
 >
-> 本文主责事件、ownership routing、behavior、presentation、intent 与动画；Snapshot / ChangeSet、逐 Tier 增量、调度、retained patch、渐进物化、LLM generation 以及共享运行时基础以性能设计为准。本文只补充这些基础契约在交互侧的消费约束，不建立第二份真源。
+> 本文主责事件、ownership routing、behavior、presentation、intent 与动画；Snapshot / ChangeSet、逐 Tier 增量、调度、场景补丁、渐进物化、LLM generation 以及共享运行时基础以性能设计为准。本文只补充这些基础契约在交互侧的消费约束，不建立第二份真源。
 
 ---
 
@@ -16,7 +16,7 @@ retikz 当前以一次性 `IR → Scene → Renderer` 为主。这个模型适�
 
 v0.5 不应分别建设“性能系统”和“交互系统”，而应先建立一套共同的增量运行时：
 
-- 性能重构负责稳定身份、变化传播、增量编译和 retained rendering。
+- 性能重构负责稳定身份、变化传播、增量编译和 持续渲染。
 - 交互能力复用同一套身份、事务、Scene 与 renderer，不另建平行状态和渲染语义。
 - Plot、Table 等 Tier 2 模块通过统一契约接入，而不是在进入 Core 前完整重算。
 
@@ -52,7 +52,7 @@ Domain Snapshot
   → Core Contribution
   → Core Compiler
   → Scene
-  → Retained Renderer
+  → Renderer
 ```
 
 运行时在这条链路之外统一协调 revision、transaction、调度和提交：
@@ -177,7 +177,7 @@ Tier 2 与宿主 adapter 负责装配自己的 program；`@retikz/runtime` 是�
 ### `@retikz/render`
 
 - 消费 Scene snapshot / patch。
-- 拥有 SVG / Canvas retained view、资源、空间索引与命中。
+- 拥有 SVG / Canvas 视图、资源、空间索引与命中。
 - 执行 presentation、overlay 和动画的后端更新。
 - 向上提供统一事件源、坐标与 renderer capability。
 
@@ -257,7 +257,7 @@ v0.5 先完成性能底座，再建设交互能力，但性能 ADR 必须用真�
 1. Kernel identity、revision、change 与 program 基础契约。
 2. Runtime transaction、调度、并发与原子提交。
 3. Core contribution、依赖图与 Scene patch。
-4. SVG / Canvas retained renderer 与 presentation。
+4. SVG / Canvas renderer 与 presentation。
 5. Data Pulse 与 Plot / Table incremental program。
 6. Event、ownership、behavior 与 domain intent。
 7. Transform、overlay、animation 与冲突策略。

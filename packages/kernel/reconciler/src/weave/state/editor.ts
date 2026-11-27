@@ -1,3 +1,4 @@
+import { captureCompositeInputScope } from '@retikz/core';
 import type { CanonicalScopeInheritance, IRChild } from '@retikz/core';
 import type { IdAllocator } from '@retikz/foundation';
 import { compareProperties } from '@retikz/foundation';
@@ -78,12 +79,26 @@ export class WeaveEditor {
       }
       case WeaveOperationKind.Update: {
         const entry = this.requireTargetEntry(operation.target);
-        if (entry.type === 'composite')
+        if ('namespace' in operation.input) {
+          if (entry.type !== 'composite')
+            throw new RetikzReconcilerError(
+              RetikzReconcilerErrorCode.Contract,
+              'Weave input type does not match target',
+            );
+          const state = this.transaction.editState(entry);
+          state.origin = { ...state.origin, own: operation.input };
+          state.bindings = operation.bindings?.length
+            ? captureCompositeInputScope(operation.input, operation.bindings).bindings
+            : undefined;
+          changes.changedEntries.push(entry);
+          break;
+        }
+        changes.changedEntries.push(entry);
+        if (operation.bindings !== undefined)
           throw new RetikzReconcilerError(
             RetikzReconcilerErrorCode.Contract,
-            'Replace the scene to edit a Composite declaration',
+            'Only a Composite accepts runtime input bindings',
           );
-        changes.changedEntries.push(entry);
         const before = this.transaction.readState(entry).origin.own;
         const after = operation.input;
         const namespaceChanged =
@@ -108,7 +123,7 @@ export class WeaveEditor {
         if (entry.type === 'composite')
           throw new RetikzReconcilerError(
             RetikzReconcilerErrorCode.Contract,
-            'Replace the scene to edit a Composite declaration',
+            'Replace the scene to remove a Composite declaration',
           );
         changes.changedEntries.push(entry);
         /** 移除前记录旧声明名称；脱离候选树的整棵子树留给协调器断开依赖 */
@@ -225,15 +240,6 @@ export class WeaveEditor {
     this.transaction.editState(entry);
     this.transaction.editStateAttribute(parent, 'children').push(entry);
     return entry;
-  }
-
-  /** 序列化候选声明供 Core 组装和来源遍历，不比较新旧完整 IR */
-  serializeEntryDeclaration(entry: WeaveEntry): IRChild {
-    if (entry.type === 'scope') {
-      const state = this.transaction.readState(entry);
-      return { ...state.origin.own, children: state.children.map(child => this.serializeEntryDeclaration(child)) };
-    }
-    return this.transaction.readState(entry).origin.own;
   }
 
   /** 解析批次容器，地址仅在当前候选结构内有效 */

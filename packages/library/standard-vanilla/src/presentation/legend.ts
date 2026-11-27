@@ -6,12 +6,13 @@ import {
   createLegend,
   legendProvider,
 } from '@retikz/standard/presentation';
+import { embed } from '@retikz/vanilla';
 import type {
   InputChild,
   InputEmbed,
   InputEmbedAuthoringSite,
   InputEmbedContext,
-  SynchronousInputEmbedAdapter,
+  InputEmbedAdapter,
 } from '@retikz/vanilla';
 
 import { standardLegendEmbedKind } from '../shared/constants';
@@ -83,7 +84,7 @@ const normalizeLegendSlot = (
 };
 
 /** Standard Legend 的 InputEmbed adapter */
-export const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> = {
+export const legendInputEmbedAdapter: InputEmbedAdapter<InputLegend> = {
   kind: standardLegendEmbedKind,
   lower: (props, context) => {
     const collected: CollectedLegendSlots = { roots: [], providers: [], authoringSites: [] };
@@ -136,9 +137,9 @@ export const legendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> 
 };
 
 /** 创建由 legendInputEmbedAdapter 下沉的 Standard Legend embed */
-export const legend = (input: InputLegend): InputEmbed<InputLegend> => ({
-  type: 'embed',
-  kind: standardLegendEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const legend = (input: InputLegend): InputEmbed<InputLegend> =>
+  embed({
+    adapter: legendInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

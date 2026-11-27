@@ -7,7 +7,7 @@ Read [Basic usage](/kernel/components/path/usage) first. This page explains loca
 
 ## Where the two forms meet
 
-`<Draw way={['a', '-|', 'b']}>` describes the same route as a move to a followed by a fold to b. React Draw forwards input to Path; Vanilla's `normalizePath` calls `parseWay` to produce a uniform ordered sequence of steps.
+`<Draw way={['a', '-|', 'b']}>` describes the same route as a move to a followed by a fold to b. Draw calls Vanilla’s `parseWay` and passes the resulting sequence to Path as Step children.
 
 - Author input: convenient `way` values and string targets
 - Source IR: JSON-serializable Path, Step, and marks, still containing node references
@@ -21,7 +21,11 @@ The diagram separates normalization from coordinate calculation. Creating steps 
 
 <SourceLinks
   sources={[
-    { label: 'Draw forwards to Path', path: 'packages/kernel/react/src/sugar/path/Draw.tsx', startLine: 28 },
+    {
+      label: 'Draw expands way into steps',
+      path: 'packages/kernel/react/src/components/path/Draw.tsx',
+      startLine: 25,
+    },
     {
       label: 'Normalize way, steps, and arrows',
       path: 'packages/kernel/vanilla/src/normalize/element/path/path.ts',

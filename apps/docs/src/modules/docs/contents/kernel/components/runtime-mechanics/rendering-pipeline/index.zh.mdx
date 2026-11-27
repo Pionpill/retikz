@@ -17,7 +17,7 @@ description: 用两个节点和一条连线，理解 React / Vanilla 输入如�
 
 <ComponentPreview files="pipeline-example" size="xs" />
 
-预览源码可切换 React、Vanilla 与 IR。本例使用 static 模式，便于观察一次完整处理。
+预览源码可切换 React、Vanilla 与 IR。本例展示首帧的完整编译。
 
 ## 声明与输入
 
@@ -31,8 +31,11 @@ React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明
 
 <SourceLinks
   sources={[
-    { label: 'Layout 收集声明并调用 Vanilla', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'JSX 转换为 InputScene', path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts' },
+    {
+      label: 'Layout 收集声明并调用 Vanilla',
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+    },
+    { label: 'JSX 转换为 InputScene', path: 'packages/kernel/react/src/container/convert.ts' },
   ]}
 />
 
@@ -40,19 +43,13 @@ React 中的 `Node`、`Path`、`Step` 只做声明。`Layout` 收集整棵声明
 
 Vanilla 在输入层统一处理配置：将 `InputScene` 归一化为 `IRScene`，整理编译选项，再安排 Core 执行。已有 IR 也从这里接入。本例经过输入准备后，IR 中仍保留 A、B 的名称引用，等待 Core 计算连接位置。
 
-Vanilla 还负责处理模式的装配。**static** 创建临时非增量 SceneReconciler，完成编译后释放；默认的 **retained** 模式由控制器持有协调器，持续接收完整输入并通过 replace 更新。协调器按编译模式选择完整遍历或 Weave，两者共享元素计算与输出语义。
+Layout 首次渲染通过 `compileToScene` 获取画面。客户端提交后创建 Vanilla 的 `SceneRuntime`，并通过 `replace` 传入后续的作者输入或完整 IR。协调器默认完整编译，也可通过 `reconciler` 配置为增量模式；完整替换始终完整编译。
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 
 React 的 Layout 调用 Vanilla 提供的处理能力，将控制器的创建、更新和释放接入 React 生命周期。应用采用哪种声明方式，都复用这套输入准备与处理流程。
 
-<SourceLinks
-  sources={[
-    { label: '输入准备', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: '单次处理', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    { label: '协调器与处理控制器装配', path: 'packages/kernel/vanilla/src/processing/internal/controller.ts' },
-  ]}
-/>
+<SourceLinks sources={[{ label: '单次编译入口与场景会话', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' }]} />
 
 ## Core 编译
 
@@ -89,7 +86,7 @@ SceneReconciler 接收 IR 与编译选项，调用 Core 原子阶段确定节点
 </DocTab>
 </DocTabs>
 
-上面只摘录路径结构。完整 Scene 还包含两个节点的矩形、文字及画布信息。Reconciler 将 Scene 与 Composite artifacts、诊断一起交付，Vanilla 再整理为宿主消费的 `ProcessingResult`。普通绘图从中取出 Scene，应用按需读取其他结果。
+上面只摘录路径结构。完整 Scene 还包含两个节点的矩形、文字及画布信息。Reconciler 将 Scene 与 Composite artifacts 放在同一个编译结果中，Vanilla 直接交付原始 `CompileResult`。普通绘图从中取出 Scene，应用按需读取其他结果。
 
 <SourceLinks
   sources={[
@@ -100,7 +97,7 @@ SceneReconciler 接收 IR 与编译选项，调用 Core 原子阶段确定节点
 
 ## Render 与宿主
 
-Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述元素与属性的 `SvgNode` 树，由 React 或 Vanilla DOM 宿主提交为 SVG 元素；选择 Canvas 时，它执行绘制操作，由 Canvas 宿主管理画布。
+Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述元素与属性的 `SvgNode` 树，由原生 SVG renderer 提交到 React 或 Vanilla 提供的根元素；选择 Canvas 时，它执行绘制操作，由 Canvas 宿主管理画布。
 
 <ComponentPreview files="pipeline-output" size="sm" hideCode type="flow" />
 
@@ -111,26 +108,25 @@ Render 消费 Scene 中已经确定的几何。选择 SVG 时，它生成描述�
 <SourceLinks
   sources={[
     { label: 'SVG 描述树构建', path: 'packages/kernel/render/src/svg/builders/document.ts' },
-    { label: 'React 宿主显示处理结果', path: 'packages/kernel/react/src/render/processing-result.tsx' },
-    { label: 'Vanilla SVG 宿主', path: 'packages/kernel/vanilla/src/dom/mount-svg.ts' },
+    { label: 'React 宿主显示处理结果', path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx' },
+    { label: 'Vanilla DOM 宿主', path: 'packages/kernel/vanilla/src/dom/mount.ts' },
     { label: 'Canvas 绘制', path: 'packages/kernel/render/src/canvas/render-to-canvas.ts' },
   ]}
 />
 
 ## 完整实现流程
 
-沿本例的 React JSX、static、SVG 分支阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备与编译驱动内部的调用也展开在图中。
+沿本例的 React JSX 首帧到 SVG 的路径阅读源码，可以依次追踪下面的入口。箭头表示执行阅读顺序；输入准备内部的调用也展开在图中。
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-从 Layout 的 `createInputScene` 开始，进入 Vanilla 的 `prepareStaticProcessing`。其中，`prepareProcessingInput` 负责输入准备，静态驱动创建临时非增量 `SceneReconciler`，从 `mount` 结果读取同次编译产物与诊断，并在调用结束后释放。结果返回 React 的 `ProcessingResultHost` 后，经 `buildSvgFrameDocument` 与 `svgToReact` 转成 React 元素，最终由 React 提交到页面。
+Layout 通过 `convertReactToInputScene` 收集 JSX，并通过 `compileToScene` 确定首次宿主尺寸。React 挂载空 SVG 根元素后，Layout 建立带 DOM 渲染目标的 `SceneRuntime`。原生 SVG renderer 提交子节点，并处理后续更新。
 
 <SourceLinks
   sources={[
-    { label: 'React 场景入口', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    { label: '默认编译驱动', path: 'packages/kernel/vanilla/src/processing/compile-driver.ts' },
-    { label: 'SvgNode 转换为 React 元素', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
+    { label: 'React 场景入口', path: 'packages/kernel/react/src/container/Layout.tsx' },
+    { label: 'Vanilla 同步处理', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
+    { label: 'React SVG 根宿主', path: 'packages/kernel/react/src/container/render/SvgHost.tsx' },
   ]}
 />
 

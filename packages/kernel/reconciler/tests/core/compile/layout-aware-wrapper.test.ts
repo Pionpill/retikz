@@ -24,8 +24,9 @@ import {
   LayoutIntrinsicMode,
   naturalLayoutProposal,
 } from '../../../../core/src';
-import { createCompileRuntime } from '../../../src/compile/runtime';
-import { compileScene } from '../../../src/full';
+import { compileScene } from '../../../src/compile';
+import { createCompositeScopeChild } from '../../../src/compile/execution/composite/handle';
+import { CompositeCompileState, createCompileRuntime } from '../../../src/compile/runtime';
 import { compileTestResult } from '../../helpers/compilation';
 import { sceneRectangles } from '../../helpers/scene-rectangles';
 
@@ -955,44 +956,18 @@ describe('布局感知复合运行时包装树', () => {
     expect(duplicates[0].message).toContain('under <Scope localNamespace>');
   });
 
-  it('在构建器时分离每个可变包装器输入', () => {
-    const definition = defineComposite({
-      namespace: 'test',
-      type: 'detachedWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('detachedWrapper') }),
-      compile: (_value, context) => {
-        const transforms = [{ kind: 'translate' as const, x: 2, y: 3 }];
-        const clip = { kind: 'rect' as const, params: { x: 0, y: 0, width: 20, height: 10 } };
-        const meta = { role: 'original' };
-        const animations = [{ ...fade, keyframes: fade.keyframes.map(frame => ({ ...frame })) }];
-        const children: Array<IRChild | CompositeCompileChild> = [node('original')];
-        const props = { id: 'detached', transforms, clip, meta, animations };
-        const wrapper = context.createScope(props, children);
-
-        transforms[0].x = 99;
-        clip.params.width = 99;
-        meta.role = 'mutated';
-        animations[0].duration = 999;
-        children[0] = node('mutated');
-        props.id = 'mutated';
-
-        return { children: [wrapper] };
-      },
-    });
-
-    const result = compileTestResult(scene([{ namespace: 'test', type: 'detachedWrapper' }]), {
-      composites: [definition],
-    });
-
-    expect(result.scene.primitives[0]).toMatchObject({
-      type: 'group',
-      id: 'detached',
-      transforms: [{ kind: 'translate', x: 2, y: 3 }],
-      meta: { role: 'original' },
-      animations: [expect.objectContaining({ duration: 200 })],
-    });
-    expect(JSON.stringify(result.scene.primitives)).toContain('original');
-    expect(JSON.stringify(result.scene.primitives)).not.toContain('mutated');
+  it('Scope 句柄借用调用方的属性与子项列表', () => {
+    const session = new CompositeCompileState();
+    const props = { id: 'borrowed', meta: { role: 'content' } };
+    const children = [node('content')];
+    const handle = createCompositeScopeChild(session, { label: 'test.scope' }, props, children);
+    const output = session.outputChildren.get(handle)?.child;
+    expect(output?.kind).toBe('scope');
+    if (output?.kind !== 'scope') throw new Error('expected a Scope output');
+    expect(output.props).toBe(props);
+    expect(output.children).toBe(children);
+    expect(Object.isFrozen(props.meta)).toBe(false);
+    expect(Object.isFrozen(children)).toBe(false);
   });
 
   it('保留类型化 Scope 与回放配置中可选字段的省略语义', () => {

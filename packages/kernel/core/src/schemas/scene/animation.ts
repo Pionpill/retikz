@@ -102,16 +102,16 @@ export const KeyframeSchema = strictObject({
   easing: EasingSchema.optional().describe(
     'Easing from this keyframe to the next. Overrides track-level easing for that segment.',
   ),
-}).describe('One animation keyframe: normalized time, absolute value, and optional segment easing.');
+});
 
 /** 校验通过运行时事件名称启动播放的触发描述 */
 export const EventTriggerSchema = strictObject({
   onEvent: NonBlankStringSchema.describe('Runtime event name that starts playback. Only the event name enters the IR.'),
-}).describe('Runtime event trigger descriptor.');
+});
 
 /** 校验加载、可见、手动或命名事件触发方式 */
 export const TriggerSchema = union([zodEnum(AnimationTrigger), EventTriggerSchema]).describe(
-  'Playback trigger: load, visible, manual, or a named runtime event. Omitted fields use load.',
+  'Starts on load unless another trigger is specified.',
 );
 
 /** 校验变换动画使用的命名锚点或元素局部坐标原点 */
@@ -127,13 +127,13 @@ export const OriginSchema = union([
 /** 动画轨道共享的时序与触发配置 */
 const animationTimingSchema = strictObject({
   duration: PositiveNumberSchema.describe('Duration of one animation iteration in milliseconds.'),
-  delay: NonNegativeNumberSchema.optional().describe('Delay before playback starts, in milliseconds.'),
+  delay: NonNegativeNumberSchema.optional().describe('Time before playback, in milliseconds.'),
   easing: EasingSchema.optional().describe(
     'Default easing for keyframe segments without keyframe-level easing. Omitted fields use linear easing.',
   ),
   iterations: union([PositiveNumberSchema, literal('infinite')])
     .optional()
-    .describe('Iteration count. Use "infinite" for endless playback. Omitted fields play once.'),
+    .describe('Defaults to one iteration.'),
   direction: zodEnum(AnimationDirection)
     .optional()
     .describe('Playback direction for each iteration. Omitted fields use normal.'),
@@ -143,9 +143,7 @@ const animationTimingSchema = strictObject({
       'Value mode outside the active interval. Omitted fields use forwards so static rendering matches the settled value.',
     ),
   trigger: TriggerSchema.optional().describe('Playback trigger. Omitted fields use load.'),
-  origin: OriginSchema.optional().describe(
-    'Transform pivot for scale, scaleX, scaleY, and rotate. Other properties ignore it.',
-  ),
+  origin: OriginSchema.optional().describe('Only affects scale and rotation; defaults to the element center.'),
 });
 
 /** 组合属性和值约束，保留属性与关键帧的类型关联 */

@@ -3,7 +3,6 @@ import { LayoutItemKind } from '@retikz/layout';
 import type { InputFlexLayout } from '@retikz/layout-vanilla';
 import { flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
@@ -12,7 +11,7 @@ import { createInputLayoutItems } from '../shared';
 /** Flex 布局的 React 属性 */
 export type FlexLayoutProps = Omit<InputFlexLayoutConfig, 'children'> &
   Readonly<{
-    /** 交给可选编译驱动解释的不透明声明数据 */
+    /** 归一化时保留的不透明声明数据 */
     authoring?: unknown;
     /** 必须由 Flex 类型布局项目组成的子元素；省略时容器为空
      * @default []
@@ -26,7 +25,7 @@ const createFlexLayoutInput = (props: Readonly<Record<string, unknown>>, context
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Flex, context);
 
-  return withInputEmbedAdapters({ ...input, children: collected.items } satisfies InputFlexLayout, collected.adapters);
+  return { ...input, children: collected.items } satisfies InputFlexLayout;
 };
 
 const FlexLayoutComponent: FC<FlexLayoutProps> = () => null;

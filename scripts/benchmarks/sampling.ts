@@ -7,6 +7,9 @@ export const sampling = {
   warmupIterations: 10,
 };
 
+/** 万级实体的限次采样：总计十次，保留正式预算判定 */
+export const largeWorkloadSampling = { ...sampling, warmup: false, warmupIterations: 0, iterations: 10 };
+
 /** 大规模参考档只测三次，不预热；注册时还须显式指定 async: false */
 export const referenceSampling = {
   time: 0,

@@ -1,4 +1,5 @@
 import { AnimationModeProvider } from '@retikz/react';
+import type { RenderMode } from '@retikz/render/runtime';
 import type { CSSProperties, FC, ReactNode } from 'react';
 import { Fragment, useLayoutEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -11,7 +12,7 @@ import { PreviewControlStateContext, PreviewDimensionsContext } from '../context
 import type { PreviewDimensions } from '../context';
 import type { PreviewTheme } from '../theme';
 import { PreviewThemeProvider } from '../theme';
-import type { ComponentPreviewDemoComponent, PreviewControlSlot, RendererMode } from '../types';
+import type { ComponentPreviewDemoComponent, PreviewControlSlot } from '../types';
 import { DemoRenderer } from './DemoRenderer';
 import { PreviewControlSlotLayer } from './PreviewControlSlotLayer';
 import type { PreviewPanelState } from './usePreviewPanelState';
@@ -27,7 +28,7 @@ export type PreviewPanelProps = {
   /** 当前文档语言。 */
   lang?: Lang;
   /** 当前源码视图提供的不可变渲染函数。 */
-  activeRender?: (rendererMode: RendererMode) => ReactNode;
+  activeRender?: (rendererMode: RenderMode) => ReactNode;
   /** 当前预览实际生效的 Theme。 */
   theme?: PreviewTheme;
   /** 当前预览使用的明暗选择。 */

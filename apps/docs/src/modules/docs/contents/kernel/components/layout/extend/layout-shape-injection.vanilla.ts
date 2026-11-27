@@ -1,4 +1,4 @@
-import { node, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
 
 import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
 
@@ -27,7 +27,5 @@ const input = scene({
   ],
 });
 
-export const svg = renderToSvgString(input, {
-  output: { width: 280, height: 140 },
-  compile: { measureText: browserMeasurer, shapes: [fileShape] },
-});
+const compileResult = compileToScene(input, { compile: { measureText: browserMeasurer, shapes: [fileShape] } });
+export const svg = renderToSvg(compileResult.scene, { output: { width: 280, height: 140 } });

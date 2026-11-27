@@ -2,7 +2,7 @@ import type { CurveSegment, CurveSegmentSample, Position } from '@retikz/math';
 import { curve } from '@retikz/math';
 import { Draw, Layout, Path, Step } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
-import type { ReactNode } from 'react';
+import type { ReactElement } from 'react';
 
 const CurveSegments = {
   line: {
@@ -46,7 +46,7 @@ const controlPolygonOf = (segment: CurveSegment): Array<Position> | undefined =>
   return undefined;
 };
 
-const stepsOf = (segment: CurveSegment): ReactNode => {
+const stepsOf = (segment: CurveSegment): ReactElement => {
   if (segment.kind === 'line') {
     return (
       <>

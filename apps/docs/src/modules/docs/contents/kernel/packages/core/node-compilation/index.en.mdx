@@ -1,5 +1,5 @@
 ---
-title: Node Compilation
+title: Compilation / Node
 description: Follow effective node semantics through text measurement, shape layout, connection geometry and backend-neutral emission
 ---
 
@@ -24,7 +24,7 @@ The type <ApiSourceLink label="NodeSchema" path="packages/kernel/core/src/schema
 | `label` / <ApiSourceLink label="NodeLabelSchema" path="packages/kernel/core/src/schemas/node/label.ts" startLine={106}>`NodeLabelSchema`</ApiSourceLink>        | One label or an array                                                                    | Resolution creates a list; compilation measures each label independently and attaches it to the body                        |
 | `scale`, `padding`, `margin`, `minimumSize`                                                                                                                     | Number or axis, inset and size objects                                                   | Resolution expands shorthand and applies node scaling; compilation consumes the resulting constraints                       |
 
-The type <ApiSourceLink label="AnchorPositionSchema" path="packages/kernel/core/src/schemas/position/anchor.ts" startLine={7}>`AnchorPositionSchema`</ApiSourceLink> separates the target from `selfAnchor`: they determine where to align and which point on the node to align. Label positions accept a direction, angle, or `{ boundary, fraction }`. Compilation finds that attachment point, applies inside/outside `placement`, and draws a leader when an outside label requests `pin`.
+The type <ApiSourceLink label="AnchorPositionSchema" path="packages/kernel/core/src/schemas/position/anchor.ts" startLine={7}>`AnchorPositionSchema`</ApiSourceLink> separates the target from `selfAnchor`: they determine where to align and which point on the node to align. Label positions accept a direction, angle, or `{ side, fraction }`. Compilation finds that attachment point, applies inside/outside `placement`, and draws a leader when an outside label requests `pin`.
 
 Node A from the running example fits its text inside a minimum 60 × 40 visual rectangle centered at [0, 0], without additional rotation:
 

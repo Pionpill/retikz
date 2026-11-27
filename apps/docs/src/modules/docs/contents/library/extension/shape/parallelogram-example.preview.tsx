@@ -10,10 +10,7 @@ export type ParallelogramExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderParallelogramExamplePreview = (values: ParallelogramExamplePreviewValues) => (
-  <Layout
-    viewBox={{ x: -120, y: -80, width: 240, height: 160 }}
-    extensions={{ shapes: [parallelogramShapeDefinition] }}
-  >
+  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} compile={{ shapes: [parallelogramShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{

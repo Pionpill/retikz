@@ -1,7 +1,8 @@
 import { pathClipProvider } from '@retikz/extension';
 import type { IRMap } from '@retikz/standard/collection';
 import { createMap, mapProvider } from '@retikz/standard/collection';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardMapEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -40,7 +41,7 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */
-export const mapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
+export const mapInputEmbedAdapter: InputEmbedAdapter<InputMap> = {
   kind: standardMapEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)
@@ -81,9 +82,9 @@ export const mapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
 };
 
 /** 创建 Map embed；显式 input.id 同时用作领域与 embed 身份 */
-export const map = (input: InputMap): InputEmbed<InputMap> => ({
-  type: 'embed',
-  kind: standardMapEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const map = (input: InputMap): InputEmbed<InputMap> =>
+  embed({
+    adapter: mapInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

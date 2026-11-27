@@ -1,5 +1,5 @@
 import type { CompileOccurrenceLocator, LayoutChildFailure, LayoutProbeRecoverableError } from '@retikz/core';
-import { createCompositeContractError, createLayoutProbeRecoverableError } from '@retikz/core';
+import { createContractViolationError, createLayoutProbeRecoverableError } from '@retikz/core';
 import { formatPropertyPath } from '@retikz/foundation';
 
 import type { LayoutProbeFailureEntry } from '../../runtime';
@@ -25,7 +25,6 @@ export const createLayoutChildFailure = (
   failures.set(failure, {
     owner,
     providerKey,
-    sourcePath: occurrence.sourcePath,
     occurrence: Object.freeze({
       sourcePath: occurrence.sourcePath,
       expansionPath: Object.freeze(occurrence.expansionPath.map(segment => Object.freeze({ ...segment }))),
@@ -45,29 +44,29 @@ export const raiseLayoutChildFailure = (
   failure: unknown,
 ): never => {
   if (failure === null || typeof failure !== 'object') {
-    throw createCompositeContractError(`${owner.label} received an invalid or forged layout child failure`);
+    throw createContractViolationError(`${owner.label} received an invalid or forged layout child failure`);
   }
 
   const entry = failures.get(failure);
   if (entry === undefined) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `${owner.label} received a layout child failure that does not belong to this compile or was forged`,
     );
   }
 
   if (entry.owner !== owner) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `${owner.label} received a layout child failure that does not belong to this composite callback`,
     );
   }
 
   if (entry.consumed) {
-    throw createCompositeContractError(`${owner.label} received a layout child failure that was already raised`);
+    throw createContractViolationError(`${owner.label} received a layout child failure that was already raised`);
   }
 
   entry.consumed = true;
   throw createLayoutProbeRecoverableError(
-    `Layout child provider '${entry.providerKey}' failed at ${formatPropertyPath(entry.sourcePath)} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,
+    `Layout child provider '${entry.providerKey}' failed at ${formatPropertyPath(entry.occurrence.sourcePath)} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,
     { cause: entry.cause, detail: entry.detail, providerKey: entry.providerKey, occurrence: entry.occurrence },
   );
 };

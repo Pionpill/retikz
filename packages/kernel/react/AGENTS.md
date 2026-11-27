@@ -14,52 +14,40 @@
 
 - Kernel 组件把 JSX props 收集为 Vanilla Input：`Layout`、`Node`、`Path`、`Step`、`Text`、`Coordinate`、`Scope` 等。
 - Sugar 组件同步展开为 Kernel，最终由 Vanilla 产生的 IR 必须与等价 Vanilla Input 一致。
-- Scene 到 SVG / Canvas 的主逻辑属于 `@retikz/render`；Vanilla 拥有 compile driver、Runtime session、idPrefix、commit 与结果发布，react 侧只拥有 host shell、React subscription 与 callback 映射。
+- Scene 到 SVG / Canvas 的主逻辑属于 `@retikz/render`；Vanilla 管理运行时会话、idPrefix 与成功帧发布。React 宿主采用帧后才调用 `Layout.onCompileResult`；领域回调由对应的 Tier 2 宿主交付，不在 React render 或 SSR 期间触发。
 - Tier 2（plot 等）独立成包；react 包不内置它们的语法或算法。
 - Tier 2 的跨 namespace Composite roots / providers 只收集后交给 Core provider graph resolver；React 不按 namespace 私下合并 definitions、datasets 或传递依赖。
 
 ## 硬约束
 
 - `react` / `react-dom` 保持 peerDependencies，本地开发再放 devDependencies。
-- 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 compile driver、Runtime session 或 retained renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
+- 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 Runtime session 或 renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
 - 不新增第三方运行时依赖；确需新增时先说明理由。
 - 不引 Tailwind / shadcn / 样式库；adapter 输出原生 SVG / Canvas 宿主，样式由消费者或 props 控制。
-- `kernel/` 与 `sugar/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。
+- `components/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `container/render/` 和 `container/context/` 的系统偏好订阅中访问。
 
 ## 目录职责
 
 ```text
-src/index.ts   公开 API，只聚合允许公开的一级 owner barrel
-kernel/        React DSL Kernel：组件、JSX ↔ Vanilla Input adapter、Layout runtime
-sugar/         Sugar 组件与同步展开 helper，可按 path / shapes 分组
-render/        React 宿主渲染接线，可按 svg / canvas / text 分组
+src/index.ts            包根公开 API，不暴露内部转换函数
+components/             简单图元直接放在根目录；node/、path/ 汇总各自的图元、步骤和标签
+container/              Layout、场景收集与根作用域
+container/context/      主题、渲染模式与动画模式的 context、hook 和 Provider
+container/hydration.ts  从 JSX 子树收集事件处理器
+container/render/       SVG / Canvas 宿主与 processing result 映射
+shared/                 跨模块共享的组件展示名、事件契约与嵌入协议
 ```
 
-新增模块时按职责放置；不要在 `render/` 外写浏览器特化逻辑。
-
-`kernel/` 内部按 owner 拆分：
-
-```text
-components/  Kernel DSL 标记组件：Layout 之外的 Node / Path / Step / Scope / Coordinate / Text
-protocol/    displayName、水合事件 props、embeddable 协议等跨 owner 共享契约
-adapter/     JSX ↔ Vanilla Input 转换逻辑：React children 解包、字段透传与调度
-runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 React subscription
-```
-
-- 用户可用 React 组件文件用 `PascalCase.tsx`；非组件纯逻辑用 `kebab-case.ts`。
-- 内部 helper 用语义名，不用 `_xxx.ts`；例如 `fields.ts`、`display-names.ts`、`shape-helpers.ts`。
-- 每个 owner 目录用 `index.ts` barrel 收口；`src/index.ts` 只聚合允许进入包公共面的一级 owner。
-- `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
-- `kernel/adapter` 可以依赖 `kernel/components`、`kernel/protocol` 与 `@retikz/vanilla` 的公开 Input / normalizer，负责把 React props 构建为 Vanilla Input；不得依赖 `kernel/runtime` 或 `sugar`，不得直接实现 Core Source IR builder 或绕过 Vanilla。
-- `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 Vanilla processing API；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`。
-- `render` 只做 processing result 到 React host 的薄映射，不依赖 `kernel/runtime`，不创建 Runtime session 或 retained renderer；浏览器全局只允许在 `render/` 下出现。
+- 组件家族的 `index.ts` 汇总同组组件与内部 adapter，`components/index.ts` 精选公共导出；包根只公开声明与已有公开入口，不导出图元 adapter。
+- 图元 adapter 只转换当前元素，可接收步骤序号信息或已收集的子项，不依赖 Layout、runtime 或 renderer。整棵场景的遍历、嵌入上下文及图元分派归 `container`。
+- Sugar 可以依赖 Kernel，Kernel 不依赖 Sugar 实现；渲染宿主不创建编译会话。
 
 ## Kernel 组件
 
 - Kernel 组件不渲染真实 DOM，由 builder 同步遍历 props 后丢弃。
 - 禁止在 Kernel 组件中使用 React hooks、`React.Children.map` 或 `cloneElement`；children 遍历由 builder 负责。
 - 每个 Kernel 组件对应一个 Vanilla Input；新增 prop 必须先改 core schema 与 Vanilla Input，再由 React props 类型同步暴露。
-- Props 类型优先从 Vanilla Input 派生；只有无 authoring 差异的持久化字段才直接复用 schema 推导的 IR 类型，不手写平行 schema。
+- Props 优先从对应 Vanilla 工厂的 Options 派生；无对应工厂时复用已有 Vanilla Input 或其字段；只有无 authoring 差异的持久化字段才直接复用 schema 推导的 IR 类型，不手写平行 schema。
 - 必须设置 `displayName`，builder 以稳定 displayName 识别节点类型。
 
 ## Sugar 组件
@@ -72,7 +60,7 @@ runtime/     Layout、hydration handler 收集、Vanilla processing 调度与 Re
 ## Renderer 接线
 
 - 输入是 Vanilla readonly processing result，不在 renderer 里重做 IR -> Scene 编译或 Runtime session。
-- `Layout` 的客户端 IR / JSX 路径由 Vanilla processing mode 选择常驻或临时非增量 SceneReconciler 执行，默认 retained；React 只声明 `<svg>` / `<canvas>` shell，并将 Vanilla result 交给 Render 接线。
+- `Layout` 复用 Vanilla 的 `SceneViewOptions`，只补 JSX 与 React 生命周期属性；客户端复用 `SceneRuntime`，完整 IR / JSX 输入变化走 `replace`。React 不定义编译模式或推导增量批次。
 - SSR SVG 只输出 opaque seed，首次客户端 layout effect 以 `adopt` 接管；后续 render 不重写 Render-owned descendants。
 - 坐标、anchor、bbox 等几何计算属于 core；react renderer 不重复实现。
 - SVG 输出形态优先改 `@retikz/render/svg`；react 侧保持 `SvgNode -> ReactElement` 薄映射。

@@ -31,7 +31,7 @@ import { ribbonPathDefinition } from '@retikz/extension';
 import { Layout, Path, Step } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ paths: [ribbonPathDefinition] }}>
+  <Layout compile={{ paths: [ribbonPathDefinition] }}>
     <Path
       kind="ribbon"
       kindOptions={{ width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions}
@@ -70,7 +70,7 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ paths: [ribbonPathDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ paths: [ribbonPathDefinition] }} />;
 ```
 
 </DocTab>
@@ -79,7 +79,7 @@ export const Example = () => <Layout ir={ir} extensions={{ paths: [ribbonPathDef
 ```ts
 import type { IRRibbonPathOptions } from '@retikz/extension';
 import { ribbonPathDefinition } from '@retikz/extension';
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -95,7 +95,7 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { compile: { paths: [ribbonPathDefinition] } }));
+console.log(renderToSvg(compileToScene(input, { compile: { paths: [ribbonPathDefinition] } }).scene));
 ```
 
 </DocTab>
@@ -105,7 +105,7 @@ console.log(renderToSvgString(input, { compile: { paths: [ribbonPathDefinition] 
 import type { IRScene } from '@retikz/core';
 import type { IRRibbonPathOptions } from '@retikz/extension';
 import { ribbonPathDefinition } from '@retikz/extension';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -124,7 +124,8 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { paths: [ribbonPathDefinition] } }));
+const compileResult = compileToScene(ir, { compile: { paths: [ribbonPathDefinition] } });
+console.log(renderToSvg(compileResult.scene));
 ```
 
 </DocTab>

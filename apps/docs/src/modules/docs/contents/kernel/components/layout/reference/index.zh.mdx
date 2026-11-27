@@ -7,4 +7,17 @@ description: 查询 Layout 的 React 属性、Vanilla 场景输入与 Core 场�
 
 首次调用见[基础用法](/kernel/components/layout/usage)，持久化字段见下方 Schema 页签，挂载、更新与释放见 [Vanilla](/kernel/packages/vanilla)。
 
+编译字段沿用 Reconciler 的类型和默认值。省略 `compile.measureText` 时，Layout 通过 Vanilla 优先使用环境文字测量；不可用时才使用估算。
+
+场景根的 `animations` 接受只读轨道数组。解析 Scene 时只浅冻结输出的数组，不冻结调用方的数组。
+
+<SourceLinks
+  sources={[
+    { label: 'SceneViewOptions', path: 'packages/kernel/vanilla/src/runtime/view-options.ts', startLine: 7 },
+    { label: 'ProcessOptions', path: 'packages/kernel/vanilla/src/runtime/runtime.ts', startLine: 53 },
+    { label: 'CompileOptions', path: 'packages/kernel/reconciler/src/compile/types.ts', startLine: 101 },
+    { label: 'SceneReconcilerOptions', path: 'packages/kernel/reconciler/src/reconcile/types.ts', startLine: 74 },
+  ]}
+/>
+
 {/* @include kernel/components/layout/reference/generated */}

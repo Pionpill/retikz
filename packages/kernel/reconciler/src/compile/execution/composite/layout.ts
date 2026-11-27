@@ -5,7 +5,7 @@ import type {
   LayoutMeasurementAxis,
   LayoutProposal,
 } from '@retikz/core';
-import { canonicalizeBoundsRect, mergeLayoutBounds, createCompositeContractError } from '@retikz/core';
+import { canonicalizeBoundsRect, mergeLayoutBounds, createContractViolationError } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 import { boundsToRect } from '@retikz/math';
 
@@ -25,14 +25,14 @@ export const snapshotAlignmentGuides = (
   for (let index = 0; index < guideCount; index += 1) {
     const { name, dimension, position } = guides[index];
     if (!Number.isFinite(position)) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${ownerLabel} returned invalid alignment guide position at index ${index}; expected finite number`,
       );
     }
 
     const key = `${dimension}\u0000${name}`;
     if (keys.has(key)) {
-      throw createCompositeContractError(`${ownerLabel} returned duplicate alignment guide '${dimension}:${name}'`);
+      throw createContractViolationError(`${ownerLabel} returned duplicate alignment guide '${dimension}:${name}'`);
     }
 
     keys.add(key);
@@ -81,7 +81,7 @@ export const snapshotAllocationBounds = (
   occurrence: CompileOccurrenceLocator,
 ): Readonly<BoundsRect> => {
   if (bounds === null || typeof bounds !== 'object' || Array.isArray(bounds)) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned an invalid allocationBounds.`,
     );
   }
@@ -95,7 +95,7 @@ export const snapshotAllocationBounds = (
     (width as number) < 0 ||
     (height as number) < 0
   ) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; x/y must be finite and width/height must be finite non-negative numbers.`,
     );
   }
@@ -103,7 +103,7 @@ export const snapshotAllocationBounds = (
   const right = (x as number) + (width as number);
   const bottom = (y as number) + (height as number);
   if (!Number.isFinite(right) || !Number.isFinite(bottom)) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; derived edges must remain finite.`,
     );
   }

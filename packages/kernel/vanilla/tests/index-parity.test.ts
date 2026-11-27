@@ -13,9 +13,8 @@ describe('@retikz/vanilla 入口边界', () => {
       'coordinate',
       'scope',
       'embed',
-      'InputLayerCache',
-      'processToStaticResult',
-      'createProcessingController',
+      'BuiltinLayerName',
+      'SceneRuntime',
       'DrawWay',
       'parseNodeTarget',
       'parseTargetSugar',
@@ -29,22 +28,7 @@ describe('@retikz/vanilla 入口边界', () => {
   it('no-dom-root-export：DOM mount/hydrate 只由 @retikz/vanilla/dom 提供', () => {
     const namespace = vanilla as Record<string, unknown>;
 
-    for (const name of [
-      'mount',
-      'mountSvg',
-      'mountCanvas',
-      'hydrate',
-      'VanillaViewMode',
-      'createDomProcessingController',
-      'updateParticipant',
-      'prepareProcessingInput',
-      'createInputRuntimeMetaSnapshot',
-      'createEmptyInputRuntimeMetaSnapshot',
-      'createVanillaCompileDriverSession',
-      'resolveVanillaCompileOutput',
-      'compileVanillaWithDriver',
-      'commitVanillaCompileOutput',
-    ]) {
+    for (const name of ['mountSceneView', 'createDomProcessingController', 'updateParticipant']) {
       expect(namespace[name]).toBeUndefined();
     }
   });

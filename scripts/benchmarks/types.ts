@@ -30,6 +30,8 @@ export type BenchmarkEnvironment = {
 
 /** 稳定标识与模块定义的有序维度值；维度不参与基线匹配 */
 export type BenchmarkIdentity = {
+  /** 使用万级限次策略的被测实体数，不从报告标签推断 */
+  workloadSize?: number;
   id: string;
   dimensions: ReadonlyArray<string>;
 };
@@ -53,6 +55,8 @@ export type BenchmarkMeasurement = {
   mode: 'normal' | 'reference';
   sampling: { time: number; iterations: number; warmupTime: number; warmupIterations: number; warmup?: boolean };
   calls: number;
+  /** 与正式调用配对的阶段样本（毫秒），保持执行顺序 */
+  sampleTimingsMs?: ReadonlyArray<Readonly<Record<string, number>>>;
   /** 计时外独立核验的工作量，不是计时样本或缓存命中率 */
   observations?: Readonly<Record<string, number>>;
 };

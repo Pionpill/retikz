@@ -1,5 +1,21 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '渲染后端；缺省使用 SVG，框架宿主可从上下文继承':
+    'Renderer; defaults to SVG and may be inherited from framework context',
+  'SVG 资源 id 前缀；省略时由宿主生成': 'SVG resource ID prefix; supplied by the host when omitted',
+  '是否播放动画；未指定时遵循系统减少动态效果偏好': 'Enable playback; defaults to the system reduced-motion preference',
+  '按图元 id 绑定的初始事件处理函数表': 'Initial event handlers keyed by drawing element ID',
+  'DOM 与框架宿主共享的场景视图配置': 'Scene view options shared by DOM and framework hosts',
+  编译选项: 'Compile options',
+  '协调器执行选项；提交目标由宿主接入': 'Reconciler execution options; the host supplies the commit target',
+  接收协调器的结构化诊断: 'Receives structured reconciler diagnostics',
+  '设置子树的默认动画模式；Layout 的 animate 优先':
+    'Sets the default animation mode for descendants; an explicit Layout animate prop takes precedence',
+  动画模式提供器: 'Animation mode provider',
+  '设置子树的默认渲染后端；Layout 的 renderer 优先':
+    'Sets the default backend for descendants; an explicit Layout renderer takes precedence',
+  渲染模式提供器: 'Renderer mode provider',
+  '创建场景时传给 scene 的对象选项': 'Object options accepted by scene',
   沿路径放置的标记定义: 'Definitions of markers placed along a path',
   '自定义文字测量；省略时使用 Vanilla 的环境测量与估算降级':
     'Custom text measurement; omitted uses Vanilla environment measurement with estimation when unavailable',
@@ -8,48 +24,29 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Height above the baseline; resolveTextMetrics derives an omitted value from total height and descent, or assigns half the total height when both are omitted',
   '基线以下的深度；省略时由 resolveTextMetrics 根据总高度与 ascent 补齐，两者均省略时各取总高度的一半':
     'Depth below the baseline; resolveTextMetrics derives an omitted value from total height and ascent, or assigns half the total height when both are omitted',
-  '客户端作者准备方式；同步 SSR 仍消费同步 lower':
-    'Client authoring preparation mode; synchronous SSR continues to use synchronous lower',
-  '异步 preparation 与 controller 的生命周期信号': 'Lifecycle signal for async preparation and the controller',
   '固定为 layer 的作者分层标识': 'Authoring layer discriminator, fixed to layer',
-  '可省略的场景类别；归一化后固定为 scene': 'Optional scene discriminator; fixed to scene after normalization',
   '作者输入不接受版本号；归一化时写入当前 IR 版本':
     'Authoring input excludes a version; normalization supplies the current IR version',
-  '作者侧场景标识，不写入持久化 Scene IR': 'Authoring scene identity, excluded from persisted Scene IR',
-  '场景根主题，只填写需要覆盖的 name 与 mode': 'Root theme; specify only name and mode overrides',
-  '显式取景矩形；省略时由编译结果按内容计算': 'Explicit viewport; compilation derives it from content when omitted',
-  '场景根动画轨道，省略时不添加根动画': 'Scene-root animation tracks; omitted means no root animation',
-  'children 模式不接受显式 layers': 'The children variant excludes explicit layers',
-  '显式分层列表，按 zIndex 稳定排序后归一化': 'Explicit layers, normalized after a stable sort by zIndex',
-  'layers 模式不接受顶层 children': 'The layers variant excludes top-level children',
-  '有序子图元，归一化时置于隐式默认层': 'Ordered children placed in the implicit default layer during normalization',
-
   '作者侧 Layer 输入': 'Authoring input for a layer',
-  运行时缓存提示: 'Runtime cache hint',
+  作者侧图层: 'Authoring input for a layer',
+  在视口内唯一的名称: 'Unique layer name in the viewport',
+  本层的编译选项: 'Compile options for this layer',
+  本层的协调器执行选项: 'Reconciler execution options for this layer',
   按声明顺序归一的子节点: 'Children normalized in declaration order',
   分层身份标识: 'Layer identity',
   同值保持声明顺序的分层排序值: 'Layer stacking order; equal values preserve declaration order',
   '作者侧 Scene 输入': 'Scene authoring input',
-  '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
-    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
-  '使用 children 简写的作者侧 Scene 输入': 'Scene authoring input using a children list',
-  '使用 Layer 列表的作者侧 Scene 输入': 'Scene authoring input using explicit layers',
-  '创建作者侧 Scene 输入': 'Create scene authoring input',
-  用子图元列表创建场景: 'Create a scene from a list of children',
-  用子图元和全图配置创建场景: 'Create a scene from children and drawing-wide options',
-  用显式分层创建场景: 'Create a scene from explicit layers',
-  '有序子图元列表，允许空数组': 'Ordered children; an empty array is allowed',
-  '保留子数组引用的场景输入，数据版本在归一化时补齐':
-    'Scene input retaining the children array reference; normalization supplies the data version',
-  'children 与主题、视框等全图配置，不接受 layers':
-    'Children and drawing-wide options such as theme and viewBox; excludes layers',
-  '保留配置与子图元引用的场景输入，尚未编译': 'Uncompiled scene input retaining the options and child references',
-  'layers 与全图配置，不接受 children': 'Layers and drawing-wide options; excludes children',
-  '保留分层列表引用的场景输入，分层运行时信息由归一化提取':
-    'Scene input retaining the layers array reference; normalization extracts runtime layer metadata',
+  '归一化时保留的作者元数据，不进入 Core IR': 'Authoring metadata retained during normalization; excluded from Core IR',
+  '单图作者输入，归一化时转换为 Core IR': 'Single-scene authoring input normalized into Core IR',
+  '构造单图作者输入，不编译或复制子图元': 'Build a single scene input without compiling or copying its children',
+  '当前层的完整 Core IR': 'Complete Core IR for this layer',
+  '仅随当前场景参与编译的嵌入绑定，不属于图层默认配置': 'Embed bindings for this scene only; not layer defaults',
+  '创建图层时将作者输入一次转换为 IR，并保留其嵌入绑定':
+    'Normalize authored input once when creating a layer and retain its embed bindings',
+  覆盖层栈的执行配置: 'Execution options overriding the layer stack defaults',
   创建作者侧分层输入: 'Create layer authoring input',
-  '分层标识、排序、缓存提示与子图元': 'Layer identity, stacking order, cache hint, and children',
-  '带 layer 类别的输入，不编译或复制子图元': 'Input tagged as a layer; does not compile or copy its children',
+  '分层名称、排序、计算配置与场景': 'Layer name, stacking order, processing options, and scene',
+  '带 layer 类别的输入，不编译或复制场景': 'Input tagged as a layer; does not compile or copy the scene',
   'retikz 顶层绘制 IR，可序列化 JSON 形式的绘制描述': 'Root drawing IR, a JSON-serializable description of a drawing',
   '显式视框 IR 类型 `{ x, y, width, height }`': 'Explicit viewport IR: `{ x, y, width, height }`',
 
@@ -61,26 +58,12 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none',
   '动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate':
     'Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate',
-  '将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画':
-    'Render JSX drawings or scene IR as SVG or Canvas, with updates and animation',
-  '通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式':
-    'Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.',
-  '保留执行状态以处理后续图形更新；省略 runtime 或 mode 时使用此模式':
-    'Keep execution state for subsequent drawing updates; used when runtime or mode is omitted',
-  '更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行':
-    'Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution',
-  '接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面':
-    'Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing',
-  '每次输入变化时完整编译图形，不保留增量执行状态':
-    'Compile the complete drawing whenever input changes, without retaining incremental execution state',
-  '通过 mode 选择图形更新方式；retained 支持更新策略和诊断回调，static 不接受这两个选项':
-    'Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static accepts neither option',
+  绘图容器: 'Drawing container',
+  '将 JSX 子图元或完整 IR 渲染为 SVG 或 Canvas，必须选择一种输入':
+    'Renders either JSX children or a complete IR scene as SVG or Canvas; exactly one input is required',
   主题样式定义: 'Theme definitions',
   '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
-  处理作者输入的编译驱动: 'Compile driver that processes authoring input',
   '直接传入 ir 时使用的事件处理函数表': 'Event handlers used when ir is supplied directly',
-  '选择 retained 增量更新或 static 完整编译模式；省略时使用 retained':
-    'Select retained incremental updates or static full compilation; defaults to retained',
   动画缓动函数注册表: 'Animation easing registry',
   可动画属性注册表: 'Animatable property registry',
   请求生成的编译附加产物: 'Requested compilation artifacts',
@@ -89,27 +72,16 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference',
   'SVG 资源 id 前缀；省略时由 React useId 生成': 'SVG resource ID prefix; generated from React useId when omitted',
 
-  '供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':
-    'JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR',
+  '归一化时收集的 JSX 作者元数据；传入 ir 时忽略，不写入持久化 Scene IR':
+    'JSX authoring metadata collected during normalization; ignored when ir is supplied and excluded from persisted Scene IR',
   '渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG':
     'Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided',
   '节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效':
     'Default relative node distance in drawing units; applies when position uses direction/of without distance',
   '默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号':
     'Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes',
-  '创建保留式 Runtime': 'Creates a retained Runtime',
-  '按 Vanilla processing controller 的队列顺序接收 Runtime 结构化诊断':
-    'Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller',
-  'Computation 更新策略': 'Computation update strategy',
-  '不创建 Runtime，直接完整编译与物化':
-    'Compiles and materializes the complete result directly, without creating a Runtime',
-  'static 不创建 Runtime，因此不产生 Runtime 结构化诊断':
-    'Static mode creates no Runtime and therefore emits no structured Runtime diagnostics',
-  'static 不支持 Computation 更新策略': 'Static mode does not support a Computation update strategy',
   '为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展':
     'Register custom shapes, arrows, clips, and other drawing extensions for Layout',
-  '通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据':
-    'Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.',
   形状定义: 'Shape definitions',
   连接表面定义: 'Connection boundary definitions',
   裁剪定义: 'Clip definitions',
@@ -132,12 +104,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Scene 根动画': 'Scene-root animations',
   自定义箭头定义: 'Custom arrow definitions',
   'artifact 请求': 'Requested compilation artifacts',
-  '只供 Vanilla compile driver 消费的 runtime metadata': 'Runtime metadata consumed only by the Vanilla compile driver',
   自定义边界定义: 'Custom boundary definitions',
   'Kernel 或 Sugar JSX children': 'Kernel or Sugar JSX children',
   '宿主 className': 'Host className',
   自定义裁剪定义: 'Custom clip definitions',
-  'Vanilla 领域中立 compile driver': 'Domain-neutral Vanilla compile driver',
   'Tier 2 composite definitions': 'Tier 2 composite definitions',
   'easing registry': 'Easing registry',
   默认字号: 'Default font size',
@@ -153,9 +123,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '自定义 path 定义': 'Custom path definitions',
   '自定义 pattern 定义': 'Custom pattern definitions',
   渲染目标: 'Rendering target',
-  'JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效':
-    'Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently',
-  'retained 或 static processing 模式': 'Retained or static processing mode',
+  'JSX 子图的隐式根 Scope 覆盖': 'Implicit root Scope overrides for JSX children',
+  完整的持久化场景: 'Complete persisted scene',
   自定义形状定义: 'Custom shape definitions',
   静态动画采样时刻: 'Time at which to sample a static animation frame',
   宿主内联样式: 'Host inline styles',
@@ -165,15 +134,10 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   显式视框: 'Explicit viewport',
   'SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴':
     'CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio',
-  'React Layout retained Runtime 配置': 'Retained Runtime configuration for React Layout',
-  'React Layout 宿主执行模式取值': 'React Layout host execution mode value',
-  'React Layout 的判别 Runtime 配置': 'Discriminated Runtime configuration for React Layout',
-  'React Layout static Runtime 配置': 'Static Runtime configuration for React Layout',
   'React Layout：JSX 转 Vanilla Input，随后只宿主化 Vanilla processing result':
     'React Layout converts JSX to Vanilla Input, then hosts the Vanilla processing result',
-  'React 不创建 Core Computation、Runtime 或 retained renderer；所有处理状态归 Vanilla':
-    'React does not create Core Computations, Runtimes, or retained renderers; Vanilla owns all processing state',
-  'React Layout 的宿主执行模式': 'React Layout host execution modes',
+  'React 不创建 Core Computation、Runtime 或 renderer；所有处理状态归 Vanilla':
+    'React does not create Core Computations, Runtimes, or renderers; Vanilla owns all processing state',
 };
 
 /** 新增说明缺少翻译时阻止生成 */

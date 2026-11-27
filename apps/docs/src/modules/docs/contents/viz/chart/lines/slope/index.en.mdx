@@ -70,7 +70,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const Example = () => <Layout ir={ir} extensions={definitions} />;
+export const Example = () => <Layout ir={ir} compile={{ ...definitions }} />;
 ```
 
 </DocTab>
@@ -78,7 +78,7 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { slopeChart, slopeChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { slopeChart } from '@retikz/chart-vanilla/line';
 import { slopeData } from './slope-basic.data';
 
 const chart = slopeChart({
@@ -86,7 +86,7 @@ const chart = slopeChart({
   layout: { width: 640, height: 320 },
   encodings: { entity: 'entity', start: 'previous', end: 'current' },
 });
-export const svg = renderChart(chart, { adapters: [slopeChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>
@@ -100,7 +100,7 @@ import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { slopeData } from './slope-basic.data';
 import { compileToScene } from '@retikz/reconciler';
-import { renderToSvgString } from '@retikz/vanilla';
+import { renderToSvg } from '@retikz/vanilla';
 
 const chart = SlopeChartSchema.parse({
   namespace: 'chart',
@@ -118,7 +118,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+export const svg = renderToSvg(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

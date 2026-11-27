@@ -4,7 +4,7 @@ import type { Lang } from '@/i18n';
 export const text: Record<Lang, Record<string, [string, string]>> = {
   zh: {
     edge0: ['准备输出', ''],
-    prepare: ['prepareProcessingInput', 'Vanilla 整理新输入'],
+    prepare: ['SceneRuntime', 'Vanilla 整理新输入'],
     runtime: ['SceneReconciler.replace', '准备完整替换'],
     update: ['executeWeaveMount', '构建新的候选树'],
     full: ['publish', '协调候选状态与目标'],
@@ -13,7 +13,7 @@ export const text: Record<Lang, Record<string, [string, string]>> = {
   },
   en: {
     edge0: ['Prepare output', ''],
-    prepare: ['prepareProcessingInput', 'Vanilla prepares input'],
+    prepare: ['SceneRuntime', 'Vanilla prepares input'],
     runtime: ['SceneReconciler.replace', 'Prepare complete replacement'],
     update: ['executeWeaveMount', 'Build a new candidate tree'],
     full: ['publish', 'Coordinate state and target'],

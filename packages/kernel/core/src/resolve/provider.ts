@@ -6,8 +6,8 @@ import { ZodError } from 'zod';
 import {
   createLayoutProbeRecoverableError,
   safeThrownDetail,
-  createCompositeContractError,
-  isCompositeContractError,
+  createContractViolationError,
+  isContractViolationError,
   isFatalProbeError,
 } from './diagnostics';
 
@@ -76,7 +76,7 @@ export const guardProviderOutput = <T>(owner: string, validate: () => T): T => {
   try {
     return validate();
   } catch (cause) {
-    if (isCompositeContractError(cause) || isFatalProbeError(cause)) throw cause;
-    throw createCompositeContractError(`${owner} output validation failed.`, { cause });
+    if (isContractViolationError(cause) || isFatalProbeError(cause)) throw cause;
+    throw createContractViolationError(`${owner} output validation failed.`, { cause });
   }
 };

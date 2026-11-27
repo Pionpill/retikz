@@ -6,9 +6,20 @@ import { NodeSchema } from '../../../src';
 import { gradeNodeAnswer, nodeEvalCases } from '../suite';
 
 describe('节点语义用例的离线完整性', () => {
+  it('相同线性渐变放在填充、主体描边或标签引线上时不能互换', () => {
+    const placements = ['NF001', 'NF006', 'NF011'].map(id => nodeEvalCases.find(item => item.id === id)!);
+    for (const target of placements) {
+      for (const candidate of placements) {
+        const score = gradeNodeAnswer(target, JSON.stringify(candidate.expected));
+        expect(score.schemaValid).toBe(true);
+        expect(score.success).toBe(candidate.id === target.id);
+      }
+    }
+  });
+
   it('稳定 ID 唯一，所有题目始终是完整节点任务', () => {
     expect(new Set(nodeEvalCases.map(testCase => testCase.id)).size).toBe(nodeEvalCases.length);
-    expect(nodeEvalCases.filter(testCase => testCase.diagnostic === undefined)).toHaveLength(146);
+    expect(nodeEvalCases.filter(testCase => testCase.diagnostic === undefined)).toHaveLength(141);
     expect(nodeEvalCases.filter(testCase => testCase.diagnostic !== undefined)).toHaveLength(1);
   });
 

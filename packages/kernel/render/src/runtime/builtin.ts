@@ -1,14 +1,14 @@
-import { createBuiltinCanvasRetainedRenderer } from './canvas-renderer';
-import type { RetainedRenderer, RetainedRendererFactory, InputRetainedRendererFactory } from './renderer';
-import { createBuiltinSvgRetainedRenderer } from './svg-renderer';
+import { createBuiltinCanvasRenderer } from './canvas-renderer';
+import type { Renderer, RendererFactory, InputRendererFactory } from './renderer';
+import { createBuiltinSvgRenderer } from './svg-renderer';
 
-const createBuiltinRetainedRenderer = (input: InputRetainedRendererFactory): RetainedRenderer => {
+const createBuiltinRenderer = (input: InputRendererFactory): Renderer => {
   if (input.backend === 'svg') {
-    return createBuiltinSvgRetainedRenderer(input.host, input.immutableOptions);
+    return createBuiltinSvgRenderer(input.host, input.immutableOptions);
   }
 
-  return createBuiltinCanvasRetainedRenderer(input.host, input.immutableOptions);
+  return createBuiltinCanvasRenderer(input.host, input.immutableOptions);
 };
 
-/** 内置 SVG / Canvas retained renderer factory */
-export const builtinRetainedRendererFactory = createBuiltinRetainedRenderer as RetainedRendererFactory;
+/** 内置 SVG / Canvas renderer factory */
+export const builtinRendererFactory = createBuiltinRenderer as RendererFactory;

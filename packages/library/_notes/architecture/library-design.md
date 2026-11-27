@@ -3,6 +3,8 @@
 > **状态：长期分组边界已确认。** Library 包含 Standard、Extension 与 Layout；官方 Core provider 归 Extension，Tier 2 绘图组合归 Standard，排版布局归 Layout。
 >
 > 关联：[`../../AGENTS.md`](../../AGENTS.md) · [`Standard 拓展库设计`](./standard-library-design.md) · [`Layout 布局库设计`](./layout-library-design.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
+>
+> 规划中：[Widgets · 图内交互部件](./widgets-library-design.md)，待 Kernel 交互能力就绪后实现，不属于当前已交付的包。
 
 ---
 
@@ -18,7 +20,7 @@ Library 不以“所有通用代码”作为收纳标准。进入本组的能力
 
 Standard 提供通用 Tier 2 绘图 composite 与动画效果纯工厂，通过 Core 的 Definition、registry 与 lowering 主链接入。
 
-Standard 不拥有排版 solver、Layout artifact 或 Layout Inspector。Standard composite 需要排版时，以普通消费方身份组合 Layout 的公开能力。
+Standard 不拥有排版 solver或 Layout artifact。Standard composite 需要排版时，以普通消费方身份组合 Layout 的公开能力。
 
 ### Extension · 拓展包
 
@@ -26,7 +28,7 @@ Extension 提供节点形状、箭头、裁剪与 Ribbon 等官方 Core provider
 
 ### Layout · 布局包
 
-Layout 纵向提供领域无关的容器排版模型、约束求解、placement、overflow / clip、artifact、inspection 与跨宿主 authoring。Flex、Grid、Overlay 等布局共享同一 Core proposal / probe / replay 底座，但拥有独立于 Standard 的发布与演进节奏。
+Layout 纵向提供领域无关的容器排版模型、约束求解、placement、overflow / clip、artifact 与跨宿主 authoring。Flex、Grid、Overlay 等布局共享同一 Core proposal / probe / replay 底座，但拥有独立于 Standard 的发布与演进节奏。
 
 Layout 不拥有 Tree、Layered、Force、UML 自动排布、GraphModel、rank、port constraint、edge routing 或碰撞避让。这些能力依赖关系图与领域约束，属于算法布局及其领域 owner。
 

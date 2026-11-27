@@ -1,5 +1,5 @@
 ---
-title: Scope 编译
+title: 编译 / Scope
 description: 理解 Scope 的继承、局部空间、子布局包络及分组输出，以及 Core 与 Reconciler 的分工
 ---
 
@@ -141,6 +141,22 @@ export type PreparedScopeEmit = {
 <ComponentPreview files="scope-envelope" size="xl" hideCode type="illustration" />
 
 两幅图使用相同的 A、B 和 Coordinate。向父层贡献布局时，具名 Scope 使用图中的包络；匿名 Scope 继续传递这些子布局。
+
+### 矩形包络复用
+
+假设已有包络从 `[1, 1]` 到 `[10, 10]`。某个子项原先严格位于内部，更新后仍在内部，四条外边界就不会变化；如果它移到外面，可以把新极值并入旧包络。原来触及外边界的子项向内移动或被删除时，其他子项能撑到哪里需要重新计算。
+
+Core 从 `@retikz/core` 公开三个纯函数，供编译调用方保存和合并原始极值。它们不持有会话状态，也不会从中心与宽高反推边界。
+
+| 函数                                                                                                                                                                                 | 输入与结果                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| <ApiSourceLink label="calculateScopeEnvelopeBounds" path="packages/kernel/core/src/compile/scope/envelope/layout.ts" startLine={51}>`calculateScopeEnvelopeBounds`</ApiSourceLink>   | 有序的 `ReadonlyArray<CompiledReferenceGeometry>` → 四条角点极值；空数组返回 `undefined` |
+| <ApiSourceLink label="mergeScopeEnvelopeBounds" path="packages/kernel/core/src/compile/scope/envelope/layout.ts" startLine={70}>`mergeScopeEnvelopeBounds`</ApiSourceLink>           | 同坐标系的前、后两段极值 → 合并结果；`undefined` 是空集合，相等时保留前段值              |
+| <ApiSourceLink label="compileScopeRectangleEnvelope" path="packages/kernel/core/src/compile/scope/envelope/layout.ts" startLine={85}>`compileScopeRectangleEnvelope`</ApiSourceLink> | 极值或 `undefined` → `CompiledScopeGeometry`；空集合得到原点零尺寸矩形                   |
+
+Reconciler 保存上次的四条极值，比较当前与旧子布局。只有变化前的贡献严格处于旧包络内部，才局部合并新贡献；触边、数值平局或子布局数量变化会完整重算，保留极值的声明顺序及正负零语义。圆形仍按完整点集计算。准备好的矩形通过 `PreparedScopeLayout.envelope` 交给 Core，候选提交失败时旧状态不变。
+
+对于具名矩形 Scope，如果它只依赖该子项的布局，且子项变化前后都严格位于旧边界内部，Reconciler 在收到子布局变化时就能保留父包络。这次通知不需要收集或比较兄弟布局。直接引用子项的路径仍会收到变化；完整 Scene 的绘制、资源和诊断仍照常组装。
 
 ### 放置、裁剪与分组输出
 

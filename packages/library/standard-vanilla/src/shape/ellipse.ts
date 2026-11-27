@@ -1,6 +1,6 @@
 import type { IREllipse } from '@retikz/standard/shape';
 import { ellipseProvider, createEllipse } from '@retikz/standard/shape';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputShape } from './shared';
 import { normalizeShapeInput } from './shared';
@@ -9,7 +9,7 @@ import { normalizeShapeInput } from './shared';
 export type InputEllipse = InputShape<IREllipse>;
 
 /** 将 Ellipse 作者输入归一为持久化的 Standard 意图 */
-export const ellipseInputEmbedAdapter: SynchronousInputEmbedAdapter<InputEllipse & { id?: string }> = {
+export const ellipseInputEmbedAdapter: InputEmbedAdapter<InputEllipse & { id?: string }> = {
   kind: 'standard.ellipse',
   lower: props => ({
     node: createEllipse(normalizeShapeInput<IREllipse>(props)),

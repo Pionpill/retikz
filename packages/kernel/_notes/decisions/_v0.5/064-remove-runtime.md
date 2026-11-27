@@ -16,6 +16,8 @@ keywords: Runtime、Reconciler、Weave、事务、Render、依赖移除
 
 > 静态编译不创建协调器会话的约定由 [ADR-082](./082-scene-reconciler-entry.md) 替代：完整与增量编译统一通过现有 SceneReconciler，一次性调用使用临时非增量实例
 
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
+
 ## 背景与目标
 
 Weave 已拥有编译树、批次操作、依赖传播、缓存及候选状态隔离。现有公开链路仍通过 Runtime Source / Computation 包装完整输入，更新回退到完整准备，未直接使用已有 Weave 批次能力。通用计算图与完整快照捕获增加接线复杂度，不能作为元素增量计算的必要条件。
@@ -30,7 +32,7 @@ Core 继续拥有绘图语义、逐元素编译与完整结果组装。静态编
 
 Render 拥有 SVG / Canvas 宿主修改、渲染配置、动画、水合和渲染资源生命周期。Reconciler 定义可选的输出提交边界，由 Render 实现并由宿主接线注入；Reconciler 不导入 Render，不持有 DOM 类型，也不实现后端失败恢复算法。
 
-Vanilla 拥有作者输入转换、处理结果投影、渲染配置接线和宿主生命周期；React 复用 Vanilla。两者不另建计算事务或复制 Weave 操作语义。现有静态、retained、SSR 和自定义 renderer 使用场景继续成立，Runtime 的移除不等于取消保留式宿主。
+Vanilla 拥有作者输入转换、处理结果投影、渲染配置接线和宿主生命周期；React 复用 Vanilla。两者不另建计算事务或复制 Weave 操作语义。现有静态、session、SSR 和自定义 renderer 使用场景继续成立，Runtime 的移除不等于取消保留式宿主。
 
 运行期 Scene 身份、revision 及 Scene 更新输出契约归 Reconciler；Core 的编译内来源不升级为跨次身份。绘图诊断归 Core，执行与版本错误归 Reconciler，宿主错误归 Render，作者输入错误归 adapter。各包拥有自己的 trace 词汇和发射边界；无领域含义且存在实际共享消费者的观测原子契约才进入 Foundation，不把 Runtime 注册图、事务或领域诊断搬进 Foundation。Foundation 仅保留共享 trace record / sink 类型，不定义执行结果枚举或 reporter。Core、Reconciler、Render 各自定义阶段、结果与计数语义，并在发射边界隔离观察回调异常；阶段注册、记录校验、聚合与展示由 Bench / 开发工具负责，不进入生产编译热路径。
 
@@ -63,7 +65,7 @@ Vanilla 拥有作者输入转换、处理结果投影、渲染配置接线和宿
 - 最终确认后的旧资源清理、观察回调失败只产生所属包诊断，不撤销已发布结果。销毁释放会话与宿主各自持有的资源，不允许销毁后继续更新。
 - 基础元素的批次结果保持与同一最终输入的 Core 完整编译可观察等价；延后 Path 引用、Scope 包络、名称可见性与自定义基础能力继续遵守现有 Core / Weave 契约。
 - 删除 Runtime 包、Source / Computation / Participant API 及对它们的包装出口，不保留旧名转发或兼容层。保留式 renderer 工厂调整为新的提交接线契约，调用方同步迁移。
-- Adapter 的 `static | retained` 模式及现有默认值保持；现有 `runtime` 配置字段是执行配置入口，不再表示依赖同名包，本决策不为包删除强制更名。`auto | full` 作为 Reconciler 执行策略保留既有含义：auto 的权威基础批次使用 Weave，完整输入走完整准备；full 使用最终输入完整准备。两种策略都不得掩盖无效批次。
+- Adapter 的 `static | session` 模式及现有默认值保持；现有 `runtime` 配置字段是执行配置入口，不再表示依赖同名包，本决策不为包删除强制更名。`auto | full` 作为 Reconciler 执行策略保留既有含义：auto 的权威基础批次使用 Weave，完整输入走完整准备；full 使用最终输入完整准备。两种策略都不得掩盖无效批次。
 - React 与 Vanilla 保持等价配置语义；完整输入更新、SSR、动画、水合、只读图层和已有 Composite 完整编译接线必须同步去除 Runtime 类型与运行依赖，但不增加 Composite 增量或交互地址能力。
 
-本决策获批后替代 [011](./011-runtime-identity-source-registry.md) 与 [012](./012-computation-transaction-lifecycle.md) 中独立 Runtime Source / Computation / Participant 的包契约；调整 [014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)、[050](./050-runtime-trace-owner-declarations.md)、[055](./055-reconciler-extraction.md)、[061](./061-weave-core-integration.md) 和 [063](./063-weave-incremental-update.md) 对 Runtime 的所有权与接线要求。Core 绘图语义、Weave 批次语义、候选隔离和渲染一致性要求继续有效。Proposed 状态不改变现有实现与历史决策效力。
+本决策获批后替代 [011](./011-runtime-identity-source-registry.md) 与 [012](./012-computation-transaction-lifecycle.md) 中独立 Runtime Source / Computation / Participant 的包契约；调整 [014](./014-scene-patch-renderer.md)、[016](./016-runtime-execution-policy.md)、[050](./050-runtime-trace-owner-declarations.md)、[055](./055-reconciler-extraction.md)、[061](./061-weave-core-integration.md) 和 [063](./063-weave-incremental-update.md) 对 Runtime 的所有权与接线要求。Core 绘图语义、Weave 批次语义、候选隔离和渲染一致性要求继续有效。Proposed 状态不改变现有实现与历史决策效力。

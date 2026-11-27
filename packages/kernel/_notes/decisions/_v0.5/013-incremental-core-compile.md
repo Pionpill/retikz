@@ -8,7 +8,7 @@ keywords: 'Core、Runtime、Computation、replaceScene、update、CompileResult�
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-28
-- 关联：[ADR-012](./012-computation-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-retained-renderer.md)
+- 关联：[ADR-012](./012-computation-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-renderer.md)
 
 > 后续调整：[061](./061-weave-core-integration.md) 已替代本文的 CoreChange 提示、快照 diff 索引与 mismatch 诊断约定；完整输入和 Scene 提交边界继续保留。
 
@@ -103,7 +103,7 @@ Computation trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 
 本 ADR 新增 Core Runtime Computation 公共入口，并消费 ADR-014 定义的 readonly Scene Patch DTO；Core IR 与持久 Scene schema 不变。`compileToScene()` 继续可独立使用；调用方无需提供 ChangeSet，也不需要根据 full / incremental / fallback 切换消费协议。
 
-这是 `0.x` 新能力，不提供旧写法别名。React / Vanilla runtime 接线与 retained SVG / Canvas commit 由 ADR-014 承接。
+这是 `0.x` 新能力，不提供旧写法别名。React / Vanilla runtime 接线与 session SVG / Canvas commit 由 ADR-014 承接。
 
 ## 遗留风险与后续
 

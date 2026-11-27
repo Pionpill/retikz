@@ -1,7 +1,7 @@
 import type { ShapeCircumscribedGeometry } from '../../../contract';
 import type { CanonicalNode } from '../../../resolve';
 import {
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   guardProviderOutput,
   isFatalProbeError,
@@ -29,7 +29,7 @@ export const layoutNodeShape = (shape: CanonicalNode['shape'], halfContentWidth:
   return guardProviderOutput(`Shape '${definition.name}' circumscribe`, () => {
     const { halfWidth, halfHeight, offset: rawOffset } = raw;
     if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth < 0 || halfHeight < 0) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `Shape '${definition.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
       );
     }

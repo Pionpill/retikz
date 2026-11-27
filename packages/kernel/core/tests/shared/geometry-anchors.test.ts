@@ -2,7 +2,6 @@ import type { CenteredBox, Ellipse } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import { Anchor, CenterAnchor, Side, isAnchor, isDirectionalAnchor } from '../../src/shared';
-import { isSide } from '../../src/shared/anchor/utils';
 import { edgeAngleDeg } from '../../src/shared/geometry/edge';
 import { ellipse } from '../../src/shared/geometry/ellipse';
 import { rect } from '../../src/shared/geometry/rect';
@@ -15,9 +14,7 @@ describe('锚定词汇', () => {
     expect(isAnchor(Anchor.BottomRight)).toBe(true);
     expect(isDirectionalAnchor(Anchor.TopLeft)).toBe(true);
     expect(isDirectionalAnchor(CenterAnchor.Center)).toBe(false);
-    expect(isSide(Side.Top)).toBe(true);
     expect(isAnchor('north')).toBe(false);
-    expect(isSide('above')).toBe(false);
   });
 });
 

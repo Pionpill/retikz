@@ -1,8 +1,9 @@
+// @vitest-environment jsdom
 import type { IRAnimationTrack } from '@retikz/core';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { AnimationModeProvider, Layout, Node } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 const FADE: Array<IRAnimationTrack> = [
   {
@@ -15,42 +16,52 @@ const FADE: Array<IRAnimationTrack> = [
   },
 ];
 
-const animatedLayout = (animate: boolean, snapshotAt?: number): React.ReactElement => (
+const animatedLayout = (animate?: boolean, snapshotAt?: number): React.ReactElement => (
   <Layout width={100} height={100} animate={animate} snapshotAt={snapshotAt}>
     <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
   </Layout>
 );
 
-const hasAnimationStyle = (node: React.ReactNode): boolean => renderToStaticMarkup(node).includes('<style>');
+const hasAnimationStyle = (node: React.ReactNode): boolean => mountedMarkup(node).includes('<style>');
 
 describe('AnimationModeProvider', () => {
   it('未使用 Provider 时保留 Layout 自身的显式配置', () => {
     expect(hasAnimationStyle(animatedLayout(false))).toBe(false);
   });
 
-  it('enabled 覆盖后代 Layout 的 animate={false}', () => {
+  it('显式 animate={false} 优先于 enabled', () => {
     expect(
       hasAnimationStyle(<AnimationModeProvider mode="enabled">{animatedLayout(false)}</AnimationModeProvider>),
-    ).toBe(true);
-  });
-
-  it('disabled 覆盖后代 Layout 的 animate={true}', () => {
-    expect(
-      hasAnimationStyle(<AnimationModeProvider mode="disabled">{animatedLayout(true)}</AnimationModeProvider>),
     ).toBe(false);
   });
 
-  it('system 忽略后代显式值并在 SSR 中按 no-preference 处理', () => {
+  it('显式 animate={true} 优先于 disabled', () => {
+    expect(
+      hasAnimationStyle(<AnimationModeProvider mode="disabled">{animatedLayout(true)}</AnimationModeProvider>),
+    ).toBe(true);
+  });
+
+  it('显式 animate={false} 优先于 system', () => {
     expect(
       hasAnimationStyle(<AnimationModeProvider mode="system">{animatedLayout(false)}</AnimationModeProvider>),
-    ).toBe(true);
+    ).toBe(false);
+  });
+
+  it.each([
+    ['enabled', true],
+    ['disabled', false],
+    ['system', true],
+  ] as const)('未传 animate 时采用 %s（挂载后）', (mode, expected) => {
+    expect(hasAnimationStyle(<AnimationModeProvider mode={mode}>{animatedLayout()}</AnimationModeProvider>)).toBe(
+      expected,
+    );
   });
 
   it('嵌套时使用最近的 Provider', () => {
     expect(
       hasAnimationStyle(
         <AnimationModeProvider mode="disabled">
-          <AnimationModeProvider mode="enabled">{animatedLayout(false)}</AnimationModeProvider>
+          <AnimationModeProvider mode="enabled">{animatedLayout()}</AnimationModeProvider>
         </AnimationModeProvider>,
       ),
     ).toBe(true);
@@ -58,7 +69,7 @@ describe('AnimationModeProvider', () => {
 
   it('snapshotAt 继续优先于 enabled Provider', () => {
     expect(
-      hasAnimationStyle(<AnimationModeProvider mode="enabled">{animatedLayout(false, 200)}</AnimationModeProvider>),
+      hasAnimationStyle(<AnimationModeProvider mode="enabled">{animatedLayout(undefined, 200)}</AnimationModeProvider>),
     ).toBe(false);
   });
 });

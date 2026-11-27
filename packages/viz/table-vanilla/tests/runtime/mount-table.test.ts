@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { layer, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { scene } from '@retikz/vanilla';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { detailTable, embedTable, tableInputEmbedAdapter } from '../../src';
+import { detailTable, embedTable } from '../../src';
 
 const createCanvasContext = (): CanvasRenderingContext2D => {
   const target: Record<string | symbol, unknown> = {
@@ -11,6 +11,11 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
     fillStyle: '#000',
     strokeStyle: '#000',
     lineWidth: 1,
+    measureText: (text: string) => ({
+      width: text.length * 8,
+      actualBoundingBoxAscent: 9,
+      actualBoundingBoxDescent: 3,
+    }),
   };
   return new Proxy(target, {
     get(value, property) {
@@ -41,26 +46,25 @@ describe('Table Vanilla 安装运行时', () => {
     });
     const tableFigure = (name: string) =>
       scene({
-        layers: [layer({ id: 'content', children: [embedTable(spec, { data: { people: [{ name }] } })] })],
+        children: [embedTable(spec, { data: { people: [{ name }] } })],
       });
     const svgContainer = document.createElement('div');
-    const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [tableInputEmbedAdapter] });
+    const svgView = mountSceneView(svgContainer, tableFigure('Ada'));
     const svgRoot = svgView.root;
 
     expect(svgRoot.textContent).toContain('Ada');
 
-    svgView.update(tableFigure('Grace'));
+    svgView.replace(tableFigure('Grace'));
 
     expect(svgView.root).toBe(svgRoot);
     expect(svgRoot.textContent).toContain('Grace');
 
     const canvasContainer = document.createElement('div');
-    const canvasView = mount(canvasContainer, tableFigure('Lin'), {
+    const canvasView = mountSceneView(canvasContainer, tableFigure('Lin'), {
       renderer: 'canvas',
-      adapters: [tableInputEmbedAdapter],
     });
     const canvasRoot = canvasView.root;
-    canvasView.update(tableFigure('Edsger'));
+    canvasView.replace(tableFigure('Edsger'));
 
     expect(canvasView.root).toBe(canvasRoot);
     expect(canvasRoot).toBeInstanceOf(HTMLCanvasElement);

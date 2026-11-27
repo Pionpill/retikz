@@ -6,8 +6,8 @@ import type { IRPosition, IRScope, IRScopePositionTarget } from '../../../schema
 import { evaluatePositionTargetWorld } from '../../reference';
 import type { ScopeCompileContext } from '../types';
 
-/** 拒绝引用适配返回的非有限位置 */
-const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
+/** 拒绝 Scope 定位或变换产生的非有限坐标 */
+export const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
   if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
   }

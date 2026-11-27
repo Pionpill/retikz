@@ -1,6 +1,6 @@
 import type { IRTable } from '@retikz/table';
 import { compileTable } from '@retikz/table';
-import { renderToSvgString } from '@retikz/vanilla';
+import { renderToSvg } from '@retikz/vanilla';
 
 import type { TableRenderer, TableRenderArtifactOptions, TableRenderArtifactResult, TableRenderOptions } from './types';
 
@@ -21,7 +21,7 @@ const renderTableImpl = (
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     compile: options.compile,
   });
-  const svg = renderToSvgString(result.scene, { output: options.output, animation: options.animation });
+  const svg = renderToSvg(result.scene, { output: options.output, animation: options.animation });
   if (!requestsArtifacts(options)) return svg;
 
   return Object.freeze({ svg, manifest: result.manifest });

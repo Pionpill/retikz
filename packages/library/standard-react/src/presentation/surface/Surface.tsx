@@ -1,5 +1,5 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene, withInputEmbedAdapters } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import type { InputSurface } from '@retikz/standard-vanilla/presentation';
 import { surfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import type { InputSurfaceConfig } from '@retikz/standard/presentation';
@@ -17,13 +17,13 @@ export type SurfaceProps = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 /** 将唯一 React child 收集为 Standard Vanilla Input */
 const createSurfaceInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { children, ...input } = props as SurfaceProps;
-  const childInput = createInputScene(children, { embedIdPrefix: `${context.id}:child` });
-  const childrenInput = childInput.scene.children;
-  if (childrenInput === undefined || childrenInput.length !== 1) {
+  const childInput = convertReactToInputScene(children, { embedIdPrefix: `${context.id}:child` });
+  const childrenInput = childInput.children;
+  if (childrenInput.length !== 1) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
       message: 'Surface children must contain exactly one authoring child.',
-      details: { childCount: childrenInput?.length ?? 0, component: 'Surface' },
+      details: { childCount: childrenInput.length, component: 'Surface' },
     });
   }
 
@@ -32,7 +32,7 @@ const createSurfaceInput = (props: Readonly<Record<string, unknown>>, context: R
     child: childrenInput[0],
   };
 
-  return withInputEmbedAdapters(inputProps, childInput.adapters);
+  return inputProps;
 };
 
 const SurfaceComponent: FC<SurfaceProps> = () => null;

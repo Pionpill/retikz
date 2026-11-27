@@ -1,7 +1,5 @@
 import type {
   DataFieldMap,
-  DataInputBindings,
-  DataTransformExecutor,
   ExternalDatasets,
   ExternalRow,
   IRDataModel,
@@ -9,12 +7,14 @@ import type {
 } from '@retikz/data';
 import type { RequireExactlyOne } from '@retikz/foundation';
 import type { AssertEqual } from '@retikz/foundation';
+import { lowerPlotWithLineage } from '@retikz/plot';
 import type {
   IRPlot,
   PlotsLoweringOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
   PlotLineageRun,
+  PreparedPlotData,
 } from '@retikz/plot';
 import type {
   InputPlotCoordinate,
@@ -22,9 +22,10 @@ import type {
   InputPlotPanel,
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
-import { plotInputEmbedAdapter, createPlotLineageCompileDriver } from '@retikz/plot-vanilla';
-import type { LayoutExtensions, LayoutProps } from '@retikz/react';
-import { Layout } from '@retikz/react';
+import { plotInputEmbedAdapter } from '@retikz/plot-vanilla';
+import type { LayoutProps } from '@retikz/react';
+import { Layout, useTheme, useThemeDefinitions } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { FC, ReactNode } from 'react';
 import { useMemo } from 'react';
 
@@ -35,10 +36,7 @@ import { usePlotThemeDefinitions } from './theme-context';
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
-type PlotLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
-  'className' | 'style' | 'renderer' | 'themeDefinitions'
->;
+type PlotLayoutHostProps = Pick<LayoutProps & CompileOptions, 'className' | 'style' | 'renderer' | 'themeDefinitions'>;
 
 /** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
@@ -70,16 +68,11 @@ void plotStandalonePropKeysCheck;
 
 /**
  * <Plot> 两条入口共享的展示 props 与 Plot lowering 选项
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type PlotCommonProps<TSource = never> = PlotStandaloneProps &
+export type PlotCommonProps = PlotStandaloneProps &
   PlotPanelProps &
   Pick<IRPlot, 'width' | 'height'> &
   PlotsLoweringOptions & {
-    /** 通用执行器的最低优先级配置 */
-    dataTransformExecutor?: DataTransformExecutor<TSource>;
-    /** 请求取消信号 */
-    signal?: AbortSignal;
     /** 根级执行配置；spec已声明时不能重复提供 */
     dataExecution?: IRPlot['dataExecution'];
   };
@@ -94,15 +87,14 @@ export type PlotThemeProps = {
 
 /**
  * 已构造 Plot Source IR 的薄包装入口
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type PlotIRProps<TSource = never> = PlotCommonProps<TSource> &
+export type PlotIRProps = PlotCommonProps &
   PlotThemeProps &
   RequireExactlyOne<{
-    /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
+    /** 以数据引用名索引的外部行数据集，与 preparedData 互斥 */
     data: ExternalDatasets;
-    /** 行数据或原生数据源的运行时绑定，与 data 互斥 */
-    dataBindings: DataInputBindings<TSource>;
+    /** 与当前 spec 匹配的已完成数据计算，与 data 互斥 */
+    preparedData: PreparedPlotData;
   }> & {
     /** 完整 Plot Source IR 根节点 */
     spec: IRPlot;
@@ -112,9 +104,8 @@ export type PlotIRProps<TSource = never> = PlotCommonProps<TSource> &
 
 /**
  * 由 React 组合 DSL 构造 Plot Source IR 的入口
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type PlotDslProps<TSource = never> = PlotCommonProps<TSource> &
+export type PlotDslProps = PlotCommonProps &
   PlotThemeProps & {
     /** 不与 children 入口并存 */
     spec?: never;
@@ -125,7 +116,7 @@ export type PlotDslProps<TSource = never> = PlotCommonProps<TSource> &
     /** 运行时数据行 */
     data: Array<ExternalRow>;
     /** 行数据 DSL 不叠加第二份 runtime 绑定 */
-    dataBindings?: never;
+    preparedData?: never;
     /** mark 与 guide React 子组件 */
     children: ReactNode;
     /** 字段名与字段类型模型 */
@@ -144,9 +135,8 @@ export type PlotDslProps<TSource = never> = PlotCommonProps<TSource> &
 
 /**
  * <Plot> props，spec 入口与组合 DSL 入口二选一
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type PlotProps<TSource = never> = PlotIRProps<TSource> | PlotDslProps<TSource>;
+export type PlotProps = PlotIRProps | PlotDslProps;
 
 /** 从 React 面板 props 组装 Plot Vanilla Input 的 Scope 部分 */
 const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined => {
@@ -171,8 +161,8 @@ const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined
 };
 
 /** 将 React Plot props 收敛为由 Plot Vanilla adapter 消费的 Input */
-const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmbed<unknown> => {
-  const plotProps = props as PlotProps<unknown>;
+const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmbed => {
+  const plotProps = props as PlotProps;
   const unsupportedStandaloneProps = PLOT_STANDALONE_PROP_KEYS.filter(key => Object.hasOwn(plotProps, key));
   if (unsupportedStandaloneProps.length > 0) {
     throw new RetikzPlotReactError(
@@ -185,46 +175,19 @@ const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmb
 
   return {
     ...authored,
-    dataTransformExecutor: plotProps.dataTransformExecutor,
-    signal: plotProps.signal,
     ...(panel === undefined ? {} : { panel }),
   };
 };
 
-/** 移除 standalone 已消费的宿主与 lineage 字段，避免内部 embed 重新接收 */
-const plotContentPropsOf = <TSource,>(props: PlotProps<TSource>): PlotProps<TSource> => {
-  const {
-    className: _className,
-    style: _style,
-    renderer: _renderer,
-    themeDefinitions: _themeDefinitions,
-    lineage: _lineage,
-    hostLineageMetadata: _hostLineageMetadata,
-    onLineage: _onLineage,
-    ...contentProps
-  } = props;
-  void _className;
-  void _style;
-  void _renderer;
-  void _themeDefinitions;
-  void _lineage;
-  void _hostLineageMetadata;
-  void _onLineage;
-
-  return contentProps;
-};
-
-type InputEmbeddablePlotComponent = (<TSource = never>(
-  props: PlotProps<TSource>,
-) => ReturnType<FC<PlotProps<TSource>>>) & {
+type InputEmbeddablePlotComponent = FC<PlotProps> & {
   isTier2Embeddable: true;
   inputEmbedAdapter: typeof plotInputEmbedAdapter;
-  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => InputPlotEmbed<unknown>;
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => InputPlotEmbed;
   displayName?: string;
 };
 
 /** Plot React 组件 */
-const PlotContent: FC<InputPlotEmbed<unknown>> = () => null;
+const PlotContent: FC<InputPlotEmbed> = () => null;
 
 const EmbeddablePlotContent = Object.assign(PlotContent, {
   isTier2Embeddable: true as const,
@@ -232,21 +195,11 @@ const EmbeddablePlotContent = Object.assign(PlotContent, {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => props,
 });
 
-const PlotComponent: FC<PlotProps<unknown>> = props => {
-  const {
-    className,
-    style,
-    renderer,
-    themeDefinitions,
-    onLineage,
-    definitions,
-    signal,
-    dataTransformExecutor,
-    lineage,
-    hostLineageMetadata,
-  } = props;
+const PlotComponent: FC<PlotProps> = props => {
+  const { className, style, renderer, themeDefinitions, onLineage, definitions, lineage, hostLineageMetadata } = props;
   const ambientPlotThemeDefinitions = usePlotThemeDefinitions();
-  const lineageDriver = useMemo(() => createPlotLineageCompileDriver(), []);
+  const theme = useTheme();
+  const ambientDefinitions = useThemeDefinitions();
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeDefinitions === undefined) return props;
     const explicit = definitions?.plotThemeDefinitions;
@@ -259,28 +212,36 @@ const PlotComponent: FC<PlotProps<unknown>> = props => {
       },
     };
   }, [ambientPlotThemeDefinitions, definitions, props]);
-  const contentProps = plotContentPropsOf(effectiveProps);
-  const authored = resolvePlotAuthoring(contentProps);
-  const panel = createPlotPanelInput(contentProps);
+  const authored = resolvePlotAuthoring(effectiveProps);
+  const panel = createPlotPanelInput(effectiveProps);
+  const notifyLineage =
+    onLineage && lineage !== false
+      ? () => {
+          const compiledDefinitions = [...(ambientDefinitions ?? []), ...(themeDefinitions ?? [])];
+          const result = lowerPlotWithLineage(
+            authored.spec,
+            authored.datasets ?? {},
+            {
+              ...authored.lowerOptions,
+              environment: { theme, compile: { themeDefinitions: compiledDefinitions } },
+              lineage: lineage ?? {},
+              hostLineageMetadata,
+            },
+            authored.preparedData,
+          );
+          onLineage(result.lineage);
+        }
+      : undefined;
 
   return (
     <Layout
       className={className}
       style={style}
       renderer={renderer}
-      extensions={{ themeDefinitions }}
-      runtime={{ preparation: 'async', signal }}
-      compileDriver={lineageDriver}
+      compile={{ themeDefinitions }}
+      onCompileResult={notifyLineage}
     >
-      <EmbeddablePlotContent
-        {...authored}
-        {...(panel === undefined ? {} : { panel })}
-        dataTransformExecutor={dataTransformExecutor}
-        signal={signal}
-        lineage={lineage}
-        hostLineageMetadata={hostLineageMetadata}
-        onLineage={onLineage}
-      />
+      <EmbeddablePlotContent {...authored} {...(panel === undefined ? {} : { panel })} />
     </Layout>
   );
 };

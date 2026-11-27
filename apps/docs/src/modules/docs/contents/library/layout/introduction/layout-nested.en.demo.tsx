@@ -69,7 +69,7 @@ const Demo: FC = () => (
   </Layout>
 );
 
-/** canonical IR keeps layout inputs and excludes runtime Inspector selection */
+/** canonical IR keeps layout inputs */
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (

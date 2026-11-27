@@ -223,13 +223,20 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
   }
 };
 
+const duplicateDefinition = (label: string, key: string): RetikzChartError =>
+  new RetikzChartError({
+    code: RetikzChartErrorCode.ProviderDefinitionDuplicate,
+    message: `${label} "${key}" is registered more than once`,
+    details: { path: [label, key] },
+  });
+
 /**
- * 合并当前 Core provider 实际贡献的 recipe 与主题 Definition
+ * 解析数据准备与正式编译共用的 recipe 注册表
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
+export const resolveChartRecipeRegistry = <TSource extends IRChartSource>(
   contributions: ReadonlyArray<InputChartRecipeProviderContribution<TSource>>,
-): ChartProviderRegistry => {
+): Omit<ChartProviderRegistry, 'themes'> => {
   const assertRecipe = (recipe: AnyChartRecipeDefinition, family: string, index: number): void => {
     const path = ['recipes', index, recipe.chartType] as const;
     if (recipe.chartType.length === 0) throw invalidRegistry('Chart recipe chartType must be non-empty', path);
@@ -238,13 +245,6 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
     assertSlots(recipe, [...path]);
   };
 
-  const duplicateDefinition = (label: string, key: string): RetikzChartError =>
-    new RetikzChartError({
-      code: RetikzChartErrorCode.ProviderDefinitionDuplicate,
-      message: `${label} "${key}" is registered more than once`,
-      details: { path: [label, key] },
-    });
-
   if (contributions.length === 0)
     throw invalidRegistry('Chart provider requires at least one active recipe', ['recipes']);
 
@@ -252,10 +252,6 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
   if (family.length === 0) throw invalidRegistry('Chart provider family must be non-empty', ['family']);
 
   const recipes = new Map<string, AnyChartRecipeDefinition>();
-  const themes = new Map<string, ChartThemeDefinition>();
-  const themeSources = new Map<string, ChartThemeDefinition>();
-  const parsedThemes = new Map<ChartThemeDefinition, ChartThemeDefinition>();
-  const chartThemeDefinitions: Array<ChartThemeDefinition> = [];
   const seenContributions = new Set<InputChartRecipeProviderContribution<TSource>>();
 
   for (const [index, contribution] of contributions.entries()) {
@@ -274,25 +270,9 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
     }
 
     recipes.set(recipe.chartType, recipe);
-
-    for (const theme of contribution.chartThemeDefinitions) chartThemeDefinitions.push(theme);
   }
 
   const recipeMap = createReadonlyMap(recipes);
-
-  for (const theme of chartThemeDefinitions) {
-    const parsedTheme = parsedThemes.get(theme) ?? parseChartThemeDefinition(theme, recipeMap);
-    parsedThemes.set(theme, parsedTheme);
-    const existingThemeSource = themeSources.get(parsedTheme.name);
-    if (existingThemeSource !== undefined && existingThemeSource !== theme) {
-      throw duplicateDefinition('themes', parsedTheme.name);
-    }
-
-    themeSources.set(parsedTheme.name, theme);
-    themes.set(parsedTheme.name, parsedTheme);
-  }
-
-  assertChartThemeBases(themes);
 
   const runtime = resolveEncodingRuntime(sharedRuntimeDefinitionsOf([...seenContributions]));
 
@@ -305,8 +285,33 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
   return Object.freeze({
     family,
     recipes: recipeMap,
-    themes: createReadonlyMap(themes),
     schema,
     runtime,
   });
+};
+
+/** 在正式编译边界合并命名主题及其继承链 */
+export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
+  contributions: ReadonlyArray<InputChartRecipeProviderContribution<TSource>>,
+): ChartProviderRegistry => {
+  const recipes = resolveChartRecipeRegistry(contributions);
+  const themes = new Map<string, ChartThemeDefinition>();
+  const themeSources = new Map<string, ChartThemeDefinition>();
+  const parsedThemes = new Map<ChartThemeDefinition, ChartThemeDefinition>();
+  const chartThemeDefinitions = contributions.flatMap(contribution => contribution.chartThemeDefinitions);
+  for (const theme of chartThemeDefinitions) {
+    const parsedTheme = parsedThemes.get(theme) ?? parseChartThemeDefinition(theme, recipes.recipes);
+    parsedThemes.set(theme, parsedTheme);
+    const existingThemeSource = themeSources.get(parsedTheme.name);
+    if (existingThemeSource !== undefined && existingThemeSource !== theme) {
+      throw duplicateDefinition('themes', parsedTheme.name);
+    }
+
+    themeSources.set(parsedTheme.name, theme);
+    themes.set(parsedTheme.name, parsedTheme);
+  }
+
+  assertChartThemeBases(themes);
+
+  return Object.freeze({ ...recipes, themes: createReadonlyMap(themes) });
 };

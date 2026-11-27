@@ -330,7 +330,7 @@ const profileLine = (
   const mainProfile = resolveFlexLineMainProfile(mainItems, indexes, mainGap);
 
   return Object.freeze({
-    itemIndexes: Object.freeze([...indexes]),
+    itemIndexes: indexes,
     minimumMainSize: mainProfile.minimum,
     naturalMainSize: mainProfile.natural,
     minimumCrossSize: minimumCross.size,

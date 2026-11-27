@@ -1,6 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CoreProviderContribution } from '@retikz/core';
-import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
+import type { PreparedPlotData } from '@retikz/plot';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate } from '../normalize/chart';
@@ -12,10 +13,9 @@ const DEFAULT_CHART_DATA_REFERENCE = 'chart.data';
 
 /**
  * Typed Chart factory 在 Source 与运行时之间传递的共享拆分结果
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-type TypedChartParts<TSource extends IRChartSource, TNative = never> = Readonly<{
+type TypedChartParts<TSource extends IRChartSource> = Readonly<{
   /** 将进入精确 Chart Source 的根字段 */
   root: Readonly<{
     /** 图表的作者身份 */
@@ -37,12 +37,8 @@ type TypedChartParts<TSource extends IRChartSource, TNative = never> = Readonly<
   }>;
   /** 由直接行数据构造的具名数据集 */
   datasets: Readonly<Record<string, Array<ExternalRow>>>;
-  /** 保留原生源类型的数据绑定，不进入 JSON IR */
-  dataBindings?: DataInputBindings<TNative>;
-  /** 当前请求使用的数据变换执行器 */
-  dataTransformExecutor?: DataTransformExecutor<TNative>;
-  /** 当前数据准备请求的取消信号 */
-  signal?: AbortSignal;
+  /** 已完成的 Plot 数据，不进入 JSON IR */
+  preparedData?: PreparedPlotData;
   /** 当前 chartType 可用的主题定义 */
   chartThemeDefinitions?: InputChartCommon<TSource>['chartThemeDefinitions'];
   /** 共享 Plot 下沉能力及定义的选项 */
@@ -53,12 +49,11 @@ type TypedChartParts<TSource extends IRChartSource, TNative = never> = Readonly<
 
 /**
  * 把 typed Chart 输入拆分为 JSON-safe Source root 与 runtime 输入
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
-  input: InputChartCommon<TSource, TNative>,
-): TypedChartParts<TSource, TNative> => {
+export const typedChartPartsOf = <TSource extends IRChartSource>(
+  input: InputChartCommon<TSource>,
+): TypedChartParts<TSource> => {
   const {
     data,
     dataRef,
@@ -73,9 +68,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
     panel,
     dataExecution,
     plotExtension,
-    dataBindings,
-    dataTransformExecutor,
-    signal,
+    preparedData,
   } = input;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
 
@@ -94,9 +87,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
       ...(plotExtension === undefined ? {} : { plotExtension }),
     },
     datasets: data === undefined ? {} : { [reference]: data },
-    ...(dataBindings === undefined ? {} : { dataBindings }),
-    ...(dataTransformExecutor === undefined ? {} : { dataTransformExecutor }),
-    ...(signal === undefined ? {} : { signal }),
+    ...(preparedData === undefined ? {} : { preparedData }),
     ...(chartThemeDefinitions === undefined ? {} : { chartThemeDefinitions }),
     ...(lowerOptions === undefined ? {} : { lowerOptions }),
     ...(panel === undefined ? {} : { panel }),
@@ -105,19 +96,16 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
 
 /**
  * 将 typed input 归一为 Source 并复用当前 chartType provider pipeline
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export const buildChartRuntime = <TSource extends IRChartSource, TNative>(
+export const buildChartRuntime = <TSource extends IRChartSource>(
   source: TSource,
-  parts: TypedChartParts<TSource, TNative>,
+  parts: TypedChartParts<TSource>,
   provider: CoreProviderContribution,
-): InputChartRuntime<TSource, TNative> => ({
+): InputChartRuntime<TSource> => ({
   source,
   datasets: parts.datasets,
-  ...(parts.dataBindings === undefined ? {} : { dataBindings: parts.dataBindings }),
-  ...(parts.dataTransformExecutor === undefined ? {} : { dataTransformExecutor: parts.dataTransformExecutor }),
-  ...(parts.signal === undefined ? {} : { signal: parts.signal }),
+  ...(parts.preparedData === undefined ? {} : { preparedData: parts.preparedData }),
   chartProviderContribution: provider,
   ...(parts.lowerOptions === undefined ? {} : { lowerOptions: parts.lowerOptions }),
   ...(parts.panel === undefined ? {} : { panel: parts.panel }),

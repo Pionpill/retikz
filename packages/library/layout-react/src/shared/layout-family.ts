@@ -2,8 +2,8 @@ import type { LayoutItemKind } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { InputFlexLayoutItem, InputGridLayoutItem, InputOverlayLayoutItem } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene } from '@retikz/react';
-import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
+import { convertReactToInputScene } from '@retikz/react';
+import type { InputChild } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -32,8 +32,6 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
 ): Readonly<{
   /** 传给对应 Layout Vanilla adapter 的项目输入 */
   items: Array<LayoutItemInputByKind[TKind]>;
-  /** React 子树需要注册到根 Scene 的 Vanilla adapter */
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }> => {
   /** 透明展开 Fragment 和数组，同时保留需要由容器验证的直属节点 */
   const flattenLayoutChildren = (childNodes: ReactNode): Array<ReactNode> => {
@@ -54,31 +52,22 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
   };
 
   /** 收集单个布局子项的 React child，不在 React 内归一化 */
-  const resolveLayoutItemChild = (
-    props: LayoutItemAuthoringProps,
-    embedIdPrefix: string,
-  ): Readonly<{
-    /** 当前布局项目包含的作者侧子元素 */
-    child: InputChild;
-    /** React 子树需要注册到根 Scene 的 Vanilla adapter */
-    adapters: ReadonlyArray<AnyInputEmbedAdapter>;
-  }> => {
-    if (props.ir !== undefined) return Object.freeze({ child: props.ir, adapters: [] });
+  const resolveLayoutItemChild = (props: LayoutItemAuthoringProps, embedIdPrefix: string): InputChild => {
+    if (props.ir !== undefined) return props.ir;
 
-    const input = createInputScene(props.children, { embedIdPrefix });
-    const normalizedChildren = input.scene.children;
-    if (normalizedChildren === undefined || normalizedChildren.length !== 1) {
+    const input = convertReactToInputScene(props.children, { embedIdPrefix });
+    const normalizedChildren = input.children;
+    if (normalizedChildren.length !== 1) {
       throw new RetikzLayoutError({
         code: RetikzLayoutErrorCode.AuthoringInvalid,
         message: 'Layout item must contain exactly one authoring child',
-        details: { childCount: normalizedChildren?.length ?? 0 },
+        details: { childCount: normalizedChildren.length },
       });
     }
 
-    return Object.freeze({ child: normalizedChildren[0], adapters: input.adapters });
+    return normalizedChildren[0];
   };
 
-  const adapters: Array<AnyInputEmbedAdapter> = [];
   const items = flattenLayoutChildren(children).map((child, index) => {
     const expectedComponent = layoutItemComponents[expectedKind];
     if (!isValidElement(child) || child.type !== expectedComponent) {
@@ -93,16 +82,15 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
     const { children: itemChildren, ir, itemKey, ...item } = props;
     void itemChildren;
     void ir;
-    const resolved = resolveLayoutItemChild(props, `${context.id}:items:${index}`);
-    adapters.push(...resolved.adapters);
+    const childInput = resolveLayoutItemChild(props, `${context.id}:items:${index}`);
 
     return {
       ...item,
       kind: expectedKind,
       ...(itemKey === undefined ? {} : { key: itemKey }),
-      child: resolved.child,
+      child: childInput,
     } as LayoutItemInputByKind[TKind];
   });
 
-  return Object.freeze({ items, adapters: Object.freeze(adapters) });
+  return { items };
 };

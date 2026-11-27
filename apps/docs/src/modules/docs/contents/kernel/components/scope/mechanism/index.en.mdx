@@ -186,6 +186,8 @@ Once the children finish, `replaceCompiled` updates the placeholder to a resolve
   ]}
 />
 
+For a rectangular envelope, a child that was strictly inside and remains inside does not require the outer edges to be recalculated. Moving outside can extend the old envelope; losing an old boundary support requires recalculation. Circular envelopes still use the complete point set. See [Scope compilation](/kernel/packages/core/scope-compilation) for responsibilities and limitations.
+
 ## Clipping and group output
 
 `clip` controls which parts of the subtree remain visible, independently of the reference envelope. A registered Clip Definition validates the JSON clipping spec with its schema, then lowers it directly to a Scene clipping path.

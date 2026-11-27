@@ -93,5 +93,5 @@ export declare const isRetikzError: (value: unknown) => value is RetikzError<str
 - 兼容性 / breaking：`ValueOf`、`AssertEqual`、`OpenString` 的公开 owner 从 Core / Runtime 迁移到 Foundation，旧根出口移除且不保留 alias；这是 0.x 的明确 import breaking。真正消费 Foundation 的包必须改为 direct dependency，未消费的包不得为了拓扑声明依赖
 - 断言兼容：Core、Inspect、Plot、Table 等 owner 继续保留各自未知输入收窄、错误前缀和领域 class / code；Runtime identity 的 owner 与 path segment 从允许全空白改为 fail-loud，失败由 `RetikzRuntimeError` 的 code 区分，且 `cause` 保留被拒绝的原始值
 - 领域错误：各 owner 通过包级 RetikzError 子类和稳定 code/details 区分失败，并保留原始 cause。Foundation 不规定领域 constructor、诊断投影或恢复分支，不要求保留历史专用错误类
-- 领域 details：Runtime details 表达 phase、owner / program 与 secondary diagnostics；Retained Render details 由 render owner 提供并可为空；Plot declaration details 表达 declaration path 与冲突路径；Chart resolution details 表达 path、target 与冲突 id。领域 owner 继续决定这些值是否冻结以及如何投影到 Diagnostic
+- 领域 details：Runtime details 表达 phase、owner / program 与 secondary diagnostics；Session Render details 由 render owner 提供并可为空；Plot declaration details 表达 declaration path 与冲突路径；Chart resolution details 表达 path、target 与冲突 id。领域 owner 继续决定这些值是否冻结以及如何投影到 Diagnostic
 - React / Vanilla 等价性：两种 authoring 入口不新增 Foundation 专属语法，也不各自维护基础副本；它们和 headless consumer 看到相同的根契约、错误分类和 owner wrapper 语义

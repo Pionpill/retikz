@@ -1,20 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import { renderChart } from '@retikz/chart-vanilla';
-import {
-  lineChart,
-  lineChartInputEmbedAdapter,
-  slopeChart,
-  slopeChartInputEmbedAdapter,
-} from '@retikz/chart-vanilla/line';
+import { lineChart, slopeChart } from '@retikz/chart-vanilla/line';
 import type { LineChartInputEmbedProps, SlopeChartInputEmbedProps } from '@retikz/chart-vanilla/line';
-import {
-  scatterChartInputEmbedAdapter,
-  bubbleChartInputEmbedAdapter,
-  connectedScatterChartInputEmbedAdapter,
-  rangedDotChartInputEmbedAdapter,
-  regressionChartInputEmbedAdapter,
-  stripChartInputEmbedAdapter,
-} from '@retikz/chart-vanilla/point';
 import type {
   BubbleChartInputEmbedProps,
   ConnectedScatterChartInputEmbedProps,
@@ -53,9 +40,9 @@ import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
-import { branchDiagram, branchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
+import { branchDiagram } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
-import { flowDiagram, flowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
+import { flowDiagram } from '@retikz/diagram-vanilla/flow';
 import type { IRBranchDiagram } from '@retikz/diagram/branch';
 import { BranchDiagramSchema } from '@retikz/diagram/branch';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
@@ -81,24 +68,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputBlockChild, InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
-import {
-  block,
-  blockHeader,
-  blockHeaderInputEmbedAdapter,
-  blockInputEmbedAdapter,
-  blockRow,
-  blockRowInputEmbedAdapter,
-  blockSection,
-  blockSectionInputEmbedAdapter,
-  entity,
-  entityInputEmbedAdapter,
-  graph,
-  graphInputEmbedAdapter,
-  group,
-  groupInputEmbedAdapter,
-  relation,
-  relationInputEmbedAdapter,
-} from '@retikz/graph-vanilla';
+import { block, blockHeader, blockRow, blockSection, entity, graph, group, relation } from '@retikz/graph-vanilla';
 import {
   flexLayoutDefinition,
   FlexLayoutSchema,
@@ -107,58 +77,16 @@ import {
   overlayLayoutDefinition,
   OverlayLayoutSchema,
 } from '@retikz/layout';
-import {
-  flexLayout,
-  flexLayoutInputEmbedAdapter,
-  gridLayout,
-  gridLayoutInputEmbedAdapter,
-  overlayLayout,
-  overlayLayoutInputEmbedAdapter,
-} from '@retikz/layout-vanilla';
+import { flexLayout, gridLayout, overlayLayout } from '@retikz/layout-vanilla';
 import type { IRPlot, PlotProviderParams } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import {
-  tree,
-  treeInputEmbedAdapter,
-  queue,
-  queueInputEmbedAdapter,
-  stack,
-  stackInputEmbedAdapter,
-} from '@retikz/standard-vanilla/collection';
-import { chain, chainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { tree, queue, stack } from '@retikz/standard-vanilla/collection';
+import { chain } from '@retikz/standard-vanilla/collection';
 import type { InputChainItem } from '@retikz/standard-vanilla/collection';
-import {
-  matrix,
-  matrixInputEmbedAdapter,
-  array,
-  arrayInputEmbedAdapter,
-  map,
-  mapInputEmbedAdapter,
-} from '@retikz/standard-vanilla/collection';
-import {
-  axes,
-  axesInputEmbedAdapter,
-  frame,
-  frameInputEmbedAdapter,
-  grid,
-  gridInputEmbedAdapter,
-  legend,
-  legendInputEmbedAdapter,
-  surface,
-  surfaceChild,
-  surfaceInputEmbedAdapter,
-} from '@retikz/standard-vanilla/presentation';
-import {
-  shape,
-  circleInputEmbedAdapter,
-  ellipseInputEmbedAdapter,
-  rectangleInputEmbedAdapter,
-  polygonInputEmbedAdapter,
-  starInputEmbedAdapter,
-  arcInputEmbedAdapter,
-  sectorInputEmbedAdapter,
-} from '@retikz/standard-vanilla/shape';
+import { matrix, array, map } from '@retikz/standard-vanilla/collection';
+import { axes, frame, grid, legend, surface, surfaceChild } from '@retikz/standard-vanilla/presentation';
+import { shape } from '@retikz/standard-vanilla/shape';
 import type { IRTree, IRQueue, IRStack } from '@retikz/standard/collection';
 import { treeDefinition, queueDefinition, stackDefinition, chainDefinition } from '@retikz/standard/collection';
 import type { IRChain, IRChainItem } from '@retikz/standard/collection';
@@ -194,9 +122,9 @@ import {
 } from '@retikz/standard/shape';
 import type { IRTable, TableProviderParams } from '@retikz/table';
 import { TableSchema, TableStructureKind } from '@retikz/table';
-import { embedTable, tableInputEmbedAdapter } from '@retikz/table-vanilla';
-import type { SynchronousInputEmbedAdapter, InputChild } from '@retikz/vanilla';
-import { renderToSvgString, scene, scope } from '@retikz/vanilla';
+import { embedTable } from '@retikz/table-vanilla';
+import type { InputChild } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene, scope } from '@retikz/vanilla';
 
 import { PreviewThemeDefinitionBundle } from '../theme/presets';
 import {
@@ -285,15 +213,13 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
     children: preview.ir.children.map(convertCoreChild),
   });
-  const svg = renderToSvgString(input, {
-    output: outputSize(preview),
-    ...(preview.paths === undefined && preview.shapes === undefined && options.measureText === undefined
-      ? {}
-      : { compile: { paths: preview.paths, shapes: preview.shapes, measureText: options.measureText } }),
+  const compileResult = compileToScene(input, {
+    compile: { ...preview.compile, measureText: preview.compile?.measureText ?? options.measureText },
   });
+  const svg = renderToSvg(compileResult.scene, { output: outputSize(preview) });
 
   try {
-    return { code: irToVanillaCode(preview.sourceIr, { paths: preview.paths, shapes: preview.shapes }), svg };
+    return { code: irToVanillaCode(preview.sourceIr, preview.compile), svg };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { ...diagnostic(message), svg };
@@ -328,16 +254,16 @@ type LibraryKind = StandardKind | LayoutKind;
 type GraphKind = 'graph' | 'group' | 'block' | 'blockHeader' | 'blockSection' | 'blockRow' | 'entity' | 'relation';
 
 type LibraryConversionState = {
-  adapters: Set<LibraryKind>;
+  kinds: Set<LibraryKind>;
 };
 
 type GraphConversionState = {
-  adapters: Set<GraphKind>;
+  kinds: Set<GraphKind>;
 };
 
-/** 登记转换 Graph Source 所需的 Vanilla adapter */
-const registerGraphAdapter = (kind: GraphKind, state: GraphConversionState): void => {
-  state.adapters.add(kind);
+/** 记录需要解析定义的 Graph 类型 */
+const recordGraphKind = (kind: GraphKind, state: GraphConversionState): void => {
+  state.kinds.add(kind);
 };
 
 const convertStandardChild = (
@@ -345,7 +271,7 @@ const convertStandardChild = (
   state: LibraryConversionState,
   graphState: GraphConversionState,
 ): InputChild => {
-  state.adapters.add(child.type as StandardKind);
+  state.kinds.add(child.type as StandardKind);
 
   switch (child.type) {
     case 'circle': {
@@ -605,7 +531,7 @@ const convertLayoutChild = (
   state: LibraryConversionState,
   graphState: GraphConversionState,
 ): InputChild => {
-  state.adapters.add(child.type as LayoutKind);
+  state.kinds.add(child.type as LayoutKind);
 
   switch (child.type) {
     case 'flexLayout': {
@@ -674,7 +600,7 @@ const convertGraphChild = (
       };
 
       const children = input.children?.map(convertGraphInputChild);
-      registerGraphAdapter('graph', state);
+      recordGraphKind('graph', state);
 
       return graph({
         ...input,
@@ -691,7 +617,7 @@ const convertGraphChild = (
       const children: ReadonlyArray<InputGroupChild> | undefined = sourceChildren?.map(nested =>
         convertPreviewChild(nested, libraryState, state),
       );
-      registerGraphAdapter('group', state);
+      recordGraphKind('group', state);
 
       return group({
         ...input,
@@ -705,7 +631,7 @@ const convertGraphChild = (
       const children: ReadonlyArray<InputBlockChild> | undefined = sourceChildren?.map(nested =>
         convertPreviewChild(nested, libraryState, state),
       );
-      registerGraphAdapter('block', state);
+      recordGraphKind('block', state);
 
       return block({
         ...input,
@@ -716,7 +642,7 @@ const convertGraphChild = (
       const { namespace: _namespace, type: _type, icon, trail, ...input } = BlockHeaderSchema.parse(child);
       void _namespace;
       void _type;
-      registerGraphAdapter('blockHeader', state);
+      recordGraphKind('blockHeader', state);
 
       return blockHeader({
         ...input,
@@ -736,7 +662,7 @@ const convertGraphChild = (
       const children: ReadonlyArray<InputGraphChild> | undefined = sourceChildren?.map(nested =>
         convertPreviewChild(nested, libraryState, state),
       );
-      registerGraphAdapter('blockSection', state);
+      recordGraphKind('blockSection', state);
 
       return blockSection({
         ...input,
@@ -749,7 +675,7 @@ const convertGraphChild = (
         const { namespace: _namespace, type: _type, ...input } = row;
         void _namespace;
         void _type;
-        registerGraphAdapter('blockRow', state);
+        recordGraphKind('blockRow', state);
 
         return blockRow({
           ...input,
@@ -759,7 +685,7 @@ const convertGraphChild = (
       const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
       void _namespace;
       void _type;
-      registerGraphAdapter('blockRow', state);
+      recordGraphKind('blockRow', state);
 
       return blockRow({
         ...input,
@@ -771,10 +697,10 @@ const convertGraphChild = (
       });
     }
     case 'entity':
-      registerGraphAdapter('entity', state);
+      recordGraphKind('entity', state);
       return entity(entityPreviewAuthoringInput(EntitySchema.parse(child)));
     case 'relation':
-      registerGraphAdapter('relation', state);
+      recordGraphKind('relation', state);
       return relation(relationPreviewAuthoringInput(RelationSchema.parse(child)));
     default:
       throw new Error(`Unsupported Graph composite "${child.namespace}.${child.type}".`);
@@ -804,48 +730,6 @@ const convertPreviewChild = (
     children.map(nested => convertPreviewChild(nested, libraryState, graphState)),
   );
 };
-
-const standardAdapters = (state: LibraryConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
-  ...(state.adapters.has('circle') ? [circleInputEmbedAdapter] : []),
-  ...(state.adapters.has('ellipse') ? [ellipseInputEmbedAdapter] : []),
-  ...(state.adapters.has('rectangle') ? [rectangleInputEmbedAdapter] : []),
-  ...(state.adapters.has('polygon') ? [polygonInputEmbedAdapter] : []),
-  ...(state.adapters.has('star') ? [starInputEmbedAdapter] : []),
-  ...(state.adapters.has('arc') ? [arcInputEmbedAdapter] : []),
-  ...(state.adapters.has('sector') ? [sectorInputEmbedAdapter] : []),
-
-  ...(state.adapters.has('grid') ? [gridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('axes') ? [axesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('frame') ? [frameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('tree') ? [treeInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('queue') ? [queueInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('stack') ? [stackInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('chain') ? [chainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('matrix') ? [matrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('array') ? [arrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('map') ? [mapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('surface') ? [surfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('legend') ? [legendInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-];
-
-const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
-  ...(state.adapters.has('flexLayout') ? [flexLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('gridLayout') ? [gridLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('overlayLayout')
-    ? [overlayLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>]
-    : []),
-];
-
-const graphAdapters = (state: GraphConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
-  ...(state.adapters.has('graph') ? [graphInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('group') ? [groupInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('block') ? [blockInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('blockHeader') ? [blockHeaderInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('blockSection') ? [blockSectionInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('blockRow') ? [blockRowInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('entity') ? [entityInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('relation') ? [relationInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-];
 
 const standardDefinitionByName = {
   circleDefinition,
@@ -889,10 +773,10 @@ const graphDefinitionByName = {
 
 const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
   const libraryState: LibraryConversionState = {
-    adapters: new Set(),
+    kinds: new Set(),
   };
   const graphState: GraphConversionState = {
-    adapters: new Set(),
+    kinds: new Set(),
   };
   const input = scene({
     ...(options.theme === undefined ? {} : { theme: options.theme }),
@@ -904,7 +788,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   const definitionNames = collectPreviewDefinitions(
     preview.ir.children,
     new Set(
-      Array.from(libraryState.adapters).filter((kind): kind is StandardKind =>
+      Array.from(libraryState.kinds).filter((kind): kind is StandardKind =>
         [
           'grid',
           'axes',
@@ -929,14 +813,14 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
       ),
     ),
     new Set(
-      Array.from(libraryState.adapters).filter((kind): kind is LayoutKind =>
+      Array.from(libraryState.kinds).filter((kind): kind is LayoutKind =>
         ['flexLayout', 'gridLayout', 'overlayLayout'].includes(kind),
       ),
     ),
-    new Set(graphState.adapters),
+    new Set(graphState.kinds),
   );
 
-  const hasStandaloneGraphMembers = graphState.adapters.size > 0 && !graphState.adapters.has('graph');
+  const hasStandaloneGraphMembers = graphState.kinds.size > 0 && !graphState.kinds.has('graph');
   const definitions = [
     ...definitionNames.standard.map(name => standardDefinitionByName[name]),
     ...definitionNames.layout.map(name => layoutDefinitionByName[name]),
@@ -968,13 +852,10 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     ? { ...preview.ir, ...(options.theme === undefined ? {} : { theme: options.theme }) }
     : input;
 
+  const compileResult = compileToScene(renderInput, { compile });
   return {
     code: irToVanillaCode(preview.sourceIr, { theme: options.theme }),
-    svg: renderToSvgString(renderInput, {
-      adapters: [...standardAdapters(libraryState), ...layoutAdapters(libraryState), ...graphAdapters(graphState)],
-      output: outputSize(preview),
-      compile,
-    }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
   };
 };
 
@@ -1170,7 +1051,6 @@ const buildChartCode = (
       strip: 'stripChart',
     } as const;
     const factory = factoryByChartType[typedSource.recipe.chartType];
-    const adapter = `${factory}InputEmbedAdapter`;
 
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
@@ -1195,9 +1075,9 @@ const buildChartCode = (
       .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
 
     const size = outputSize(preview);
-    const renderOptionsCode = `, { adapters: [${adapter}]${Object.keys(size).length === 0 ? '' : `, output: ${formatVanillaValue(size)}`} }`;
+    const renderOptionsCode = Object.keys(size).length === 0 ? '' : `, { output: ${formatVanillaValue(size)} }`;
 
-    return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory}, ${adapter} } from '@retikz/chart-vanilla/${typedSource.type}';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+    return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory} } from '@retikz/chart-vanilla/${typedSource.type}';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
   }
 
   return diagnostic(`Cannot generate Vanilla preview for unknown Chart Source type "${chart.type}".`).code;
@@ -1247,16 +1127,6 @@ const buildChartPreview = (
   })();
 
   const rendered = renderChart(runtime, {
-    adapters: [
-      scatterChartInputEmbedAdapter,
-      bubbleChartInputEmbedAdapter,
-      connectedScatterChartInputEmbedAdapter,
-      rangedDotChartInputEmbedAdapter,
-      regressionChartInputEmbedAdapter,
-      stripChartInputEmbedAdapter,
-      lineChartInputEmbedAdapter,
-      slopeChartInputEmbedAdapter,
-    ],
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),
   });
@@ -1287,12 +1157,11 @@ const buildTableCode = (
   }).replace("'__CHILDREN__'", childrenCode);
   const size = outputSize(preview);
   const renderOptions = {
-    adapters: '__ADAPTERS__',
     ...(Object.keys(size).length > 0 ? { output: size } : {}),
   };
-  const optionsCode = formatVanillaValue(renderOptions).replace("'__ADAPTERS__'", '[tableInputEmbedAdapter]');
+  const optionsCode = formatVanillaValue(renderOptions);
 
-  return `import { embedTable, tableInputEmbedAdapter } from '@retikz/table-vanilla';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, ${optionsCode});\n`;
+  return `import { embedTable } from '@retikz/table-vanilla';\nimport { compileToScene, renderToSvg, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nconst compileResult = compileToScene(input);\nexport const svg = renderToSvg(compileResult.scene, ${optionsCode});\n`;
 };
 
 const buildTablePreview = (
@@ -1320,13 +1189,12 @@ const buildTablePreview = (
     children: [embedTable(spec, Object.keys(resolvedDatasets).length > 0 ? { data: resolvedDatasets } : {})],
   });
 
+  const compileResult = compileToScene(input, {
+    compile: { measureText: options.measureText },
+  });
   return {
     code: buildTableCode(spec, resolvedDatasets, preview, options),
-    svg: renderToSvgString(input, {
-      adapters: [tableInputEmbedAdapter],
-      output: outputSize(preview),
-      ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
-    }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
     replacePreviewRender: false,
   };
 };
@@ -1360,7 +1228,7 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
     children: '__FLOW_CHILDREN__',
   }).replace("'__FLOW_CHILDREN__'", `[flowDiagram(${authoringCode})]`);
 
-  return `import { flowDiagram, flowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [flowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
+  return `import { flowDiagram } from '@retikz/diagram-vanilla/flow';\nimport { compileToScene, renderToSvg, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nconst compileResult = compileToScene(input, { compile: { themeDefinitions: PreviewThemeDefinitionBundle.core } });\nexport const svg = renderToSvg(compileResult.scene, { output: ${formatVanillaValue(outputSize(preview))} });\n`;
 };
 
 const buildFlowPreview = (
@@ -1384,16 +1252,15 @@ const buildFlowPreview = (
     ],
   });
 
+  const compileResult = compileToScene(input, {
+    compile: {
+      themeDefinitions: PreviewThemeDefinitionBundle.core,
+      measureText: options.measureText ?? browserPreviewMeasurer,
+    },
+  });
   return {
     code: buildFlowCode(source, preview, options),
-    svg: renderToSvgString(input, {
-      adapters: [flowDiagramInputEmbedAdapter],
-      output: outputSize(preview),
-      compile: {
-        themeDefinitions: PreviewThemeDefinitionBundle.core,
-        measureText: options.measureText ?? browserPreviewMeasurer,
-      },
-    }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
   };
 };
 
@@ -1424,7 +1291,7 @@ const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: B
     children: '__BRANCH_CHILDREN__',
   }).replace("'__BRANCH_CHILDREN__'", `[branchDiagram(${authoringCode})]`);
 
-  return `import { branchDiagram, branchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [branchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeDefinitions: PreviewThemeDefinitionBundle.core },\n});\n`;
+  return `import { branchDiagram } from '@retikz/diagram-vanilla/branch';\nimport { compileToScene, renderToSvg, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nconst compileResult = compileToScene(input, { compile: { themeDefinitions: PreviewThemeDefinitionBundle.core } });\nexport const svg = renderToSvg(compileResult.scene, { output: ${formatVanillaValue(outputSize(preview))} });\n`;
 };
 
 const buildBranchPreview = (
@@ -1447,16 +1314,15 @@ const buildBranchPreview = (
     ],
   });
 
+  const compileResult = compileToScene(input, {
+    compile: {
+      themeDefinitions: PreviewThemeDefinitionBundle.core,
+      measureText: options.measureText ?? browserPreviewMeasurer,
+    },
+  });
   return {
     code: buildBranchCode(source, preview, options),
-    svg: renderToSvgString(input, {
-      adapters: [branchDiagramInputEmbedAdapter],
-      output: outputSize(preview),
-      compile: {
-        themeDefinitions: PreviewThemeDefinitionBundle.core,
-        measureText: options.measureText ?? browserPreviewMeasurer,
-      },
-    }),
+    svg: renderToSvg(compileResult.scene, { output: outputSize(preview) }),
   };
 };
 

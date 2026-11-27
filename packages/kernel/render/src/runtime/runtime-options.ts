@@ -1,11 +1,9 @@
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 import { visitSceneContent } from '@retikz/core';
 import { readPropertyPath } from '@retikz/foundation';
-import type { PropertyPath } from '@retikz/foundation';
-import type { ValueOf } from '@retikz/foundation';
+import type { PropertyPath, ValueOf } from '@retikz/foundation';
 
-import type { RuntimeScenePrimitive, SceneRuntimeSnapshot } from '../scene';
-import type { SceneIdentity } from '../scene';
+import type { RuntimeScenePrimitive, SceneRuntimeSnapshot, SceneIdentity } from '../scene';
 import { createSceneIdentityMap, runtimeStructuralEquals } from './shared';
 
 /** 沿 canonical primitivePath 读取 occurrence 对应 primitive */
@@ -49,14 +47,10 @@ export const SceneAnimationOccurrenceChangeKind = {
 /** Animated occurrence descriptor 变化类型取值 */
 export type SceneAnimationOccurrenceChangeKind = ValueOf<typeof SceneAnimationOccurrenceChangeKind>;
 
-/** 单个 animated occurrence 在相邻 lineage 间的 descriptor/public id 变化 */
+/** 单个 animated occurrence 在相邻 lineage 间的 descriptor 变化 */
 type SceneAnimationOccurrenceChange = Readonly<{
   /** occurrence 的稳定 Runtime identity */
   identity: SceneIdentity;
-  /** 当前 lineage 的 public id */
-  currentPublicId?: string;
-  /** 下一 lineage 的 public id */
-  nextPublicId?: string;
   /** descriptor 相对变化 */
   kind: SceneAnimationOccurrenceChangeKind;
 }>;
@@ -69,7 +63,7 @@ export type SceneAnimationDescriptorDiff = Readonly<{
   occurrences: ReadonlyArray<SceneAnimationOccurrenceChange>;
 }>;
 
-/** 按 SceneIdentity 比较动画 descriptor，并独立记录 public id 迁移 */
+/** 按 SceneIdentity 比较动画 descriptor */
 export const diffSceneAnimationDescriptors = (
   current: SceneRuntimeSnapshot | undefined,
   next: SceneRuntimeSnapshot,
@@ -77,40 +71,37 @@ export const diffSceneAnimationDescriptors = (
   const currentEntries =
     current?.topology.flatMap(node => {
       const animations = occurrenceAnimationTracks(primitiveAtPath(current, node.primitivePath), current);
-      return animations.length === 0 ? [] : ([[node.identity, { animations, publicId: node.publicId }]] as const);
+      return animations.length === 0 ? [] : ([[node.identity, animations]] as const);
     }) ?? [];
   const nextEntries = next.topology.flatMap(node => {
     const animations = occurrenceAnimationTracks(primitiveAtPath(next, node.primitivePath), next);
-    return animations.length === 0 ? [] : ([[node.identity, { animations, publicId: node.publicId }]] as const);
+    return animations.length === 0 ? [] : ([[node.identity, animations]] as const);
   });
   const currentByIdentity = createSceneIdentityMap(currentEntries);
   const nextByIdentity = createSceneIdentityMap(nextEntries);
   const occurrences: Array<SceneAnimationOccurrenceChange> = [];
 
-  for (const [identity, entry] of currentEntries) {
+  for (const [identity, animations] of currentEntries) {
     const candidate = nextByIdentity.get(identity);
     occurrences.push(
       Object.freeze({
         identity,
-        ...(entry.publicId === undefined ? {} : { currentPublicId: entry.publicId }),
-        ...(candidate?.publicId === undefined ? {} : { nextPublicId: candidate.publicId }),
         kind:
           candidate === undefined
             ? SceneAnimationOccurrenceChangeKind.Removed
-            : runtimeStructuralEquals(entry.animations, candidate.animations)
+            : runtimeStructuralEquals(animations, candidate)
               ? SceneAnimationOccurrenceChangeKind.Unchanged
               : SceneAnimationOccurrenceChangeKind.Changed,
       }),
     );
   }
 
-  for (const [identity, entry] of nextEntries) {
+  for (const [identity] of nextEntries) {
     if (currentByIdentity.has(identity)) continue;
 
     occurrences.push(
       Object.freeze({
         identity,
-        ...(entry.publicId === undefined ? {} : { nextPublicId: entry.publicId }),
         kind: SceneAnimationOccurrenceChangeKind.Added,
       }),
     );

@@ -1,16 +1,11 @@
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
-import { PlotSchema } from '@retikz/plot';
-import {
-  createProcessingControllerAsync,
-  embed,
-  prepareStaticProcessingAsync,
-  compileToSceneAsync,
-  scene,
-} from '@retikz/vanilla';
-import { describe, expect, it, vi } from 'vitest';
+import { preparePlotData, PlotSchema } from '@retikz/plot';
+import { embed, compileToScene, scene } from '@retikz/vanilla';
+import { describe, expect, it } from 'vitest';
 
-import { plotInputEmbedAdapter, createPlotLineageCompileDriver, renderPlot, renderPlotAsync } from '../src';
+import type { InputPlotEmbed } from '../src';
+import { plotInputEmbedAdapter, renderPlot, renderPlotAsync } from '../src';
 
 const rows = [
   { x: 1, y: 2 },
@@ -29,68 +24,6 @@ const spec = () =>
   });
 
 describe('异步 Plot 编写', () => {
-  it('更新保留的血缘站点，同时保持共享驱动程序实例隔离', async () => {
-    const first = vi.fn();
-    const second = vi.fn();
-    const replacement = vi.fn();
-    const input = (onLineage: typeof first) =>
-      scene({
-        children: [
-          embed({
-            kind: 'plot',
-            props: { spec: spec(), datasets: { rows }, onLineage, panel: { position: [24, 12], zIndex: 3 } },
-          }),
-        ],
-      });
-    const options = { adapters: [plotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
-    const a = await createProcessingControllerAsync(input(first), options);
-    const b = await createProcessingControllerAsync(input(second), options);
-
-    try {
-      expect(first).toHaveBeenCalledOnce();
-      expect(second).toHaveBeenCalledOnce();
-      expect((await a.update(input(replacement))).kind).toBe('committed');
-      expect(replacement).toHaveBeenCalledOnce();
-      expect(first).toHaveBeenCalledOnce();
-      expect(second).toHaveBeenCalledOnce();
-      expect((await b.update(input(second))).kind).toBe('committed');
-      expect(second).toHaveBeenCalledTimes(2);
-      expect(replacement).toHaveBeenCalledOnce();
-    } finally {
-      a.dispose();
-      b.dispose();
-    }
-  });
-
-  it('独立通知已提交的血缘回调，并且从不通知丢弃的候选者', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const first = vi.fn(() => {
-      throw new Error('author callback failed');
-    });
-    const second = vi.fn();
-    const input = (onLineage: typeof second) =>
-      embed({ kind: 'plot', props: { spec: spec(), datasets: { rows }, onLineage } });
-    const source = scene({ children: [input(first), input(second)] });
-    const options = { adapters: [plotInputEmbedAdapter], compileDriver: createPlotLineageCompileDriver() };
-
-    try {
-      const discarded = await prepareStaticProcessingAsync(source, options);
-      discarded.discard();
-
-      expect(first).not.toHaveBeenCalled();
-      expect(second).not.toHaveBeenCalled();
-
-      const committed = await prepareStaticProcessingAsync(source, options);
-      committed.commit();
-
-      expect(first).toHaveBeenCalledOnce();
-      expect(second).toHaveBeenCalledOnce();
-      expect(committed.result.scene.primitives).toHaveLength(2);
-    } finally {
-      warn.mockRestore();
-    }
-  });
-
   it('保留行和规范结果的内置 SVG 等价性', async () => {
     const plot = spec();
     const expected = renderPlot(plot, { rows });
@@ -150,16 +83,23 @@ describe('异步 Plot 编写', () => {
     expect(() => renderPlot(plot, { rows })).toThrow(/async/i);
   });
 
-  it('在一个准备树中保持相同的匿名 Plot 输入不同', async () => {
+  it('本地行和外部结果按各自的实例路径进入同一帧', async () => {
     const plot = spec();
-    const input = (values: typeof rows) =>
-      embed({ kind: 'plot', props: { spec: plot, dataBindings: { rows: { kind: 'rows', rows: values } } } });
-    const result = await compileToSceneAsync(scene({ children: [input(rows), input([{ x: 3, y: 1 }])] }), {
-      adapters: [plotInputEmbedAdapter],
+    const preparation = await preparePlotData(plot, {
+      dataBindings: { rows: { kind: 'rows', rows: [{ x: 3, y: 1 }] } },
     });
-
-    expect(result.scene.primitives).toHaveLength(2);
+    const preparedData = await preparation.execute();
+    const result = compileToScene(
+      scene({
+        children: [
+          embed<InputPlotEmbed>({ adapter: plotInputEmbedAdapter, props: { spec: plot, datasets: { rows } } }),
+          embed<InputPlotEmbed>({
+            adapter: plotInputEmbedAdapter,
+            props: { spec: plot, preparedData, panel: { position: [24, 12] } },
+          }),
+        ],
+      }),
+    );
     expect(JSON.stringify(result.scene).match(/"type":"ellipse"/g)).toHaveLength(3);
-    expect(JSON.stringify(result.scene)).not.toContain('dataBindings');
   });
 });

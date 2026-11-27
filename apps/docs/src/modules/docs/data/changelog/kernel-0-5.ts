@@ -406,6 +406,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '移除 CompileOutput 类型导出', en: 'Removed the CompileOutput type export' },
+          content: {
+            zh: 'Core 不再导出测试辅助代码使用的 CompileOutput 类型。普通编译结果仍通过 Reconciler 的 CompileResult 读取，Scene 与 artifacts 不变。',
+            en: 'Core no longer exports the CompileOutput type used by test helpers. Read ordinary compilation results through the Reconciler CompileResult; scene and artifacts are unchanged.',
+          },
+        },
+        {
           label: { zh: 'BREAKING：整图编译移出 Core', en: 'BREAKING: whole-scene compilation moves out of Core' },
           content: {
             zh: 'Core 保留 IR、Definition、原子计算与 Scene。一次性编译从 @retikz/vanilla 调用 compileToScene；直接处理 IR 或需要批次更新时，从 @retikz/reconciler 创建 SceneReconciler。独立的 @retikz/runtime 不再是 Kernel 依赖。',
@@ -870,8 +877,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/inspect',
       version: 'v0.5',
       description: {
-        zh: '通过可选检查工具查看最终路径、分组坐标系与裁剪边缘；检查内容与主图隔离，不接入时不执行检查逻辑。',
-        en: 'Use optional inspection tools to view final paths, group coordinate systems, and clip boundaries. Inspection stays separate from the main figure and does not run when unused.',
+        zh: '此包已从开发线移除。以下记录保留早期版本提供的 Path、Group 和 Clip 检查能力。',
+        en: 'This package has been removed from the development line. The entries below document Path, Group, and Clip inspection in earlier versions.',
       },
       highlights: [
         {
@@ -1035,8 +1042,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '首次发布：全量与增量编译会话', en: 'First release: full and incremental compilation sessions' },
           content: {
-            zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。默认增量会话接受 Weave 批次；incremental: false 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
-            en: 'Use SceneReconciler.mount and replace for direct IR input. Incremental sessions accept Weave batches by default; incremental: false disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
+            zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。显式增量会话接受 Weave 批次；mode: ReconcilerMode.Full 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
+            en: 'Use SceneReconciler.mount and replace for direct IR input. Explicit incremental sessions accept Weave batches; mode: ReconcilerMode.Full disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
           },
         },
       ],
@@ -1055,8 +1062,8 @@ export const kernelV05: Release = {
                 en: 'First release: full and incremental compilation sessions',
               },
               content: {
-                zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。默认增量会话接受 Weave 批次；incremental: false 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
-                en: 'Use SceneReconciler.mount and replace for direct IR input. Incremental sessions accept Weave batches by default; incremental: false disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
+                zh: '直接 IR 消费者使用 SceneReconciler.mount / replace。显式增量会话接受 Weave 批次；mode: ReconcilerMode.Full 不保留 Weave，也不接受批次。增量会话中，auto 空批次保留当前结果；full 空批次强制重算并在成功后推进版本。结束时调用 dispose。',
+                en: 'Use SceneReconciler.mount and replace for direct IR input. Explicit incremental sessions accept Weave batches; mode: ReconcilerMode.Full disables retained Weave state and batch updates. Empty auto batches keep the current result, while full batches force recomputation and advance the revision on success. Dispose the session when finished.',
               },
             },
           ],
@@ -1071,6 +1078,13 @@ export const kernelV05: Release = {
         en: 'Drawing updates can preserve unchanged SVG elements and reduce Canvas repainting, with rendering, events, and animation state committed together.',
       },
       highlights: [
+        {
+          label: { zh: '移除 Inspect 与辅助帧', en: 'Removed Inspect and auxiliary frames' },
+          content: {
+            zh: '不再提供 @retikz/inspect。静态 SVG / Canvas 直接消费 Scene，自定义 renderer 直接接收 SceneRuntimeSnapshot，并通过 read().snapshot 交付最近的提交。具名 Scene 图层和 Composite 产物不变。',
+            en: 'The @retikz/inspect package is retired. Static SVG and Canvas render a Scene directly. Custom renderers receive a SceneRuntimeSnapshot and expose the latest commit through read().snapshot. Named Scene layers and Composite artifacts are unchanged.',
+          },
+        },
         {
           label: { zh: '运行时快照与 Scene Patch', en: 'Runtime snapshots and Scene patches' },
           content: {
@@ -1205,22 +1219,57 @@ export const kernelV05: Release = {
       pkg: '@retikz/react',
       version: 'v0.5',
       description: {
-        zh: 'React 支持新的定位、连线与标签能力；Layout 默认管理持续更新，也可选择一次完整渲染，并能通知应用获取编译产物。',
-        en: 'React exposes new placement, path, and label capabilities. Layout manages ongoing updates by default, offers full static rendering, and can notify applications of compile artifacts.',
+        zh: 'React 支持新的定位、连线与标签能力；Layout 复用 Vanilla 的协调器配置，并在成功提交后通知应用获取编译产物。',
+        en: 'React exposes new placement, path, and label capabilities. Layout uses Vanilla reconciler options and publishes compile artifacts after successful commits.',
       },
       highlights: [
         {
-          label: { zh: 'BREAKING 冗余 API 清理', en: 'BREAKING unused API cleanup' },
+          label: { zh: 'DOM 与 React 共享视图配置', en: 'Shared DOM and React view options' },
           content: {
-            zh: '移除 createLayoutAuthoringSite 冻结包装函数及未被 Layout 消费的内部 SVG 包装组件；LayoutAuthoringSite 类型与 Layout 渲染行为保持。',
-            en: 'Removes the createLayoutAuthoringSite freeze wrapper and internal SVG wrappers unused by Layout. LayoutAuthoringSite and Layout rendering behavior remain unchanged.',
+            zh: 'SceneViewOptions 统一尺寸、动画、初始事件、compile 与 reconciler。DOM 挂载的 output 与 animation 字段改为平铺，runtime.rendererFactory 改为 rendererFactory，更新策略放入 reconciler；默认完整编译。SVG 字符串导出不变。',
+            en: 'SceneViewOptions unifies sizing, animation, initial handlers, compile and reconciler. For DOM mounts, flatten output and animation, move runtime.rendererFactory to rendererFactory and configure update strategy under reconciler. Full compilation is the default. SVG string export is unchanged.',
           },
         },
         {
-          label: { zh: 'Layout 异步准备桥接', en: 'Layout async preparation bridge' },
+          label: { zh: 'Layout 透传完整编译配置', en: 'Layout forwards all compile options' },
           content: {
-            zh: 'runtime.preparation 支持 sync/async，缺省 sync；async 复用 Vanilla controller，不创建领域私有请求状态机。React 同步 SSR 保持同步；异步 SSR 使用 Vanilla 入口。',
-            en: 'runtime.preparation supports sync/async and defaults to sync. Async mode reuses the Vanilla controller without domain-private request state machines. React synchronous SSR remains synchronous; async SSR uses Vanilla entry points.',
+            zh: '使用 compile 传入 Vanilla 的完整编译配置。原顶层的 measureText、lowerTex、nodeDistance、fontSize 以及 extensions 中的定义均移至 compile；reconciler 仍独立配置。',
+            en: 'Use compile for the complete Vanilla compile options. Move measureText, lowerTex, nodeDistance, fontSize and the definitions formerly under extensions into compile. The reconciler prop remains separate.',
+          },
+        },
+        {
+          label: { zh: 'Layout 复用协调器配置', en: 'Layout uses reconciler options' },
+          content: {
+            zh: '移除 React 的 runtime 属性与 session/static 模式。使用 reconciler 配置协调器（默认 full），原 runtime.onDiagnostic 改为顶层 onDiagnostic。完整输入变化始终通过 replace 完整编译。',
+            en: 'Removes the React runtime prop and session/static modes. Configure the reconciler through reconciler (full by default), and move runtime.onDiagnostic to the top-level onDiagnostic prop. Replacing complete input always recompiles in full.',
+          },
+        },
+        {
+          label: { zh: '路径简写由 Draw 展开', en: 'Draw expands path shorthand' },
+          content: {
+            zh: 'React Path 不再接受 way；将 <Path way={…}> 改为 <Draw way={…}>，或在 Path 下显式声明 Step。Vanilla 的 path({ way }) 不变。',
+            en: 'React Path no longer accepts way. Use <Draw way={…}> or declare explicit Step children inside Path. Vanilla path({ way }) is unchanged.',
+          },
+        },
+        {
+          label: { zh: 'JSX 标签组件', en: 'JSX label components' },
+          content: {
+            zh: 'EdgeLabel 更名为 StepLabel。使用 NodeLabel 和 PathLabel 可通过子元素声明多个节点或整条路径标签；它们按 JSX 顺序追加在 label 配置之后。',
+            en: 'EdgeLabel was renamed to StepLabel. Use NodeLabel and PathLabel children to append node or whole-path labels after the label prop in JSX order.',
+          },
+        },
+        {
+          label: { zh: '移除 IR 转 JSX 接口', en: 'Removed IR-to-JSX conversion' },
+          content: {
+            zh: 'React 不再导出 convertIRToReactNode。已有 IR 场景可直接传给 <Layout ir={ir} /> 渲染；JSX 转 Vanilla 输入的接口保持不变。',
+            en: 'React no longer exports convertIRToReactNode. Render an existing IR scene directly with <Layout ir={ir} />. JSX-to-Vanilla input conversion is unchanged.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING 冗余 API 清理', en: 'BREAKING unused API cleanup' },
+          content: {
+            zh: '移除 createLayoutAuthoringSite 冻结包装函数、LayoutAuthoringSite 和 LayoutAuthoringSiteKind 类型，以及未被 Layout 使用的内部 SVG 包装组件。Layout 渲染行为不变。',
+            en: 'Removes the createLayoutAuthoringSite freeze wrapper, the LayoutAuthoringSite and LayoutAuthoringSiteKind types, and internal SVG wrappers unused by Layout. Layout rendering behavior is unchanged.',
           },
         },
         {
@@ -1235,13 +1284,6 @@ export const kernelV05: Release = {
           content: {
             zh: '`<Layout>` 通过 `artifacts={{ nodeLayouts: true }}` 请求 Node layout，并在 React commit 后由 `onArtifacts` 接收 immutable artifacts；可用 `isNodeLayoutCompileArtifact()` 筛选。',
             en: '`<Layout>` requests Node layouts through `artifacts={{ nodeLayouts: true }}` and reports immutable artifacts through `onArtifacts` after the React commit; `isNodeLayoutCompileArtifact()` narrows the result.',
-          },
-        },
-        {
-          label: { zh: 'Layout 执行策略', en: 'Layout execution policy' },
-          content: {
-            zh: '`<Layout runtime>` 默认 `retained + auto`，也可选择保留事务的 `retained + full` 或不创建 Session/Snapshot 的 `static`。strategy 改变时在同一 host 重建 Session，mode 改变时释放并替换宿主；static 与 renderer factory、diagnostic callback 互斥。',
-            en: '`<Layout runtime>` defaults to `retained + auto` and can instead select transactional `retained + full` or `static` without a Session or Snapshot. Strategy changes rebuild the Session on the same host, while mode changes replace the host. Static mode excludes renderer factories and diagnostic callbacks.',
           },
         },
       ],

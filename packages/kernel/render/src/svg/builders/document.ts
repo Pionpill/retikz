@@ -1,9 +1,11 @@
-import type { PaintValue, Scene, ScenePrimitive } from '@retikz/core';
+import type { PaintValue, Scene } from '@retikz/core';
 
-import type { StaticRenderFrame } from '../../runtime';
-import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from '../../runtime';
-import { resolveSceneResourceMap } from '../../shared';
-import { countScenePrimitiveOccurrences, startArrowPlacement, endArrowPlacement } from '../../shared';
+import {
+  resolveSceneResourceMap,
+  countScenePrimitiveOccurrences,
+  startArrowPlacement,
+  endArrowPlacement,
+} from '../../shared';
 import type { RenderTraceReporter } from '../../trace';
 import { RenderTracePhase, RenderTraceUnit } from '../../trace';
 import { createSvgAnimationCollector } from '../animation';
@@ -13,8 +15,7 @@ import { formatViewBox } from '../view-box';
 import { buildClipDef } from './clip-defs';
 import { buildPaintDef } from './paint-defs';
 import type { SvgPrimitiveBuildContext } from './prim';
-import { buildPrim } from './prim';
-import { buildSvgReadonlyLayer } from './readonly-layer';
+import { buildPrim, buildPrimitiveNodes } from './prim';
 import { buildShadowDef, shadowHash } from './shadow-defs';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
@@ -45,7 +46,7 @@ export type SvgDocumentOptions = {
 
 /**
  * Scene → SVG 内容子树（`<defs>` + primitives，无 `<svg>` 外壳）
- * @description 给 Vanilla `mountSvg` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用
+ * @description 给 Vanilla `mountSceneView` 往已有容器塞、或需要自定义 `<svg>` 外壳的 caller 用
  */
 export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Array<SvgNode> => {
   const safeIdPrefix = toSafeSvgToken(options.idPrefix);
@@ -85,11 +86,13 @@ export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Arr
       clipRefUrl: id => `url(#${clipIdFor(id)})`,
       arrowContentFor: primitive => {
         const children: Array<SvgNode> = [];
-        for (const [spec, placement] of [
-          [primitive.arrowStart, startArrowPlacement(primitive.commands)],
-          [primitive.arrowEnd, endArrowPlacement(primitive.commands)],
+        for (const [spec, getPlacement] of [
+          [primitive.arrowStart, startArrowPlacement],
+          [primitive.arrowEnd, endArrowPlacement],
         ] as const) {
-          if (!spec || !placement) continue;
+          if (!spec) continue;
+          const placement = getPlacement(primitive.commands);
+          if (!placement) continue;
           const strokeWidth = primitive.strokeWidth ?? 1;
           const stroke =
             typeof primitive.stroke === 'object' && primitive.stroke.kind === 'contextStroke'
@@ -128,7 +131,7 @@ export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Arr
       definitions.set(id, () => buildClipDef(resource, id));
     }
   }
-  let prims = scene.primitives.filter((p): p is ScenePrimitive => Boolean(p)).map(p => buildPrim(p, context));
+  let prims = buildPrimitiveNodes(scene.primitives, context);
   if (collector) prims = collector.wrapCamera(prims, scene);
   const definitionNodes: Array<SvgNode> = [];
   for (const build of definitions.values()) definitionNodes.push(build());
@@ -150,29 +153,14 @@ export const buildSvgFragment = (scene: Scene, options: SvgDocumentOptions): Arr
  * @description `@retikz/render/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
  *   framework adapter 自理（非本包职责）
  */
-export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: SvgDocumentOptions): SvgNode => {
-  const scene = frame.primary;
-  const layers = snapshotReadonlyLayers(frame.layers);
+export const buildSvgDocument = (scene: Scene, options: SvgDocumentOptions): SvgNode => {
   const document: SvgNode = {
     tag: 'svg',
     attrs: {
       viewBox: formatViewBox(scene.layout),
       ...(options.defaultFontFamily ? { 'font-family': options.defaultFontFamily } : {}),
     },
-    children: [
-      ...buildSvgFragment(scene, options),
-      ...layers.map(layer =>
-        buildSvgReadonlyLayer(
-          layer,
-          buildSvgFragment(layer.scene, {
-            ...options,
-            idPrefix: `${options.idPrefix}-layer-${layer.key}`,
-            animate: false,
-            trace: undefined,
-          }),
-        ),
-      ),
-    ],
+    children: buildSvgFragment(scene, options),
   };
   if (options.trace !== undefined) {
     const visited = countScenePrimitiveOccurrences(scene.primitives);
@@ -192,7 +180,3 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: SvgDocu
 
   return document;
 };
-
-/** Scene → 整棵 `<svg>` 描述树，等价于使用空只读图层的静态 frame */
-export const buildSvgDocument = (scene: Scene, options: SvgDocumentOptions): SvgNode =>
-  buildSvgFrameDocument({ primary: scene, layers: EMPTY_READONLY_LAYERS }, options);

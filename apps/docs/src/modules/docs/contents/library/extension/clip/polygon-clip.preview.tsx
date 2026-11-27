@@ -10,7 +10,7 @@ export type PolygonClipPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderPolygonClipPreview = (values: PolygonClipPreviewValues) => (
-  <Layout viewBox={{ x: 0, y: 0, width: 200, height: 200 }} extensions={{ clips: [polygonClipDefinition] }}>
+  <Layout viewBox={{ x: 0, y: 0, width: 200, height: 200 }} compile={{ clips: [polygonClipDefinition] }}>
     <Node
       position={[100, 100]}
       shape="rectangle"

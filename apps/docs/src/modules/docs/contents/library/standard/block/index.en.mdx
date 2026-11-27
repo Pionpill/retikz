@@ -1,0 +1,35 @@
+---
+title: Blocks
+description: Compose a shared header, body, and closing structure for class, object, and logic descriptions.
+---
+
+The Block family presents structured descriptions of classes, objects, and logic blocks. An internal framework is now available within the package. Higher-level components such as ClassBlock will provide their own public interfaces and semantics in a later step.
+
+## Internal framework
+
+The framework uses composable regions. Its layout and compilation are independent of DOM, React, and any particular rendering backend.
+
+One possible internal composition is:
+
+```text
+Block
+├── BlockHeader
+│   ├── BlockTitle
+│   ├── BlockDescription
+│   └── BlockAccessory
+├── BlockContent
+│   └── BlockSection
+└── BlockFooter
+```
+
+> **Note:** Block and the BlockXxx roles above are internal Standard implementations. They are not publicly exported or component APIs that users can call directly. Only higher-level components such as ClassBlock will be exposed in a later step.
+
+The names in the tree represent internal structural roles and consistently use the Block prefix. Block provides the outer shell and arranges content vertically in authored order. BlockHeader holds BlockTitle, BlockDescription, and an optional BlockAccessory drawing. BlockContent accepts arbitrary body drawings, with BlockSection available for further grouping. BlockFooter arranges closing content in normal flow, aligned to the main-axis end by default.
+
+Regions may be omitted, repeated, or nested. The shell reuses [Surface](/library/standard/presentation/surface), sizing and arrangement reuse [Layout](/library/layout), and titles and descriptions use ordinary Nodes. The framework shares structure without interpreting class members, object fields, or execution semantics.
+
+## Usage boundary
+
+The framework is for composition within Standard. It has no independent import entry, React components, Vanilla helpers, or JSON types. Authors will use higher-level components such as ClassBlock, which are not available yet.
+
+Use Surface and Layout to compose content panels today. Existing [Graph Block](/schematic/graph/block) continues to use its current interface; replacement will be handled after the higher-level components are ready.

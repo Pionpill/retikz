@@ -1,10 +1,8 @@
 import type { Scene } from '@retikz/core';
 
-import type { StaticRenderFrame } from '../../runtime';
-import { EMPTY_READONLY_LAYERS } from '../../runtime';
 import { computeDisplaySize } from '../../shared';
 import type { SvgDocumentOptions } from '../builders';
-import { buildSvgFrameDocument } from '../builders';
+import { buildSvgDocument } from '../builders';
 import type { SvgNode, SvgStyle } from '../types';
 
 /** 转义 attribute 值里的 XML 特殊字符（`&` 必须先转，避免二次转义） */
@@ -79,11 +77,7 @@ const withRootSize = (root: SvgNode, width: number, height: number): SvgNode => 
  * @description 逐字序列化 `buildSvgDocument` 的描述树——零名字转换（attrs 本就是 SVG 真名）。同 scene +
  *   同 idPrefix 产逐字一致的字符串（水合前置）。给定 `width`/`height` 时结构化写进根 `<svg>` attrs（不做字符串后处理）
  */
-export const renderFrameToSvgString = (frame: StaticRenderFrame, options: RenderToStringOptions): string => {
-  const size = computeDisplaySize(frame.primary.layout, options.width, options.height);
-  return serializeNode(withRootSize(buildSvgFrameDocument(frame, options), size.width, size.height));
+export const renderToSvgString = (scene: Scene, options: RenderToStringOptions): string => {
+  const size = computeDisplaySize(scene.layout, options.width, options.height);
+  return serializeNode(withRootSize(buildSvgDocument(scene, options), size.width, size.height));
 };
-
-/** Scene → SVG 字符串，等价于使用空只读图层的静态 frame */
-export const renderToSvgString = (scene: Scene, options: RenderToStringOptions): string =>
-  renderFrameToSvgString({ primary: scene, layers: EMPTY_READONLY_LAYERS }, options);

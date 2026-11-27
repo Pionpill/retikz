@@ -23,7 +23,7 @@ extent = |ux cosθ + uy sinθ| × width / 2
        + |ux (-sinθ) + uy cosθ| × height / 2
 ```
 
-八方向、数字角度和 `{ boundary, fraction }` 使用确定的 attachment unit vector；radial 为该向量角，tangent 为 radial + 90°。Node rotate 只在最终 layout 投影阶段应用一次
+八方向、数字角度和 `{ side, fraction }` 使用确定的 attachment unit vector；radial 为该向量角，tangent 为 radial + 90°。Node rotate 只在最终 layout 投影阶段应用一次
 
 Node label 路径统一规范 text / TeX metrics：width、height、ascent、descent 必须 finite 且 nonnegative；缺失 ascent / descent 时从 visualHeight 补全，并保证 `ascent + descent === visualHeight`。TeX 的 width / height / depth 必须合法且 `depth <= height`，非法 run 按既有 `TEX_INVALID` 跳过
 

@@ -1,4 +1,3 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { definePlotTheme } from '@retikz/plot';
@@ -14,7 +13,7 @@ vi.mock('@retikz/reconciler', async importOriginal => {
   const actual = await importOriginal<typeof RetikzReconciler>();
   return {
     ...actual,
-    SceneReconciler: class extends actual.SceneReconciler<AnyCompositeDefinition> {
+    SceneReconciler: class extends actual.SceneReconciler {
       constructor(options: CompileOptions = {}, execution: SceneReconcilerOptions = {}) {
         super(options, execution);
         compileCalls.push(options);
@@ -27,7 +26,7 @@ vi.mock('@retikz/vanilla', async importOriginal => {
   const actual = await importOriginal<typeof RetikzVanilla>();
   return {
     ...actual,
-    renderToSvgString: vi.fn(() => '<svg />'),
+    renderToSvg: vi.fn(() => '<svg />'),
   };
 });
 
@@ -48,8 +47,7 @@ const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'plot',
-  layerId: 'chart',
-  identityPath: ['chart', id],
+  identityPath: [id],
 });
 
 const plotTheme = definePlotTheme({

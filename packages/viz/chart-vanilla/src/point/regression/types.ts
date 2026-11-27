@@ -7,7 +7,6 @@ export type InputRegressionChart = InputTypedChart<IRRegressionChart>;
 
 /**
  * RegressionChart InputEmbed 的完整编写输入
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type RegressionChartInputEmbedProps<TNative = never> = InputChartCommon<IRRegressionChart, TNative> &
+export type RegressionChartInputEmbedProps = InputChartCommon<IRRegressionChart> &
   Pick<InputRegressionChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

@@ -3,15 +3,108 @@ import { SceneSchema } from '@retikz/core';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { Node, Path, Scope, Step } from '../../../src/kernel';
-import { createInputScene } from '../../../src/kernel/adapter/input-scene';
-import { convertIRToReactNode } from '../../../src/kernel/adapter/unbuilder';
-import { Draw, EdgeLabel } from '../../../src/sugar';
+import { Node, Path, Scope, Step, Text } from '../../../src';
+import { Draw, NodeLabel, PathLabel, StepLabel } from '../../../src/components';
+import { convertReactToInputScene } from '../../../src/container';
 import { compileTestResult } from '../../helpers/compilation';
 
 describe('React JSX Input 场景', () => {
+  it('节点标签按配置、JSX 的顺序追加，标签文字不进入正文', () => {
+    const source = convertReactToInputScene(
+      <>
+        <Node text="body" label={{ text: 'first' }}>
+          <>
+            <NodeLabel position="left">second</NodeLabel>
+            <NodeLabel>second</NodeLabel>
+          </>
+        </Node>
+        <Node>
+          A<NodeLabel>L</NodeLabel>B
+        </Node>
+        <Node>
+          <NodeLabel>only label</NodeLabel>
+        </Node>
+        <Node label={{ text: 'single' }} />
+      </>,
+    );
+    expect(normalizeScene(source).ir.children).toEqual([
+      {
+        type: 'node',
+        text: 'body',
+        label: [{ text: 'first' }, { text: 'second', position: 'left' }, { text: 'second' }],
+      },
+      { type: 'node', text: 'AB', label: { text: 'L' } },
+      { type: 'node', label: { text: 'only label' } },
+      { type: 'node', label: { text: 'single' } },
+    ]);
+    expect(() =>
+      convertReactToInputScene(
+        <Node text="body">
+          <Text>second body</Text>
+        </Node>,
+      ),
+    ).toThrow(/正文/);
+  });
+
+  it('路径标签不占用步骤序号，且不同于单步标签', () => {
+    const { ir } = normalizeScene(
+      convertReactToInputScene(
+        <>
+          <Draw
+            way={[
+              [0, 0],
+              [1, 1],
+            ]}
+            label={[{ text: 'first' }]}
+          >
+            <PathLabel sloped>second</PathLabel>
+          </Draw>
+          <Path>
+            <PathLabel>A</PathLabel>
+            <Step to="a" />
+            <PathLabel>B</PathLabel>
+            <Step to="b">
+              <StepLabel>C</StepLabel>
+            </Step>
+          </Path>
+          <Path kind="custom">
+            <PathLabel>L</PathLabel>
+          </Path>
+        </>,
+      ),
+    );
+    expect(ir.children[0]).toMatchObject({
+      label: [{ text: 'first' }, { sloped: true, text: 'second' }],
+      children: [{ kind: 'move' }, { kind: 'line' }],
+    });
+    expect(ir.children[1]).toMatchObject({
+      label: [{ text: 'A' }, { text: 'B' }],
+      children: [{ kind: 'move' }, { kind: 'line', label: { text: 'C' } }],
+    });
+    expect(ir.children[2]).toEqual({ type: 'path', kind: 'custom', label: { text: 'L' } });
+    expect(() =>
+      convertReactToInputScene(
+        <Draw
+          way={[
+            [0, 0],
+            [1, 1],
+          ]}
+        >
+          <Step to="a" />
+        </Draw>,
+      ),
+    ).toThrow(/way 和 Step/);
+    expect(() =>
+      convertReactToInputScene(
+        <Path>
+          <PathLabel>L</PathLabel>
+        </Path>,
+      ),
+    ).toThrow(/必须指定/);
+  });
+
   it('只在省略 kind 时按实际步骤顺序补上起点和直线', () => {
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <>
         <Path>
           <>
@@ -25,7 +118,7 @@ describe('React JSX Input 场景', () => {
         </Path>
       </>,
     );
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+    expect(normalizeScene(input).ir.children).toMatchObject([
       {
         children: [
           { kind: 'move', to: { id: 'A' } },
@@ -41,34 +134,35 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
-  it('当 JSX 同时提供显式步骤和 way 时只采用步骤', () => {
-    const input = createInputScene(
-      <Path way={[]}>
-        <Step to="A" />
-        <Step to="B" />
+  it('JSX 子步骤和 way 两种写法归一为相同的路径', () => {
+    const steps = convertReactToInputScene(
+      <Path>
+        <Step to={[0, 0]} />
+        <Step to={[100, 0]} />
       </Path>,
     );
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
-      {
-        children: [
-          { kind: 'move', to: { id: 'A' } },
-          { kind: 'line', to: { id: 'B' } },
-        ],
-      },
-    ]);
+    const shorthand = convertReactToInputScene(
+      <Draw
+        way={[
+          [0, 0],
+          [100, 0],
+        ]}
+      />,
+    );
+    expect(normalizeScene(shorthand).ir).toEqual(normalizeScene(steps).ir);
   });
   it.each(['->', '<-', '<->'] as const)('Path 与 Draw 的 %s 简写统一由 Vanilla 转换', arrow => {
     const endpoints = arrow === '->' ? { end: {} } : arrow === '<-' ? { start: {} } : { start: {}, end: {} };
     const fromPath = normalizeScene(
-      createInputScene(
+      convertReactToInputScene(
         <Path arrow={arrow}>
           <Step kind="move" to={[0, 0]} />
           <Step kind="line" to={[100, 0]} />
         </Path>,
-      ).scene,
+      ),
     ).ir;
     const fromDraw = normalizeScene(
-      createInputScene(
+      convertReactToInputScene(
         <Draw
           arrow={arrow}
           way={[
@@ -76,10 +170,10 @@ describe('React JSX Input 场景', () => {
             [100, 0],
           ]}
         />,
-      ).scene,
+      ),
     ).ir;
     const explicit = normalizeScene(
-      createInputScene(
+      convertReactToInputScene(
         <Draw
           arrow={endpoints}
           way={[
@@ -87,41 +181,29 @@ describe('React JSX Input 场景', () => {
             [100, 0],
           ]}
         />,
-      ).scene,
+      ),
     ).ir;
     expect(fromPath).toEqual(explicit);
     expect(fromDraw).toEqual(explicit);
     expect(compileTestResult(fromDraw).scene).toEqual(compileTestResult(explicit).scene);
   });
-  it('通过 JSX、Vanilla 和 IR 往返保留多行节点标签', () => {
+  it('JSX 节点的多行标签归一后符合 IR schema', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
     const label = { text, textAlign: 'end' as const, lineHeight: 24, maxTextWidth: 30, opacity: 0.5 };
-    const input = createInputScene(<Node label={label} />);
-    const ir = normalizeScene(input.scene).ir;
+    const input = convertReactToInputScene(<Node label={label} />);
+    const ir = normalizeScene(input).ir;
     expect(ir.children[0]).toMatchObject({ label });
     expect(SceneSchema.parse(ir).children[0]).toMatchObject({ label });
-    const child = ir.children[0];
-    if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
-    const rebuilt = createInputScene(convertIRToReactNode({ ...ir, children: [child] }));
-    expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
-    expect(compileTestResult(normalizeScene(rebuilt.scene).ir).scene).toEqual(compileTestResult(ir).scene);
   });
-  it('通过 JSX、Vanilla 标准化和 IR 往返保留 Node 别名', () => {
-    const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
-    const ir = normalizeScene(input.scene).ir;
+  it('JSX 节点归一后保留别名', () => {
+    const input = convertReactToInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
+    const ir = normalizeScene(input).ir;
 
     expect(ir.children[0]).toMatchObject({ id: 'primary', aliasIds: ['alternate'] });
-
-    const child = ir.children[0];
-    if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
-    const kernel = { ...ir, children: [child] };
-    const rebuilt = createInputScene(convertIRToReactNode(kernel));
-
-    expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
   });
 
   it('将 Kernel JSX 收集为 Vanilla Input，并由 Vanilla 解析字符串 target', () => {
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <>
         <Node id="source" position={[0, 0]} />
         <Path id="edge">
@@ -131,8 +213,8 @@ describe('React JSX Input 场景', () => {
       </>,
     );
 
-    expect(input.scene.children).toMatchObject([{ type: 'node' }, { type: 'path' }]);
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+    expect(input.children).toMatchObject([{ type: 'node' }, { type: 'path' }]);
+    expect(normalizeScene(input).ir.children).toMatchObject([
       { type: 'node', id: 'source' },
       {
         type: 'path',
@@ -145,10 +227,12 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
-  it('将 Draw 的 way 原样交给 Vanilla Path normalizer', () => {
-    const input = createInputScene(<Draw way={['source', 'target']} style={{ stroke: '#2563eb' }} />);
+  it('Draw 将 way 转成与显式步骤等价的 Path 输入', () => {
+    const input = convertReactToInputScene(<Draw way={['source', 'target']} style={{ stroke: '#2563eb' }} />);
 
-    expect(normalizeScene(input.scene).ir.children).toEqual([
+    expect(input.children[0]).not.toHaveProperty('way');
+    expect(input.children[0]).toHaveProperty('children');
+    expect(normalizeScene(input).ir.children).toEqual([
       {
         type: 'path',
         children: [
@@ -164,14 +248,14 @@ describe('React JSX Input 场景', () => {
     const props = {
       arrow: { end: { endpointOverlap: 0.5 } },
     };
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <Path {...props}>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[20, 0]} />
       </Path>,
     );
 
-    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+    expect(normalizeScene(input).ir.children).toMatchObject([
       {
         type: 'path',
         arrow: { end: { endpointOverlap: 0.5 } },
@@ -179,10 +263,10 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
-  it('保留 Path 与 Scope 的 runtime-only authoring，供 Vanilla compile driver 消费', () => {
+  it('保留 Path 与 Scope 的作者元数据，不写入 IR', () => {
     const scopeAuthoring = Object.freeze({ scope: true });
     const pathAuthoring = Object.freeze({ path: true });
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <Scope authoring={scopeAuthoring}>
         <Path authoring={pathAuthoring}>
           <Step kind="move" to={[0, 0]} />
@@ -191,7 +275,7 @@ describe('React JSX Input 场景', () => {
       </Scope>,
     );
 
-    expect(input.scene.children).toMatchObject([
+    expect(input.children).toMatchObject([
       {
         type: 'scope',
         authoring: scopeAuthoring,
@@ -200,20 +284,20 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
-  it('将 EdgeLabel interrupt 布尔值透传为经 Core schema 验证的 Vanilla IR', () => {
-    const input = createInputScene(
+  it('将 StepLabel interrupt 布尔值透传为经 Core schema 验证的 Vanilla IR', () => {
+    const input = convertReactToInputScene(
       <Path>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[10, 0]}>
-          <EdgeLabel interrupt>force</EdgeLabel>
+          <StepLabel interrupt>force</StepLabel>
         </Step>
         <Step kind="line" to={[20, 0]}>
-          <EdgeLabel interrupt={false}>continuous</EdgeLabel>
+          <StepLabel interrupt={false}>continuous</StepLabel>
         </Step>
       </Path>,
     );
 
-    expect(SceneSchema.parse(normalizeScene(input.scene).ir).children).toMatchObject([
+    expect(SceneSchema.parse(normalizeScene(input).ir).children).toMatchObject([
       {
         type: 'path',
         children: [
@@ -225,7 +309,7 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
-  it('React EdgeLabel、Vanilla Input 与直接 JSON 编译为同一断线路径 Scene', () => {
+  it('React StepLabel、Vanilla Input 与直接 JSON 编译为同一断线路径 Scene', () => {
     const direct: IRScene = {
       version: 1,
       type: 'scene',
@@ -242,49 +326,46 @@ describe('React JSX Input 场景', () => {
         },
       ],
     };
-    const reactInput = createInputScene(
+    const reactInput = convertReactToInputScene(
       <Path id="edge" label={{ text: 'host', sloped: true }} style={{ stroke: '#13579b' }}>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[100, 0]}>
-          <EdgeLabel sloped>step</EdgeLabel>
+          <StepLabel sloped>step</StepLabel>
         </Step>
       </Path>,
     );
     const measureText = () => ({ width: 20, height: 10 });
     const jsonScene = compileTestResult(direct, { measureText }).scene;
-    const vanillaScene = compileTestResult(normalizeScene({ children: direct.children }).ir, { measureText }).scene;
-    const reactScene = compileTestResult(normalizeScene(reactInput.scene).ir, { measureText }).scene;
+    const vanillaScene = compileTestResult(normalizeScene({ type: 'scene', children: direct.children }).ir, {
+      measureText,
+    }).scene;
+    const reactScene = compileTestResult(normalizeScene(reactInput).ir, { measureText }).scene;
 
     expect(vanillaScene).toEqual(jsonScene);
     expect(reactScene).toEqual(jsonScene);
   });
 });
 
-it('Scope 包络在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
-  const input = createInputScene(
+it('JSX 作用域归一后保留包络形状和子节点', () => {
+  const input = convertReactToInputScene(
     <Scope id="group" boundingShape="circle">
       <Node position={[0, 0]} />
     </Scope>,
   );
-  const ir = normalizeScene(input.scene).ir;
+  const ir = normalizeScene(input).ir;
 
-  expect(ir.children[0]).toMatchObject({ id: 'group', boundingShape: 'circle' });
-
-  const scope = ir.children[0];
-  if ('namespace' in scope || scope.type !== 'scope') throw new Error('expected Kernel scope');
-  const child = scope.children[0];
-  if ('namespace' in child || child.type !== 'node') throw new Error('expected Kernel node');
-  const kernel = { ...ir, children: [{ ...scope, children: [child] }] };
-  const restored = normalizeScene(createInputScene(convertIRToReactNode(kernel)).scene).ir;
-
-  expect(compileTestResult(restored).scene).toEqual(compileTestResult(ir).scene);
+  expect(ir.children[0]).toMatchObject({
+    id: 'group',
+    boundingShape: 'circle',
+    children: [{ type: 'node', position: [0, 0] }],
+  });
 });
 
 it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
   const arrow = { end: { shape: 'circle', endpointOverlap: 0.5 } };
   const marks: NonNullable<IRPath['marks']> = [{ pos: 0, rotate: 45, scale: 2, shape: 'dot', params: { radius: 3 } }];
   const jsx = normalizeScene(
-    createInputScene(
+    convertReactToInputScene(
       <Draw
         way={[
           [0, 0],
@@ -293,9 +374,10 @@ it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
         arrow={arrow}
         marks={marks}
       />,
-    ).scene,
+    ),
   ).ir;
   const vanilla = normalizeScene({
+    type: 'scene',
     children: [
       {
         type: 'path',
@@ -309,8 +391,5 @@ it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
     ],
   }).ir;
   expect(jsx).toEqual(vanilla);
-  const child = jsx.children[0];
-  if ('namespace' in child || child.type !== 'path') throw new Error('expected path');
-  expect(normalizeScene(createInputScene(convertIRToReactNode({ ...jsx, children: [child] })).scene).ir).toEqual(jsx);
   expect(jsx.children[0]).toMatchObject({ arrow, marks });
 });

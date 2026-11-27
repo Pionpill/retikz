@@ -14,7 +14,7 @@ description: 从 @retikz/extension 按需引入可选节点形状，并分别在
 
 两种方式都只是当前图的显式装配，不会因为 import 自动全局注册形状。
 
-下面四种写法都绘制同一个十字形。React 将 Definition 传入 `Layout.extensions.shapes`；Vanilla 将它传入 `compile.shapes`。`shape` 名称和 JSON 参数属于节点数据，Definition 属于本次绘制的能力装配。
+下面四种写法都绘制同一个十字形。React 将 Definition 传入 `Layout.compile.shapes`；Vanilla 将它传入 `compile.shapes`。`shape` 名称和 JSON 参数属于节点数据，Definition 属于本次绘制的能力装配。
 
 <ComponentPreview files="entry" size="xs" hideCode />
 
@@ -26,7 +26,7 @@ import { crossShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ shapes: [crossShapeDefinition] }}>
+  <Layout compile={{ shapes: [crossShapeDefinition] }}>
     <Node
       shape="cross"
       layout={{ minimumSize: { width: 80, height: 80 } }}
@@ -56,7 +56,7 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ shapes: [crossShapeDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ shapes: [crossShapeDefinition] }} />;
 ```
 
 </DocTab>
@@ -64,7 +64,7 @@ export const Example = () => <Layout ir={ir} extensions={{ shapes: [crossShapeDe
 
 ```ts
 import { crossShapeDefinition } from '@retikz/extension';
-import { node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, node, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -75,7 +75,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { compile: { shapes: [crossShapeDefinition] } });
+const compileResult = compileToScene(input, { compile: { shapes: [crossShapeDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -85,7 +86,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { crossShapeDefinition } from '@retikz/extension';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -99,7 +100,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { shapes: [crossShapeDefinition] } });
+const compileResult = compileToScene(ir, { compile: { shapes: [crossShapeDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

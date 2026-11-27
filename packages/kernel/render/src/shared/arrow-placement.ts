@@ -11,8 +11,9 @@ type DrawableSegment = {
   from: Point;
 };
 
-const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableSegment> => {
-  const segments: Array<DrawableSegment> = [];
+/** 查找首个或最后一个可绘制段，并保留其子路径起点语义 */
+const findDrawableSegment = (commands: ReadonlyArray<PathCommand>, end: 'start' | 'end'): DrawableSegment | null => {
+  let segment: DrawableSegment | null = null;
   let cursor: Point | null = null;
   let subpathStart: Point | null = null;
 
@@ -29,12 +30,15 @@ const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableS
     }
 
     const from = cursor ?? (command.kind === 'arc' || command.kind === 'ellipseArc' ? commandArcStart(command) : null);
-    if (from) segments.push({ command, from });
+    if (from) {
+      segment = { command, from };
+      if (end === 'start') return segment;
+    }
     cursor = commandEndpoint(command);
     if (subpathStart === null && from) subpathStart = from;
   }
 
-  return segments;
+  return segment;
 };
 
 /**
@@ -42,7 +46,7 @@ const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableS
  * @description 使用最后一条可绘制命令的几何终点与解析切线；无法判向则角度取 0
  */
 export const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
-  const segment = drawableSegments(commands).at(-1);
+  const segment = findDrawableSegment(commands, 'end');
   if (!segment) return null;
 
   const vertex = commandEndpoint(segment.command);
@@ -59,7 +63,7 @@ export const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { verte
  * @description 使用第一条可绘制命令的几何起点与解析切线；无法判向则角度取 0
  */
 export const startArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
-  const segment = drawableSegments(commands).at(0);
+  const segment = findDrawableSegment(commands, 'start');
   if (!segment) return null;
 
   const tangent = commandStartTangent(segment.command, segment.from);

@@ -9,7 +9,7 @@ import {
   bindWaapiDescriptorElements,
   isWaapiAnimationStyleOwned,
   recoverWaapiBindingSetupFailure,
-} from '../animation/retained';
+} from '../animation/binding';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationController, HydrationTarget } from '../hydration';
 import {
@@ -18,6 +18,7 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
+import { recoverHydrationSetupFailure } from '../hydration/internal';
 import type {
   RuntimeScenePrimitive,
   SceneIdentity,
@@ -29,15 +30,11 @@ import type {
 } from '../scene';
 import { prepareRuntimeSceneContent } from '../shared';
 import type { SvgNode } from '../svg';
-import { buildSvgDocument, buildSvgFragment } from '../svg';
-import { buildSvgReadonlyLayer } from '../svg/builders';
+import { buildSvgDocument } from '../svg';
 import type { RenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
-import type { RenderReadonlyLayer } from './readonly-layer';
-import { snapshotReadonlyLayers } from './readonly-layer';
-import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
-import { defineRetainedRenderer } from './renderer';
+import type { SvgRenderer, SvgRendererImmutableOptions } from './renderer';
+import { defineRenderer } from './renderer';
 import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import { SceneAnimationOccurrenceChangeKind, diffSceneAnimationDescriptors } from './runtime-options';
 import type { SceneIdentityMap } from './shared';
@@ -46,7 +43,6 @@ import {
   createPublicIdPrimitivePathMap,
   createSceneIdentityMap,
   createSemanticOwnerPublicIdMap,
-  recoverHydrationSetupFailure,
   runBestEffortCleanup,
   runtimeStructuralEquals,
 } from './shared';
@@ -227,7 +223,7 @@ const createMutationJournal = (): MutationJournal => {
   });
 };
 
-/** 从 SvgNode descriptor 创建尚未接入 retained identity index 的 SVG subtree */
+/** 从 SvgNode descriptor 创建尚未接入 身份索引 的 SVG subtree */
 const createSvgElement = (document: Document, node: SvgNode): SVGElement => {
   const element = document.createElementNS(SVG_NAMESPACE, node.tag);
 
@@ -436,13 +432,7 @@ const descriptorMatchesElement = (element: SVGElement, node: SvgNode, root: bool
   if (!root && element.style.length !== expectedStyles.length) return false;
 
   const children = node.children ?? [];
-  const actualChildren = root
-    ? Array.from(element.childNodes).filter(
-        child =>
-          !(child instanceof element.ownerDocument.defaultView!.SVGElement) ||
-          child.getAttribute('data-retikz-readonly-layer') === null,
-      )
-    : Array.from(element.childNodes);
+  const actualChildren = Array.from(element.childNodes);
   if (actualChildren.length !== children.length) return false;
 
   return children.every((child, index) => {
@@ -556,7 +546,7 @@ const unwrapPrimitiveContent = (
     contentElement = childElement;
   }
 
-  return Object.freeze({ descriptor: contentDescriptor, element: contentElement });
+  return { descriptor: contentDescriptor, element: contentElement };
 };
 
 type SvgRootDescriptorPlan = Readonly<{
@@ -581,11 +571,7 @@ const buildRootDescriptorPlan = (
     if (headCount < 0)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root descriptor primitive count is invalid');
 
-    return Object.freeze({
-      head: Object.freeze(children.slice(0, headCount)),
-      wrappers: Object.freeze([]),
-      primitives: Object.freeze(children.slice(headCount)),
-    });
+    return { head: children.slice(0, headCount), wrappers: [], primitives: children.slice(headCount) };
   }
 
   const head = children.slice(0, -1);
@@ -611,18 +597,14 @@ const buildRootDescriptorPlan = (
     throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper primitive count is invalid');
   }
 
-  return Object.freeze({
-    head: Object.freeze(head),
-    wrappers: Object.freeze(wrappers),
-    primitives: Object.freeze(primitives),
-  });
+  return { head, wrappers, primitives };
 };
 
 const buildSubtreeDescriptor = (
   snapshot: SceneRuntimeSnapshot,
   subtree: SceneRuntimeSubtree,
   config: RenderRuntimeConfig,
-  options: RetainedSvgRendererImmutableOptions,
+  options: SvgRendererImmutableOptions,
 ): SvgNode => {
   const descriptor = buildSvgDocument(
     {
@@ -824,7 +806,6 @@ const buildRootSubtree = (
       identity: node.identity,
       semanticOwner: node.semanticOwner,
       ...(node.primitivePath.length === 2 ? {} : { parent: node.parent }),
-      order: node.order,
       primitivePath: Object.freeze(node.primitivePath.slice(2)),
       ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
     }),
@@ -1068,7 +1049,7 @@ const createSvgAnimationState = (
   const created: Array<SvgAnimationControl> = [];
 
   try {
-    const retained = new Set<SvgAnimationControl>();
+    const reusedControls = new Set<SvgAnimationControl>();
     const bindings = grouped.occurrences.map(group => {
       const existing = previousByIdentity.get(group.identity);
       if (
@@ -1077,7 +1058,7 @@ const createSvgAnimationState = (
         changeByIdentity.get(group.identity) === SceneAnimationOccurrenceChangeKind.Unchanged &&
         sameAnimationElements(existing.elements, group.elements)
       ) {
-        retained.add(existing);
+        reusedControls.add(existing);
         return existing;
       }
 
@@ -1097,13 +1078,13 @@ const createSvgAnimationState = (
           ? undefined
           : createSvgAnimationControl(grouped.root, cleanupQueue);
     if (root !== undefined) {
-      if (root === previous?.root) retained.add(root);
+      if (root === previous?.root) reusedControls.add(root);
       else created.push(root);
     }
 
     const retired = [
-      ...(previous?.root === undefined || retained.has(previous.root) ? [] : [previous.root]),
-      ...(previous?.bindings.flatMap(binding => (retained.has(binding) ? [] : [binding])) ?? []),
+      ...(previous?.root === undefined || reusedControls.has(previous.root) ? [] : [previous.root]),
+      ...(previous?.bindings.flatMap(binding => (reusedControls.has(binding) ? [] : [binding])) ?? []),
     ];
     const all = [...(root === undefined ? [] : [root]), ...bindings];
     const reuseAggregate =
@@ -1137,39 +1118,18 @@ type EntityScenePatchOperation = Extract<
   Readonly<{ kind: 'insert' | 'update' | 'remove' | 'move' }>
 >;
 
-/** 按 kind 提取单类 entity patch operation */
-type EntityScenePatchOperationOfKind<TKind extends EntityScenePatchOperation['kind']> = Extract<
-  EntityScenePatchOperation,
-  Readonly<{ kind: TKind }>
->;
-
 /** prepare 已解析完成、commit 无需再判断字段是否存在的 entity mutation plan */
 type PreparedEntityOperation =
-  | Readonly<{
-      kind: 'remove';
-      operation: EntityScenePatchOperationOfKind<'remove'>;
-      element: SVGElement;
-      parent: Node;
-      before: Node | null;
-    }>
-  | Readonly<{
-      kind: 'move';
-      operation: EntityScenePatchOperationOfKind<'move'>;
-      element: SVGElement;
-      parent: Node;
-      before: Node | null;
-    }>
-  | Readonly<{
-      kind: 'insert';
-      operation: EntityScenePatchOperationOfKind<'insert'>;
-      descriptor: SvgNode;
-      element: SVGElement;
-      parent: Node;
-      before: Node | null;
-    }>
+  | Readonly<
+      ({ kind: 'remove' } | { kind: 'move' } | { kind: 'insert' }) & {
+        element: SVGElement;
+        parent: Node;
+        before: Node | null;
+      }
+    >
   | Readonly<{
       kind: 'update';
-      operation: EntityScenePatchOperationOfKind<'update'>;
+      subtree: SceneRuntimeSubtree;
       descriptor: SvgNode;
       element: SVGElement;
       existing: SVGElement;
@@ -1190,7 +1150,7 @@ const createSvgHydration = (
   const scene = snapshot.scene as unknown as Scene;
   const targets = new WeakMap<Element, HydrationTarget>();
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
-  const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
+  const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology, publicIdByOwner);
   const animationElementsByIdentity = createSceneIdentityMap(
     groupSvgWaapiElements(host, snapshot, elements).occurrences.map(group => [group.identity, group.elements] as const),
   );
@@ -1218,7 +1178,7 @@ const createSvgHydration = (
     }
   }
 
-  /** 从事件 target 上溯到 retained topology 已索引的 occurrence 元素 */
+  /** 从事件 target 上溯到 会话拓扑已索引的 occurrence 元素 */
   const locateElement = (event: Event): Element | null => {
     let element = event.target instanceof Element ? event.target : null;
 
@@ -1251,11 +1211,11 @@ const createSvgHydration = (
   );
 };
 
-/** 生成一次完整 retained SVG 候选 descriptor */
+/** 生成一次完整 SVG 候选 descriptor */
 const buildDescriptor = (
   snapshot: SceneRuntimeSnapshot,
   config: RenderRuntimeConfig,
-  options: RetainedSvgRendererImmutableOptions,
+  options: SvgRendererImmutableOptions,
 ): SvgNode =>
   buildSvgDocument(prepareRuntimeSceneContent(snapshot.scene as unknown as Scene), {
     idPrefix: options.idPrefix,
@@ -1263,14 +1223,9 @@ const buildDescriptor = (
     snapshotAt: config.animation?.snapshotAt,
   });
 
-/** 创建内置 SVG retained renderer */
-export const createBuiltinSvgRetainedRenderer = (
-  host: SVGSVGElement,
-  options: RetainedSvgRendererImmutableOptions,
-): RetainedSvgRenderer => {
+/** 创建内置 SVG renderer */
+export const createBuiltinSvgRenderer = (host: SVGSVGElement, options: SvgRendererImmutableOptions): SvgRenderer => {
   let currentSnapshot: SceneRuntimeSnapshot | undefined;
-  let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
-  let currentLayerElements: ReadonlyArray<SVGElement> = Object.freeze([]);
   let currentAnimation: SvgAnimationState | undefined;
   let currentHydration: HydrationController | undefined;
   let currentOwnedAttributes = new Set<string>();
@@ -1338,7 +1293,6 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
             element,
             parent: element.parentNode,
             before: element.nextSibling,
@@ -1364,7 +1318,6 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
             element,
             parent,
             before,
@@ -1388,15 +1341,13 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
-            descriptor: subtreeDescriptor,
             element,
             parent,
             before,
           });
         }
 
-        const existing = currentElements.get(operation.identity);
+        const existing = currentElements.get(operation.subtree.root);
         if (existing === undefined || existing.parentNode === null)
           throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG update target is missing');
         if (existing.localName !== subtreeDescriptor.tag) {
@@ -1405,7 +1356,7 @@ export const createBuiltinSvgRetainedRenderer = (
 
           return Object.freeze({
             kind: operation.kind,
-            operation,
+            subtree: operation.subtree,
             descriptor: subtreeDescriptor,
             element,
             existing,
@@ -1416,7 +1367,7 @@ export const createBuiltinSvgRetainedRenderer = (
 
         return Object.freeze({
           kind: operation.kind,
-          operation,
+          subtree: operation.subtree,
           descriptor: subtreeDescriptor,
           element: existing,
           existing,
@@ -1480,9 +1431,6 @@ export const createBuiltinSvgRetainedRenderer = (
               continue;
             }
 
-            const operation = prepared.operation;
-            const subtree = operation.subtree;
-            const subtreeDescriptor = prepared.descriptor;
             if (prepared.kind === 'insert') {
               const parent = prepared.parent;
               const before = prepared.before;
@@ -1494,7 +1442,7 @@ export const createBuiltinSvgRetainedRenderer = (
               continue;
             }
 
-            const existing = prepared.existing;
+            const { existing, subtree, descriptor: subtreeDescriptor } = prepared;
             const element = prepared.element;
             if (element !== existing) {
               const parent = prepared.parent;
@@ -1685,94 +1633,18 @@ export const createBuiltinSvgRetainedRenderer = (
     });
   };
 
-  const prepareFrame = (
-    scenePatch: ScenePatch | undefined,
-    frame: RenderFrameSnapshot,
-    config: RenderRuntimeConfig,
-    mode: 'create' | 'adopt' = 'create',
-  ): ReconcilerPreparedCommit => {
-    const layers = snapshotReadonlyLayers(frame.layers);
-    const primaryToken = prepare(scenePatch, frame.primary, config, mode);
-    const previousLayers = currentLayers;
-    const adoptedLayerElements =
-      mode === 'adopt'
-        ? Array.from(host.children).filter(child => child.getAttribute('data-retikz-readonly-layer') !== null)
-        : [];
-    const previousElements =
-      currentLayerElements.length > 0
-        ? currentLayerElements
-        : adoptedLayerElements.filter(
-            (element): element is SVGElement => element instanceof host.ownerDocument.defaultView!.SVGElement,
-          );
-    let candidateElements: ReadonlyArray<SVGElement> = Object.freeze([]);
-
-    try {
-      candidateElements = Object.freeze(
-        layers.map(layer =>
-          createSvgElement(
-            host.ownerDocument,
-            buildSvgReadonlyLayer(
-              layer,
-              buildSvgFragment(layer.scene, {
-                idPrefix: `${options.idPrefix}-layer-${layer.key}`,
-                animate: false,
-              }),
-            ),
-          ),
-        ),
-      );
-    } catch (cause) {
-      try {
-        runBestEffortCleanup([() => primaryToken.rollback(), () => primaryToken.dispose()]);
-      } catch {
-        // 辅助 Scene 物化错误保持为 prepare 的主因
-      }
-
-      throw cause;
-    }
-
-    let committed = false;
-
-    return Object.freeze({
-      commit: () => {
-        primaryToken.commit();
-
-        for (const element of previousElements) element.remove();
-
-        for (const element of candidateElements) host.appendChild(element);
-        currentLayers = layers;
-        currentLayerElements = candidateElements;
-        committed = true;
-      },
-      rollback: () => {
-        primaryToken.rollback();
-
-        for (const element of candidateElements) element.remove();
-
-        for (const element of previousElements) if (element.parentNode !== host) host.appendChild(element);
-        currentLayers = previousLayers;
-        currentLayerElements = previousElements;
-      },
-      dispose: () => {
-        primaryToken.dispose();
-        if (!committed) for (const element of candidateElements) element.remove();
-      },
-    });
-  };
-
-  return defineRetainedRenderer({
+  return defineRenderer({
     backend: 'svg',
     host,
     capability: 'entity',
-    readonlyLayerCapability: 'supported',
-    prepareMount: (frame, config, mode) => prepareFrame(undefined, frame, config, mode),
-    prepare: (scenePatch, frame, config) => prepareFrame(scenePatch, frame, config),
+    prepareMount: (snapshot, config, mode) => prepare(undefined, snapshot, config, mode),
+    prepare,
     read: () => {
       if (currentSnapshot === undefined)
-        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG retained renderer is not committed');
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG renderer is not committed');
 
       return Object.freeze({
-        frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
+        snapshot: currentSnapshot,
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),
       });
     },
@@ -1792,8 +1664,6 @@ export const createBuiltinSvgRetainedRenderer = (
         () => candidateAnimationCleanup.disposePending(),
         () => {
           currentSnapshot = undefined;
-          currentLayers = Object.freeze([]);
-          currentLayerElements = Object.freeze([]);
           currentOwnedAttributes = new Set();
           currentOwnedStyles = new Set();
           currentElements = createSceneIdentityMap([]);
