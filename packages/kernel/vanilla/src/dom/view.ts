@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
+import { prefersReducedMotion, resolveAnimationEnabled, subscribeReducedMotion } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
   RenderHandlerContribution,
@@ -8,12 +8,13 @@ import type {
   RenderTarget,
   RendererHost,
 } from '@retikz/render/runtime';
-import { builtinRendererFactory, computeDisplaySize, createRenderTarget } from '@retikz/render/runtime';
+import { computeDisplaySize } from '@retikz/render/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputScene } from '../normalize';
 import type { SceneInputBindings, SceneViewOptions } from '../runtime';
 import { SceneRuntime } from '../runtime';
+import { createDomRenderTarget } from './target';
 import type { MountOptions } from './types';
 
 /** 与下一帧场景一起提交的动画配置；Canvas 宿主选项在挂载时确定 */
@@ -45,6 +46,7 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
   private currentAnimation: ViewUpdateOptions;
   private handlerContributions: ReadonlyArray<RenderHandlerContribution> = [];
   private nextRegistration = 0;
+  private unsubscribeMotion?: () => void;
   private rootRemoved = false;
 
   /** 视图挂载的根元素 */
@@ -86,15 +88,16 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
       bindings,
       reconciler,
       createTarget: () => {
-        this.render = createRenderTarget({
-          ...renderer,
-          rendererFactory: rendererFactory ?? builtinRendererFactory,
-          configuration: () => createRenderConfig(this.currentAnimation, this.handlerContributions, canvas),
-        });
+        this.render = createDomRenderTarget(
+          renderer,
+          () => createRenderConfig(this.currentAnimation, this.handlerContributions, canvas),
+          rendererFactory,
+        );
         return this.render.target;
       },
     });
     this.updateHostSize();
+    this.syncMotionSubscription();
   }
 
   /** 用完整 IR 或作者输入替换场景，并原子应用本次动画配置 */
@@ -104,6 +107,7 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
     try {
       this.runtime.replace(source);
       this.updateHostSize();
+      this.syncMotionSubscription();
     } catch (cause) {
       this.currentAnimation = previousAnimation;
       throw cause;
@@ -135,10 +139,21 @@ export class SceneView<TRoot extends RendererHost = RendererHost> {
 
   /** 释放会话资源并移除根元素，重复调用不再卸载 */
   dispose() {
+    this.unsubscribeMotion?.();
+    this.unsubscribeMotion = undefined;
     this.runtime.dispose();
     if (this.rootRemoved) return;
     this.root.remove();
     this.rootRemoved = true;
+  }
+
+  private syncMotionSubscription() {
+    if (this.currentAnimation.animate === undefined && this.currentAnimation.snapshotAt === undefined) {
+      this.unsubscribeMotion ??= subscribeReducedMotion(() => this.runtime.updateTarget());
+    } else {
+      this.unsubscribeMotion?.();
+      this.unsubscribeMotion = undefined;
+    }
   }
 
   /** 仅在编译结果成功提交后同步宿主尺寸 */

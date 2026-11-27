@@ -15,7 +15,11 @@ import { isAutoplayTrigger } from './channels';
 type OptionalGlobals = {
   requestAnimationFrame?: (callback: () => void) => number;
   cancelAnimationFrame?: (id: number) => void;
-  matchMedia?: (query: string) => { matches: boolean } | null;
+  matchMedia?: (
+    query: string,
+  ) =>
+    | (Pick<MediaQueryList, 'matches'> & Partial<Pick<MediaQueryList, 'addEventListener' | 'removeEventListener'>>)
+    | null;
   performance?: { now?: () => number };
 };
 
@@ -224,9 +228,17 @@ export const createClock = (options: ClockOptions): AnimationControls => {
   };
 };
 
+const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
+
 /** 读 `prefers-reduced-motion: reduce`；无 matchMedia（SSR）→ false */
-export const prefersReducedMotion = (): boolean =>
-  environment().matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+export const prefersReducedMotion = (): boolean => environment().matchMedia?.(reducedMotionQuery)?.matches ?? false;
+
+/** 订阅系统动效偏好变化，返回解除订阅的函数 */
+export const subscribeReducedMotion = (notify: () => void): (() => void) => {
+  const media = environment().matchMedia?.(reducedMotionQuery);
+  media?.addEventListener?.('change', notify);
+  return () => media?.removeEventListener?.('change', notify);
+};
 
 /**
  * 把作者动画开关与系统减少动态效果偏好解析为最终播放状态

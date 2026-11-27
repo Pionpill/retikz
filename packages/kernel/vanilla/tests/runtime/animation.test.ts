@@ -286,3 +286,28 @@ describe('mount visible-trigger 监听合帧', () => {
     container.remove();
   });
 });
+
+it('跟随系统偏好时只刷新宿主，不重新编译，释放视图后停止监听', () => {
+  const media = Object.assign(new EventTarget(), { matches: false });
+  const remove = vi.spyOn(media, 'removeEventListener');
+  vi.stubGlobal('matchMedia', () => media);
+  const view = mountSceneView(document.createElement('div'), loadIr);
+  const initial = view.compileResult;
+  expect(view.root.querySelector('style')).not.toBeNull();
+  media.matches = true;
+  media.dispatchEvent(new Event('change'));
+  expect(view.compileResult).toBe(initial);
+  expect(view.root.querySelector('style')).toBeNull();
+  media.matches = false;
+  media.dispatchEvent(new Event('change'));
+  expect(view.root.querySelector('style')).not.toBeNull();
+  view.replace(loadIr, { animate: true });
+  expect(remove).toHaveBeenCalledTimes(1);
+  media.matches = true;
+  media.dispatchEvent(new Event('change'));
+  expect(view.root.querySelector('style')).not.toBeNull();
+  view.replace(loadIr, { animate: undefined });
+  expect(view.root.querySelector('style')).toBeNull();
+  view.dispose();
+  expect(remove).toHaveBeenCalledTimes(2);
+});

@@ -108,6 +108,8 @@ const view = mountSceneView(document.querySelector('#diagram')!, input);
 
 `renderToSvg` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mountSceneView` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` provides `replace`, interaction hydration, animation controls, and disposal.
 
+When neither an explicit playback setting nor a snapshot time is supplied, a mounted view follows changes to the system reduced-motion preference without recompiling the scene. Disposing the view stops the subscription.
+
 `scene({ theme: { name, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization reuses the Theme reference without mutating caller input; both routes finally use the same Core Theme and compile contract.
 
 ## Input normalization and processing

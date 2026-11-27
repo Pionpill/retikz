@@ -41,12 +41,11 @@ export function mountSceneView(
     const host = document.createElement('canvas');
     host.style.objectFit = 'contain';
 
-    let devicePixelRatio = options.canvas?.devicePixelRatio;
-    if (devicePixelRatio === undefined || !Number.isFinite(devicePixelRatio) || devicePixelRatio <= 0) {
-      const ratio = globalThis.devicePixelRatio;
-      devicePixelRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
-    }
-    renderer = { backend: 'canvas', host, immutableOptions: { backend: 'canvas', idPrefix, devicePixelRatio } };
+    renderer = {
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix, devicePixelRatio: options.canvas?.devicePixelRatio },
+    };
   } else {
     const host = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     renderer = { backend: 'svg', host, immutableOptions: { backend: 'svg', idPrefix } };

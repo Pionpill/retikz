@@ -108,6 +108,8 @@ const view = mountSceneView(document.querySelector('#diagram')!, input);
 
 `renderToSvg` 可安全用于 SSR、构建期生成或保存 SVG；`mountSceneView` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `replace`、交互水合、动画控制与释放。
 
+未指定动画开关或静态截帧时间时，已挂载的视图会跟随系统减少动态效果偏好的变化，只更新渲染目标，不重新编译场景。释放视图时会取消订阅。
+
 `scene({ theme: { name, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化沿用 Theme 引用，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
 
 ## 输入归一与 processing

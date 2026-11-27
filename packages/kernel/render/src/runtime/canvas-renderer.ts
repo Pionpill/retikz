@@ -1481,29 +1481,37 @@ export const createBuiltinCanvasRenderer = (
   const candidateHydrationCleanup = createHydrationCleanupQueue();
   const candidateAnimationCleanup = createCanvasAnimationCleanupQueue();
 
-  const imageLoader = createCanvasImageLoader(() => {
+  const redraw = (): void => {
     if (currentSnapshot === undefined || currentConfig === undefined) return;
 
     const time =
       currentAnimation?.controls.time ??
       currentConfig.animation?.snapshotAt ??
       (currentConfig.animation?.enabled === false ? undefined : 0);
+    const hostStyle = readCanvasHostStyle(host);
     const bitmap = createBitmap(
       host,
       resolveCanvasBitmapSize(currentSnapshot, currentConfig, immutableOptions),
       currentSnapshot,
       currentConfig,
       immutableOptions,
-      readCanvasHostStyle(host),
+      hostStyle,
       time,
       undefined,
       imageLoader.getImage,
     );
     currentBitmap = bitmap;
+    currentHostStyle = hostStyle;
     host.width = bitmap.width;
     host.height = bitmap.height;
     paintBitmap(host, bitmap);
     currentAnimation?.renderFrame();
+  };
+  const imageLoader = createCanvasImageLoader(redraw);
+  const themeObserver = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(redraw);
+  themeObserver?.observe(host.ownerDocument.documentElement, {
+    attributes: true,
+    attributeFilter: ['class', 'data-theme', 'style'],
   });
 
   const prepare = (
@@ -1836,6 +1844,7 @@ export const createBuiltinCanvasRenderer = (
           if (currentAnimation === animation) currentAnimation = undefined;
         },
         () => candidateAnimationCleanup.disposePending(),
+        () => themeObserver?.disconnect(),
         () => imageLoader.dispose(),
         () => {
           currentBitmap = undefined;
