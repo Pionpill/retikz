@@ -171,6 +171,13 @@ export const librarySection: Array<Section> = [
         ],
       },
       {
+        id: 'block',
+        label: 'library.standardBlocks',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+      },
+      {
         id: 'collection',
         label: 'library.standardCollections',
         sidebarGroup: 'library.components',
