@@ -19,7 +19,7 @@ import {
   restoreWeaveResources,
   retainWeaveReads,
 } from '../../shared';
-import type { WeavePathState, WeaveReferenceRead } from '../../shared';
+import type { WeaveStages, WeavePathState, WeaveReferenceRead } from '../../shared';
 import {
   comparePathResolutions,
   compareStrokeBindings,
@@ -134,7 +134,7 @@ export const preparePathCompilation = (
 export const executeWeavePath = (
   runtime: CompileRuntime,
   pending: PendingPathEmission,
-  previous?: WeavePathState,
+  previous?: WeaveStages<WeavePathState>,
 ): {
   resolve: NonNullable<WeavePathState['resolve']>;
   compile: NonNullable<WeavePathState['compile']>;
@@ -146,30 +146,40 @@ export const executeWeavePath = (
   const compileInputs = { scopeChain: pending.scopeChain };
   const previousCompile = previous?.compile;
   const previousReads = previous?.referenceReads ?? [];
-  const before = previous?.resolve?.value;
-  const observation = createWeaveObservation(runtime, 'output');
+  const priorResolve = previous?.resolve;
+  const before = priorResolve?.value;
+  let observation: ReturnType<typeof createWeaveObservation> | undefined;
+  let canon = before;
 
-  // 1. 输入与解析上下文相同时复用 canon，否则重新解析并保留等价子产物
-  const canon =
-    before != null &&
-    previousCompile?.diagnostics.length === 0 &&
-    compareProperties({ path: previous!.resolve!.input, ...previous!.resolve!.context }, resolveInputs, { depth: 2 })
-      ? before
-      : retainPathResolution(before, resolvePath(pending.path, createPathResolveContext(observation.runtime, pending)));
+  // 1. 未命中解析阶段时才创建资源与诊断收集器
+  if (
+    priorResolve?.value == null ||
+    previousCompile?.diagnostics.length !== 0 ||
+    priorResolve.context.mode !== resolveInputs.mode ||
+    !jsonStructuralEquals(priorResolve.context.pathDefaults, resolveInputs.pathDefaults) ||
+    !jsonStructuralEquals(priorResolve.input, resolveInputs.path)
+  ) {
+    observation = createWeaveObservation(runtime, 'output');
+    canon = retainPathResolution(
+      before,
+      resolvePath(pending.path, createPathResolveContext(observation.runtime, pending)),
+    );
+  } else {
+    canon = priorResolve.value;
+  }
 
   // 2. 核对引用、编译上下文与解析结果，并要求新旧诊断均允许整体复用
   const referencesValid =
     previousCompile !== undefined && matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack);
-  // ⚡变换链只展开到每项标量字段，保持重建链的值比较而不做无界递归
   const canRetain =
     previousCompile?.diagnostics.length === 0 &&
-    compareProperties(previousCompile.context, compileInputs, { depth: 3 });
+    jsonStructuralEquals(previousCompile.context.scopeChain, compileInputs.scopeChain);
   if (
     before != null &&
     previous?.compile?.value != null &&
     canRetain &&
     referencesValid &&
-    observation.diagnostics.length === 0 &&
+    !observation?.diagnostics.length &&
     comparePathResolutions(before, canon)
   ) {
     restoreWeaveResources(runtime, previousCompile.resources);
@@ -185,6 +195,7 @@ export const executeWeavePath = (
     };
   }
 
+  observation ??= createWeaveObservation(runtime, 'output');
   // 3. 整体不能复用时，选择有效 prepared 槽位并恢复其使用的绘制资源
   const selected =
     before != null && previous?.compile?.value != null && canRetain

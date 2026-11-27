@@ -54,8 +54,6 @@ export type WeaveElementExecution = {
 export type WeaveExecutionContext = {
   /** 结构、名称或命名空间已变动，旧声明与输出地址不可复用 */
   indexesChanged: boolean;
-  /** 需要从完整 Source 获取运行时实例绑定 */
-  hasBoundInputs: boolean;
   /** 本批作者输入 */
   source: IRScene;
   /** 本次独占计算环境 */

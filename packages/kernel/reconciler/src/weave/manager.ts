@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition, IRChild, IRScene, CanonicalScopeInheritance } from '@retikz/core';
-import { resolveScopeInheritance } from '@retikz/core';
+import { selectCompositeInputScope, resolveScopeInheritance } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 
@@ -218,13 +218,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       /** 没有声明编辑且未强制全量时沿用已有快照，否则只在此统一启动一次编译调度 */
       let prepared = { ...completed, visited: 0 };
       if (modified || forceFull) {
-        if (this.options.compositeInputs !== undefined)
-          batch.source = {
-            ...batch.source,
-            children: transaction
-              .readState(persistent.root)
-              .children.map(entry => editor.serializeEntryDeclaration(entry)),
-          };
         const compilation = this.execute();
         prepared = { visited: batch.visited, compilation };
       }
@@ -267,6 +260,12 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     const batch = this.batch;
     const { transaction, editor, tracker } = batch;
     const root = this.state.persistent.root;
+    const runtime = createCompileRuntime(
+      batch.source,
+      batch.updating ? this.context.output : this.options,
+      this.context.execution,
+      this.context.shared,
+    );
     const keyOf = (path: PropertyPath) => JSON.stringify(path);
 
     /** 建立作者条目、继承上下文与名称索引，不展开 Composite 生成树，也不执行图元计算 */
@@ -286,6 +285,11 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       for (const [index, child] of children.entries()) {
         const entry = editor.createEntry(child, parent, style);
         tracker.registerEntryBinding(entry);
+        if (entry.type === 'composite' && this.options.compositeInputs)
+          transaction.editState(entry).bindings = selectCompositeInputScope(
+            runtime.context.compositeInputs,
+            createCompileChildPath(prefix, index),
+          ).bindings;
         if (!('namespace' in child) && child.id !== undefined) ids.set(child.id, entry);
         if (!('namespace' in child) && child.type === 'node') for (const id of child.aliasIds ?? []) ids.set(id, entry);
         if (entry.type === 'scope' && !('namespace' in child) && child.type === 'scope') {
@@ -325,7 +329,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
 
     /** 按作者身份去重实际计算计数，避免同一条目的多个阶段重复增加 visited */
     const counted = new Set<WeaveEntry>();
-    const runtime = createCompileRuntime(batch.source, this.options, this.context.execution, this.context.shared);
 
     /** 分别保存缓存和条目读取事实，再重建实际依赖；仅更新输出诊断时显式沿用旧读取数组 */
     const recordComputed: WeaveExecutionContext['recordComputed'] = (entry, metadata, reused, referenceReads) => {
@@ -420,7 +423,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     /** 调度器通过这些能力读取候选状态并回写结果，不在此切换已提交状态槽 */
     const context = {
       indexesChanged: batch.indexesChanged,
-      hasBoundInputs: this.options.compositeInputs !== undefined,
       source: batch.source,
       runtime,
       recordComputed,

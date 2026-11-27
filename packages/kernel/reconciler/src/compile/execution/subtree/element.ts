@@ -22,6 +22,7 @@ import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
 import { createExecutionInvariantError } from '../../runtime';
 import { createCompileChildPath, enrichLayoutProbeError, orderCompileArtifacts } from '../../shared';
+import type { CompositeMemoSlot } from '../composite';
 import { compileComposite } from '../composite';
 import { visitCoordinate, visitNode, queuePathChild, flushPendingPathEmissions } from '../leaf';
 import { visitScope } from '../scope';
@@ -164,6 +165,7 @@ export class CompileElementExecutor {
     scopeOccurrence?: CompileOccurrenceLocator,
     compositeDepth = this.options.compositeDepth ?? 0,
     authoredInput?: CompositeInputScope,
+    memoSlot?: CompositeMemoSlot,
   ): CompileOwnerKey | undefined {
     const generated = scopeOccurrence !== undefined || (isRoot ? (this.options.generated ?? false) : false);
     const semanticOwner =
@@ -202,6 +204,7 @@ export class CompileElementExecutor {
       compositeDepth,
       generated,
       semanticOwner,
+      memoSlot,
     );
     return semanticOwner;
   }
@@ -215,11 +218,12 @@ export class CompileElementExecutor {
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: CompileOwnerKey,
+    memoSlot?: CompositeMemoSlot,
   ): void {
     try {
       this.runtime.state.execution.withWarningOccurrence(occurrence, () => {
         {
-          this.compileElement(child, index, frame, occurrence, compositeDepth, generated, semanticOwner);
+          this.compileElement(child, index, frame, occurrence, compositeDepth, generated, semanticOwner, memoSlot);
         }
       });
     } catch (thrown) {
@@ -246,12 +250,14 @@ export class CompileElementExecutor {
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: CompileOwnerKey,
+    memoSlot?: CompositeMemoSlot,
   ): void {
     if ('namespace' in child) {
       const contribution = compileComposite(
         {
           runtime: this.runtime,
           host: {
+            compositeDispatcher: this.output.compositeDispatcher,
             compileSubtree: this.options.compileSubtree,
             acceptContribution: this.acceptContribution.bind(this),
             compilePreparedChild: (...args) => this.compilePreparedChild(...args),
@@ -277,6 +283,7 @@ export class CompileElementExecutor {
         occurrence,
         compositeDepth,
         {
+          memoSlot,
           probe: this.options.probe,
           measurementAxis: child === this.rootChildren[0] ? this.options.measurementAxis : undefined,
           semanticOwner,
@@ -288,10 +295,10 @@ export class CompileElementExecutor {
     const elementRuntime = this.runtime;
     switch (child.type) {
       case 'node':
-        visitNode(elementRuntime, this.output, child, index, frame, semanticOwner);
+        visitNode(elementRuntime, this.output, child, index, frame, occurrence, semanticOwner);
         break;
       case 'coordinate':
-        visitCoordinate(elementRuntime, child, index, frame);
+        visitCoordinate(elementRuntime, child, index, frame, occurrence, this.output);
         break;
       case 'scope':
         visitScope(

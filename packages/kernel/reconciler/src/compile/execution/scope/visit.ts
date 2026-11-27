@@ -101,8 +101,18 @@ export const prepareScopeExecution = (
     generatedOccurrence === undefined
       ? formatPropertyPath([...createCompileChildPath(locatorPrefix, index), 'theme'])
       : `${formatCompileOccurrence(generatedOccurrence)}.scope.theme`;
+  // 生成 Scope 在此仅核对自身属性，不因外壳命中而跳过子项
   const canon =
     resolvedScope ??
+    (generatedOccurrence &&
+      output.compositeDispatcher?.resolveScope(
+        runtime,
+        generatedOccurrence,
+        ir,
+        createCompileChildPath(locatorPrefix, index),
+        frame.context,
+        themePath,
+      )) ??
     resolveScope(ir, {
       nodeDistance: runtime.context.layout.nodeDistance,
       parent: inheritedStyle,
@@ -319,17 +329,55 @@ export const prepareScopeExecution = (
 };
 
 /** 完整构建按语义顺序执行 Scope，增量更新将实际阶段操作交给驱动 */
-export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): void => {
+const compileScopeTree = (...args: Parameters<typeof prepareScopeExecution>): void => {
+  const [runtime, output, , ir, , frame, options] = args;
+  const occurrence = options?.generatedOccurrence;
+  const warnings = runtime.state.workspace.diagnosticCollector.warnings;
+  const start = warnings.length;
   const steps = prepareScopeExecution(...args);
   try {
     steps.children();
-    const compiled = compileScope(steps.canon, steps.compileContext, {
-      layout: { preparation: steps.preparation, envelope: steps.unusedEnvelope },
-    });
+    // 子项已处理，此处复用的是 Scope 自身的编译阶段，而非整块输出
+    const compiled =
+      (occurrence &&
+        output.compositeDispatcher?.compileScope(
+          runtime,
+          occurrence,
+          ir,
+          frame.context,
+          steps,
+          warnings.slice(start),
+        )) ??
+      compileScope(steps.canon, steps.compileContext, {
+        layout: { preparation: steps.preparation, envelope: steps.unusedEnvelope },
+      });
     steps.project(compiled);
     steps.paths();
   } finally {
     steps.dispose();
   }
   steps.publish();
+};
+
+/** 仅对输出阶段独立、已闭合的基础子树尝试整块复用 */
+export const visitScope = (...args: Parameters<typeof prepareScopeExecution>): void => {
+  const [runtime, output, host, ir, index, frame, options] = args;
+  const occurrence = options?.generatedOccurrence;
+  const dispatcher = output.compositeDispatcher;
+  if (!dispatcher?.block || !occurrence || options.captureScopeTargets || runtime.state.execution.provenanceTracker) {
+    compileScopeTree(...args);
+    return;
+  }
+  const blockStage =
+    options.blockStage ??
+    (!options.compileNested && ir.children.every(child => !('namespace' in child) && child.type !== 'scope')
+      ? { input: [ir], layouts: [] }
+      : undefined);
+  if (!blockStage) {
+    compileScopeTree(...args);
+    return;
+  }
+  dispatcher.block(runtime, output, frame, occurrence, blockStage.input, blockStage.layouts, local =>
+    compileScopeTree(runtime, output, host, ir, index, local, options),
+  );
 };

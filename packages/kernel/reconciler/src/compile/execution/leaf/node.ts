@@ -1,4 +1,11 @@
-import type { IRNode, CanonicalNode, CompiledNode, NodeCompileContext, NodeResolveContext } from '@retikz/core';
+import type {
+  CompileOccurrenceLocator,
+  IRNode,
+  CanonicalNode,
+  CompiledNode,
+  NodeCompileContext,
+  NodeResolveContext,
+} from '@retikz/core';
 import { compileNode, projectLayoutWithTransform, projectNodeGeometry, resolveNode } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 
@@ -16,11 +23,18 @@ export const visitNode = (
   ir: IRNode,
   index: number,
   frame: SubtreeCompileRuntime,
+  occurrence: CompileOccurrenceLocator,
   semanticOwner?: CompileOwnerKey,
 ): void => {
   const nodeIrPath = createCompileChildPath(frame.context.pathPrefix, index);
-  const canon = resolveNode(ir, createNodeResolveContext(runtime, nodeIrPath, frame.context));
-  const compiled = compileNode(canon, createNodeCompileContext(runtime, canon, nodeIrPath, frame.context));
+  const compileDirectly = () => {
+    const canon = resolveNode(ir, createNodeResolveContext(runtime, nodeIrPath, frame.context));
+    return compileNode(canon, createNodeCompileContext(runtime, canon, nodeIrPath, frame.context));
+  };
+  // 生成 Node 按出现位置核对解析与编译记录；复用的产物仍由本轮装配
+  const compiled = outputState.compositeDispatcher
+    ? outputState.compositeDispatcher.node(runtime, occurrence, ir, nodeIrPath, frame.context)
+    : compileDirectly();
   assembleNode(runtime, outputState, ir, nodeIrPath, frame, compiled, semanticOwner);
 };
 

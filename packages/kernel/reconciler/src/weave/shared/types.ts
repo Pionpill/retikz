@@ -1,5 +1,6 @@
 import type {
   CompileWarning,
+  CompositeInputBinding,
   ReferenceReadKind,
   CompiledNode,
   CompiledCoordinate,
@@ -28,7 +29,7 @@ import type {
 } from '@retikz/core';
 import type { AxisAlignedBounds } from '@retikz/math';
 
-import type { SharedCompileContext } from '../../compile';
+import type { RetainedProbeOutput, SharedCompileContext } from '../../compile';
 import type { WeaveChangeKind, WeaveChangeSource, WeaveOperationKind } from './constants';
 import type { WeaveContribution } from './contribution';
 import type { WeaveReferenceRead } from './reference';
@@ -279,10 +280,46 @@ export type WeaveScopeEntry = {
   pending: WeaveScopeState | null;
 };
 
-/** Composite 只保存声明与贡献，不伪造基础元素的确定化或编译产物 */
+/** 作者元素与生成元素共享的阶段记录，不包含树编辑状态 */
+export type WeaveStages<T extends WeaveNodeState | WeavePathState | WeaveCoordinateState | WeaveScopeState> = Pick<
+  T,
+  'resolve' | 'compile' | 'referenceReads'
+>;
+
+/** 同一作者实例中本轮执行的各类生成元素，按输出或试算位置隔离 */
+export type WeaveCompositeStage = {
+  // 按生成位置保存整个 Scope 的输出；与仅记录 Scope 自身编译阶段的 scopes 分开
+  scopeBlocks: Map<
+    string,
+    {
+      // 按结构比较的块声明，保留子项及重放包装的顺序
+      input: ReadonlyArray<unknown>;
+      // 按顺序逐项比较身份的布局结果，不保存回调的 replay 句柄
+      layouts: ReadonlyArray<object>;
+      // 影响整块输出的变换、继承、布局、路径前缀及几何收集设置
+      context: ReadonlyArray<unknown>;
+      // 命中后重新装配的输出及需要在当前作用域发布的名称绑定
+      contribution: WeaveContribution;
+    }
+  >;
+  /** 完整试算命中时，连同内部元素阶段一起保留；局部失效时仍可复用 */
+  probes: Map<string, { elements: WeaveCompositeStage; output?: RetainedProbeOutput }>;
+  nodes: Map<string, WeaveStages<WeaveNodeState>>;
+  coordinates: Map<string, WeaveStages<WeaveCoordinateState>>;
+  paths: Map<string, WeaveStages<WeavePathState>>;
+  scopes: Map<string, WeaveStages<WeaveScopeState>>;
+};
+
+/** Composite 独立保存实例状态与输出贡献，生成元素阶段仅在该实例内部可见 */
 type WeaveCompositeState = WeaveElementStateBase & {
   /** 自身输入与有效上下文 */
   origin: Readonly<InputWeave<IRComposite>>;
+  /** 本实例上次提交的领域私有状态 */
+  memo?: object;
+  /** 上一次提交的生成元素阶段 */
+  stage?: WeaveCompositeStage;
+  /** 本实例的相对输入绑定 */
+  bindings?: ReadonlyArray<CompositeInputBinding>;
   /** 作者 Composite 的完整实例输出 */
   contribution?: WeaveContribution;
 };
@@ -405,7 +442,9 @@ type WeaveUpdateOperation = {
   /** 已有元素的地址 */
   target: WeaveTarget;
   /** 类别必须与目标一致，省略旧覆盖字段表示移除覆盖 */
-  input: InputWeaveOwn;
+  input: InputWeaveOwn | IRComposite;
+  /** 新声明的相对输入绑定，省略表示无绑定 */
+  bindings?: ReadonlyArray<CompositeInputBinding>;
 };
 
 /** 删除元素；Scope 连同其声明子树删除 */

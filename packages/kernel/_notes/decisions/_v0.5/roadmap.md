@@ -96,6 +96,8 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 
 Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域包提供 Definition 和原子阶段；Weave 保存可安全复用的实际产物，不另建简化编译模型：[080](./080-unified-reconciler-compilation.md)。
 
+Composite 可自行管理 pipeline 状态，Kernel 保留实例提交和现有局部输出语义：[089](./089-incremental-composite-contract.md)。
+
 第二阶段对接 Core 时建立 Scope 定位能力：增量模式下所有 Scope 均具备同一 Weave 树 内唯一的 id，未提供时自动分配，并在对应 Scope 生命周期内保持稳定；WeaveRoot 维护 Scope id 注册表，root 提供同等定位入口。自动 id 属于 Weave 运行时信息，不回写用户 IR，不额外触发包络计算，也不受子元素局部命名空间影响。为后续水合与 API 更新保留“所属 Scope id + 直接 children 索引”的元素定位关联；索引只对对应结构版本有效，新旧 Scope 的匹配及结构变化后的地址有效性须在接入时明确。上层可直接定位并更新 Scope，由 Weave 传播上下文，无需上层逐元素提交修改；水合交互与 Plot 实际接入仍按各自后续范围推进。
 
 后续待办：接通 Weave 元素地址、渲染快照与水合回调。SVG / Canvas 使用统一的事件目标契约，携带所属容器 scopeId 与直接 children 下标，并关联对应快照版本；同一声明元素生成的多个绘制图元映射到同一个元素地址，由 Reconciler 定位节点，不对外暴露可变 WeaveNode。接入时明确完整重建、删除与重排后的地址失效规则，防止旧事件误更新新树；该能力随后续水合接入处理，不纳入当前基础编译实现。

@@ -13,6 +13,7 @@ import {
   projectReferenceGeometry,
   projectPublishedReference,
 } from '@retikz/core';
+import { jsonStructuralEquals } from '@retikz/foundation';
 
 import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError } from '../../runtime';
@@ -48,8 +49,8 @@ export const commitCompositeReplay = (
   const { wrapperClipPath, transaction: preparedTransaction } = prepared;
   const transaction =
     preparedTransaction.materialize !== undefined &&
-    (preparedTransaction.styleFingerprint !== JSON.stringify(frame.context.inheritance.defaults) ||
-      preparedTransaction.themeFingerprint !== JSON.stringify(frame.context.inheritance.theme))
+    (!jsonStructuralEquals(preparedTransaction.defaults, frame.context.inheritance.defaults) ||
+      !jsonStructuralEquals(preparedTransaction.theme, frame.context.inheritance.theme))
       ? preparedTransaction.materialize({
           scopeChain: frame.context.transformChains,
           scopeDefaults: frame.context.inheritance.defaults,

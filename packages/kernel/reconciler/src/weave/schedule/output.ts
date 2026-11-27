@@ -24,6 +24,33 @@ import type { WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
 import type { WeaveAssembledOutput, WeaveElementExecution, WeaveExecutionContext, WeaveUpdateRequest } from './types';
 
+/** 创建单个输出块的局部收集容器 */
+export const createWeaveOutputState = (): SubtreeCompileState => ({
+  primitives: [],
+  paths: [],
+  geometries: [],
+  publications: [],
+  bounds: [],
+  allocations: [],
+  alignmentGuides: [],
+  artifacts: [],
+});
+
+/** 按声明顺序发布已完成的局部贡献 */
+export const appendWeaveOutput = (
+  destination: SubtreeCompileState,
+  contribution: WeaveAssembledOutput,
+  includeLayouts = true,
+) => {
+  destination.primitives.push(...contribution.primitives);
+  if (includeLayouts) destination.geometries.push(...contribution.geometries);
+  destination.publications.push(...contribution.publications);
+  destination.bounds.push(...contribution.bounds);
+  destination.allocations.push(...contribution.allocations);
+  destination.alignmentGuides.push(...contribution.alignmentGuides);
+  destination.artifacts.push(...contribution.artifacts);
+};
+
 /** 本批输出组装所需的执行状态与阶段调度能力 */
 type WeaveOutputFlowContext = {
   runtime: CompileRuntime;
@@ -112,11 +139,11 @@ export const createWeaveOutputFlow = ({
       return result;
     }
     const scope = transaction.readState(entry);
-    const childState = emptyOutput();
+    const childState = createWeaveOutputState();
     // ⚡具名 Scope 只投影自己的包络，输出收集无需再复制子布局
     const includeLayouts = scope.origin.own.id === undefined && !contextOf(scope.parent).skipGeometries;
-    for (const child of scope.children) appendState(childState, outputOf(child), includeLayouts);
-    const result = emptyOutput();
+    for (const child of scope.children) appendWeaveOutput(childState, outputOf(child), includeLayouts);
+    const result = createWeaveOutputState();
     importSceneResources(
       scope.compile?.resources ?? { paints: [], clips: [] },
       runtime.state.workspace.paintRegistry,
@@ -162,28 +189,23 @@ export const createWeaveOutputFlow = ({
     assembled.set(entry, result);
     return result;
   };
-  const emptyOutput = (): SubtreeCompileState => ({
-    primitives: [],
-    paths: [],
-    geometries: [],
-    publications: [],
-    bounds: [],
-    allocations: [],
-    alignmentGuides: [],
-    artifacts: [],
-  });
+
   /** 包络读取清洁布局，不提前物化绘制或来源所有者 */
   const layoutOf = (entry: WeaveEntry, includeLayouts = true): WeaveAssembledOutput => {
     if (entry.type !== 'scope') return transaction.readState(entry).contribution!.output;
     const state = transaction.readState(entry);
-    const children = emptyOutput();
+    const children = createWeaveOutputState();
     for (const child of state.children) {
       if (child.type === 'path') continue;
       ensure(child);
       if (child.type === 'scope') requireProjection(child);
-      appendState(children, executions.get(child)?.frame.state ?? layoutOf(child, includeLayouts), includeLayouts);
+      appendWeaveOutput(
+        children,
+        executions.get(child)?.frame.state ?? layoutOf(child, includeLayouts),
+        includeLayouts,
+      );
     }
-    const result = emptyOutput();
+    const result = createWeaveOutputState();
     const compiled = state.compile!.value;
     if (includeLayouts)
       result.geometries.push(
@@ -196,15 +218,6 @@ export const createWeaveOutputFlow = ({
       );
     result.primitives.push(...children.primitives);
     return result;
-  };
-  const appendState = (destination: SubtreeCompileState, contribution: WeaveAssembledOutput, includeLayouts = true) => {
-    destination.primitives.push(...contribution.primitives);
-    if (includeLayouts) destination.geometries.push(...contribution.geometries);
-    destination.publications.push(...contribution.publications);
-    destination.bounds.push(...contribution.bounds);
-    destination.allocations.push(...contribution.allocations);
-    destination.alignmentGuides.push(...contribution.alignmentGuides);
-    destination.artifacts.push(...contribution.artifacts);
   };
 
   /** 按声明顺序聚合局部产物，不进行领域计算或发现环境 */
@@ -277,5 +290,5 @@ export const createWeaveOutputFlow = ({
     collectDeclarations(root);
     transaction.editState(root).uniqueDeclarations = unique;
   };
-  return { outputOf, layoutOf, appendState, append, collectDeclarationsIfChanged };
+  return { outputOf, layoutOf, append, collectDeclarationsIfChanged };
 };

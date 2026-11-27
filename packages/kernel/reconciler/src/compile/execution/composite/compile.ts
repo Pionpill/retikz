@@ -37,12 +37,13 @@ import { snapshotAlignmentGuides, snapshotAllocationBounds } from './layout';
 import { compileCompositeOutput } from './output';
 import { preflightCompositeOutputs } from './preflight';
 import type { CompositeProbeContext } from './probe';
-import type { CompositeExecutionContext } from './types';
+import type { CompositeExecutionContext, CompositeMemoSlot } from './types';
 
 /** 当前组件的执行模式、测量轴及输出来源归属 */
 type CompositeCompileOptions = Pick<SubtreeCompileOptions, 'probe' | 'measurementAxis'> & {
   /** 当前组件的语义来源 owner */
   semanticOwner?: CompileOwnerKey;
+  memoSlot?: CompositeMemoSlot;
 };
 
 /**
@@ -50,7 +51,7 @@ type CompositeCompileOptions = Pick<SubtreeCompileOptions, 'probe' | 'measuremen
  * @description 测量分支返回冻结的尺寸贡献；完整布局分支返回子项、显式布局信息和领域产物的快照，供后续预检与编译消费
  */
 const snapshotCompositeCompileResult = (
-  callbackResult: CompositeEvaluationResult<JsonValue>,
+  callbackResult: CompositeEvaluationResult<JsonValue, object>,
   definition: Pick<ReturnType<typeof resolveComposite>, 'artifactSchema' | 'namespace' | 'type'>,
   { runtime, owner, key, occurrence }: Pick<CompositeProbeContext, 'runtime' | 'owner' | 'key' | 'occurrence'>,
   measurementAxis?: LayoutMeasurementAxis,
@@ -170,8 +171,9 @@ const evaluateCompositeCallback = (
   irPath: PropertyPath,
   context: CompositeProbeContext,
   measurementAxis?: LayoutMeasurementAxis,
+  memoSlot?: CompositeMemoSlot,
 ) => {
-  let callbackResult: CompositeEvaluationResult<JsonValue>;
+  let callbackResult: CompositeEvaluationResult<JsonValue, object>;
   const callbackContext = createCompositeCallbackContext(
     callable.source,
     frame,
@@ -182,7 +184,8 @@ const evaluateCompositeCallback = (
 
   /** 执行组件回调：包装外部异常 */
   try {
-    callbackResult = callable.compile(callable.ir, callbackContext(frame.context.inheritance.theme));
+    callbackResult = callable.compile(callable.ir, callbackContext(frame.context.inheritance.theme), memoSlot?.memo);
+    if (memoSlot && !('kind' in callbackResult)) memoSlot.memo = callbackResult.memo;
   } catch (thrown) {
     if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 
@@ -307,7 +310,7 @@ export const compileComposite = (
   const context = { runtime, host, owner, key, occurrence, compositeDepth };
 
   /** 尺寸贡献直接返回给测量方，完整布局结果继续编译子项或提交 replay */
-  const result = evaluateCompositeCallback(callable, frame, irPath, context, measurementAxis);
+  const result = evaluateCompositeCallback(callable, frame, irPath, context, measurementAxis, options.memoSlot);
   if (result.kind === 'contribution') return result.contribution;
 
   compileCompositeLayout(result, frame, context, semanticOwner);

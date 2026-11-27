@@ -260,6 +260,11 @@ export class NamespaceStack {
     }
   }
 
+  /** 输出块重放前核对本层重名；外层同名仍遵循正常遮蔽规则 */
+  hasLocalName(id: string): boolean {
+    return this.frameStack[this.frameStack.length - 1].entryMap.has(id);
+  }
+
   /** 当前栈深（≥ 1；根 frame 永远存在） */
   get depth(): number {
     return this.frameStack.length;

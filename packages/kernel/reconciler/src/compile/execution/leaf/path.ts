@@ -16,7 +16,7 @@ import type { CompileOwnerKey } from '../../provenance';
 import { createExecutionInvariantError } from '../../runtime';
 import type { CompileRuntime } from '../../runtime';
 import { createCompileChildPath } from '../../shared';
-import type { TreeOutputState, InternalScenePrimitive } from '../shared';
+import type { CompositeElementDispatcher, TreeOutputState, InternalScenePrimitive } from '../shared';
 import { PATH_PLACEHOLDER, createTreePositionContext } from '../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 
@@ -88,8 +88,21 @@ export const flushPendingPathEmissions = (
 ): void => {
   if (pendingPaths.length === 0) return;
 
+  // 等名称注册完毕才核对生成 Path 的阶段记录，使引用目标按本轮几何解析
+  const { compositeDispatcher } = output;
+  const compileWithDispatcher = (dispatcher: CompositeElementDispatcher, pending: PendingPathEmission) => {
+    const namespace = runtime.state.execution.namespaceStack;
+    namespace.setPhase('resolving');
+    try {
+      return dispatcher.path(runtime, pending);
+    } finally {
+      namespace.setPhase('registering');
+    }
+  };
   const compiled = pendingPaths.map(pending =>
-    runtime.state.execution.withWarningOccurrence(pending.occurrence, () => compilePendingPath(runtime, pending)),
+    runtime.state.execution.withWarningOccurrence(pending.occurrence, () =>
+      compositeDispatcher ? compileWithDispatcher(compositeDispatcher, pending) : compilePendingPath(runtime, pending),
+    ),
   );
   assemblePaths(runtime, output, pendingPaths, compiled);
 };

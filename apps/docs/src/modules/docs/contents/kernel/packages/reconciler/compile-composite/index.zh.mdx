@@ -54,6 +54,12 @@ const probe = context.measureChild(child, proposal, 'y');
 - **试排**：调用 `layoutChild` 时，<ApiSourceLink label="evaluateCompositeLayout" path="packages/kernel/reconciler/src/compile/execution/composite/probe.ts" startLine={55}>`evaluateCompositeLayout`</ApiSourceLink> 在隔离环境中计算子树。组件可以读取占用边界和对齐信息来决定如何放置子项；Reconciler 通过回放凭证关联本次试排的图元、资源和警告。舍弃试排结果不会改变父帧。
 - **回放**：组件用 `context.replay(result, wrapper)` 创建句柄，可附上放置变换或裁剪。Reconciler 通过 <ApiSourceLink label="preflightCompositeOutputs" path="packages/kernel/reconciler/src/compile/execution/composite/preflight.ts" startLine={14}>`preflightCompositeOutputs`</ApiSourceLink> 检查返回的句柄归属和重复使用，再由 <ApiSourceLink label="commitCompositeReplay" path="packages/kernel/reconciler/src/compile/execution/composite/replay.ts" startLine={32}>`commitCompositeReplay`</ApiSourceLink> 按输出顺序提交图元、资源和布局贡献。具名几何也随放置变换更新，后续连线才能找到最终位置。
 
+## 增量会话中的组件私有状态
+
+更新作者声明的 Composite 时，按所属 Scope 与直接子项下标提交完整声明。可选的相对输入绑定只作用于该声明，省略即解除。生成的子项仍按 Scope 可见性被引用，不是独立的批次更新地址。
+
+同一个编译回调可读取第三个参数 `memo`，并通过布局结果的同名字段返回下一轮可用的数据。定义的 `TMemo` 泛型约束传入和返回的 `memo`，默认 `never` 表示不提供这项数据。首帧没有旧状态；只有同实例、同定义、位置兼容且成功提交的状态可用于后续增量计算。完整替换不继承状态。不要修改旧状态、把它写入 Scene，或保存本轮布局与 replay 句柄。不需要缓存的定义忽略这个参数即可。
+
 ## 延伸阅读
 
 [运行状态](/kernel/packages/reconciler/compile-state)介绍测量缓存和试算工作区的生命周期；[作用域与遍历](/kernel/packages/reconciler/compile-traversal)解释父树如何消费布局和几何贡献。

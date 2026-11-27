@@ -19,14 +19,13 @@ const compareTransform = (previous: CanonicalScope['transform'], current: Canoni
   (jsonStructuralEquals(previous.position, current.position) &&
     jsonStructuralEquals(previous.transforms, current.transforms));
 
-/** 比较 Scope 属性；扩展 shape/clip 参数按解析值比较，能力仍按身份比较 */
-export const compareCanonicalScopes = (previous: CanonicalScope, current: CanonicalScope): boolean =>
+/** 只比较 Scope 自身编译属性；继承配置由子项消费，子几何在编译上下文中核对 */
+export const compareScopeCompileProperties = (previous: CanonicalScope, current: CanonicalScope): boolean =>
   previous === current ||
   (previous.envelope.shape.definition === current.envelope.shape.definition &&
     jsonStructuralEquals(previous.envelope.shape.params, current.envelope.shape.params) &&
     previous.envelope.kind === current.envelope.kind &&
     previous.localNamespace === current.localNamespace &&
-    compareInheritance(previous.inheritance, current.inheritance) &&
     compareTransform(previous.transform, current.transform) &&
     compareProperties(previous.style, current.style) &&
     compareProperties(previous.animations, current.animations) &&
@@ -39,13 +38,11 @@ export const compareScopeCompileInputs = (
   previous: NonNullable<WeaveScopeState['compile']>['context'],
   current: NonNullable<WeaveScopeState['compile']>['context'],
 ): boolean =>
-  compareProperties(previous, current) ||
+  previous === current ||
   (previous.childCount === current.childCount &&
-    compareProperties(previous.preparation.positionTarget, current.preparation.positionTarget) &&
-    compareProperties(previous.preparation.preliminaryTransforms, current.preparation.preliminaryTransforms, {
-      depth: 2,
-    }) &&
-    compareProperties(previous.scopeChain, current.scopeChain, { depth: 2 }) &&
+    jsonStructuralEquals(previous.preparation.positionTarget, current.preparation.positionTarget) &&
+    jsonStructuralEquals(previous.preparation.preliminaryTransforms, current.preparation.preliminaryTransforms) &&
+    jsonStructuralEquals(previous.scopeChain, current.scopeChain) &&
     (previous.layouts === current.layouts ||
       (previous.layouts.length === current.layouts.length &&
         previous.layouts.every((layout, index) =>

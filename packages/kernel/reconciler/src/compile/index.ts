@@ -26,6 +26,7 @@ export type {
   SubtreeCompileContext,
   SubtreeCompileRuntime,
   SubtreeCompileState,
+  RetainedProbeOutput,
   TreeOutputState,
 } from './execution';
 export * from './provenance';

@@ -35,6 +35,8 @@ export type CompositeReplayMaterializeContext = Readonly<{
 
 /** 保存布局探测的完整副作用快照，使成功结果可在最终位置仅重放一次 */
 export type CompositeReplayTransaction = {
+  /** 已验证的独立布局快照身份；输出块不持有回调凭证 */
+  layoutIdentity?: object;
   /** 创建 transaction 的 layout-aware composite callback owner */
   owner: CompositeCompileOwner;
   /** probe 根 occurrence，用于 replay 时保留 probe 内部路径后缀 */
@@ -63,10 +65,10 @@ export type CompositeReplayTransaction = {
   warnings: Array<CompileWarning>;
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeArtifact>;
-  /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
-  styleFingerprint: string;
-  /** probe 时的有效 Theme 语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
-  themeFingerprint: string;
+  /** probe 时的有效样式，用于判断 replay 是否需要在新 Scope 中重新物化 */
+  defaults: MergedScopeDefaults;
+  /** probe 时的有效 Theme ，用于判断 replay 是否需要在新 Scope 中重新物化 */
+  theme: CanonicalTheme;
   /** replay transaction 是否已经在当前 Scope preliminary chain 中完成 layout publication 投影 */
   scopeChainApplied?: boolean;
   /** 在 authored Scope 样式 / Theme 改变时重新走 Core probe channel 的内部物化器 */

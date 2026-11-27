@@ -7,12 +7,12 @@ import {
 } from '@retikz/core';
 import type { IRScope, CompileWarning } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
-import { compareProperties, formatPropertyPath } from '@retikz/foundation';
+import { jsonStructuralEquals, formatPropertyPath } from '@retikz/foundation';
 
 import type { CompileRuntime, ScopeExecutionSteps, SubtreeCompileContext } from '../../../compile';
 import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
-import type { WeaveScopeState, WeaveReferenceRead } from '../../shared';
-import { compareCanonicalScopes, compareScopeCompileInputs, retainCanonicalScope } from './compare';
+import type { WeaveStages, WeaveScopeState, WeaveReferenceRead } from '../../shared';
+import { compareScopeCompileProperties, compareScopeCompileInputs, retainCanonicalScope } from './compare';
 import { updateWeaveScopeEnvelope } from './envelope';
 
 /** 在后代执行前，按自身输入与继承上下文复用或解析 Scope 配置 */
@@ -21,14 +21,15 @@ export const resolveWeaveScope = (
   child: Omit<IRScope, 'children'>,
   path: PropertyPath,
   context: SubtreeCompileContext,
-  previous?: WeaveScopeState,
+  previous?: WeaveStages<WeaveScopeState>,
+  themePath?: string,
 ) => {
   // 1. 输入与继承上下文相同且旧编译无诊断时，复用供后代继承的 canon
-  const resolveInputs = { child, inheritedStyle: context.inheritance };
   if (
     previous?.resolve?.value != null &&
     previous.compile?.diagnostics.length === 0 &&
-    compareProperties({ child: previous.resolve.input, ...previous.resolve.context }, resolveInputs, { depth: 2 })
+    jsonStructuralEquals(previous.resolve.input, child) &&
+    jsonStructuralEquals(previous.resolve.context.inheritedStyle, context.inheritance)
   )
     return previous.resolve.value;
 
@@ -40,7 +41,7 @@ export const resolveWeaveScope = (
       parent: context.inheritance,
       ...runtime.context.registries,
       irPath: path,
-      themePath: `${formatPropertyPath(path)}.theme`,
+      themePath: themePath ?? `${formatPropertyPath(path)}.theme`,
     }),
   );
 };
@@ -53,7 +54,7 @@ export const executeWeaveScope = (
   steps: ScopeExecutionSteps,
   preparedDiagnostics: ReadonlyArray<CompileWarning>,
   preparedReads: ReadonlyArray<WeaveReferenceRead>,
-  previous?: WeaveScopeState,
+  previous?: WeaveStages<WeaveScopeState>,
 ) => {
   // 1. 以已完成的准备结果、子布局和变换等通道作为编译复用依据
   const compileInputs = {
@@ -73,7 +74,7 @@ export const executeWeaveScope = (
     previous.compile != null &&
     previousCompile?.diagnostics.length === 0 &&
     preparedDiagnostics.length === 0 &&
-    compareCanonicalScopes(previous.resolve.value, canon) &&
+    compareScopeCompileProperties(previous.resolve.value, canon) &&
     compareScopeCompileInputs(previousCompile.context, compileInputs) &&
     matchWeaveReferences(previousReads, runtime.state.execution.namespaceStack)
   ) {

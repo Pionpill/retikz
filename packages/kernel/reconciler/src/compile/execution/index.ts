@@ -19,5 +19,5 @@ export {
 } from './scope';
 export type { ScopeExecutionSteps } from './scope';
 export { createTreePositionContext, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './shared';
-export type { TreeOutputState } from './shared';
+export type { RetainedProbeOutput, TreeOutputState } from './shared';
 export * from './subtree';

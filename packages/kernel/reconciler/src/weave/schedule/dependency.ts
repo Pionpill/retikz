@@ -5,12 +5,13 @@ import type { AxisAlignedBounds } from '@retikz/math';
 
 import { shouldEmitScopeGroup } from '../../compile';
 import { compareReferenceGeometry } from '../shared';
-import type { WeaveDependencyKind, WeaveEntry, WeaveScopeEntry } from '../shared';
+import type { WeaveDependencyKind, WeaveEntry, WeaveRoot, WeaveScopeEntry } from '../shared';
 import type { WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
 import type { WeaveAssembledOutput, WeaveElementExecution, WeaveUpdateRequest } from './types';
 
 type WeaveDependencyContext = {
+  root: WeaveRoot;
   transaction: WeaveTransaction;
   pending: Map<WeaveEntry, WeaveUpdateRequest>;
   executions: Map<WeaveEntry, WeaveElementExecution>;
@@ -39,6 +40,7 @@ const isInteriorContribution = (
 
 /** 本批依赖就绪与直接消费者通知；实际阶段执行仍由队列回调负责 */
 export const createWeaveDependencyFlow = ({
+  root,
   transaction,
   pending,
   executions,
@@ -160,6 +162,16 @@ export const createWeaveDependencyFlow = ({
     const previousContribution = producer.type === 'scope' ? undefined : producer.current?.contribution;
     const previousBindings = previousContribution?.bindings ?? [];
     const bindings = executions.get(producer)?.bindings ?? [];
+    if (producer.type === 'composite') {
+      const before = new Set(previousBindings.map(binding => binding.id));
+      const after = new Set(bindings.map(binding => binding.id));
+      for (const name of new Set([...before, ...after])) {
+        if (before.has(name) === after.has(name)) continue;
+        for (const reader of transaction.readState(root).readers.get(name) ?? []) {
+          if (reader !== producer && reader.current !== null) notify(reader);
+        }
+      }
+    }
     // 先比较生产者实际输出通道；只通知直接消费者，由其按查询及 prepared 槽位继续核对
     // ⚡同一生产者的本次通知只比较一次连续相同的通道，不跨生产者、阶段或事务复用
     let previousKind: WeaveDependencyKind | undefined;
@@ -185,6 +197,7 @@ export const createWeaveDependencyFlow = ({
               const previous = previousBindings[index];
               return (
                 previous.id !== binding.id ||
+                !jsonStructuralEquals(previous.entry.irPath, binding.entry.irPath) ||
                 !compareReferenceGeometry(previous.entry.geometry, binding.entry.geometry, kind)
               );
             });
