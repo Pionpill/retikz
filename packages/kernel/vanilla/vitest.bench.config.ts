@@ -29,7 +29,7 @@ export const benchmarkConfig = (title: string, include: Array<string>): UserConf
           'vitest.bench.config.ts',
           'vitest.browser.bench.config.ts',
           'package.json',
-          '../reconciler/benchmarks/reconciler/_workload.ts',
+          '../reconciler/benchmarks/reconcile/_workload.ts',
         ],
       }),
     ],

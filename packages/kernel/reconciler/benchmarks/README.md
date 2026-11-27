@@ -1,4 +1,4 @@
-﻿# Reconciler 编译性能基准
+# Reconciler 编译性能基准
 
 本目录只测 Core IR 到完整编译结果的计算、组装及 Reconciler 内部事务，不包含 React/Vanilla normalize、SVG/Canvas 绘制、DOM 或真实宿主 target。
 
@@ -11,7 +11,7 @@
 | replace- | 已挂载会话完整输入替换 | replace、完整重建和内部提交                  | 初始mount、输入准备、校验、dispose                |     12 |
 | update-  | 增量持久会话批次更新   | 编辑、依赖传播、计算、完整输出组装、内部提交 | 初始mount、批次准备、oracle、校验、trace、dispose |    228 |
 
-整体共434项，其中10000节点背景扩容有4项参考场景。用例按Node/Path/Scope/Scene/Composite拆文件，仍只用一层reconciler目录。full表示非增量首次编译；update/.../full表示增量会话的强制全量批次，不是同一操作。
+整体共434项，其中10000节点背景扩容有4项参考场景。用例按Node/Path/Scope/Scene/Composite拆文件，放在同一层 `reconcile/` 目录下。full表示非增量首次编译；update/.../full表示增量会话的强制全量批次，不是同一操作。
 
 replace单列的原因是完整输入消费方并不自动转成Weave批次。首次编译结果不能代替已挂载完整替换，Weave update成绩也不能推导上层processing已获得同样收益。
 

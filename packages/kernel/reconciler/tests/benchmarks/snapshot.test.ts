@@ -2,7 +2,7 @@ import type { IRScene } from '@retikz/core';
 import { SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 
-import { compileBenchmarkSnapshot, verifyBenchmarkSnapshot } from '../../benchmarks/reconciler/_snapshot';
+import { compileBenchmarkSnapshot, verifyBenchmarkSnapshot } from '../../benchmarks/reconcile/_snapshot';
 
 const invalidReference: IRScene = {
   type: 'scene',

@@ -2,7 +2,7 @@ import type { IRNode, IRPath, IRScene, IRChild, ScenePrimitive } from '@retikz/c
 import type { CompileResult } from '@retikz/reconciler';
 import { expect } from 'vitest';
 
-import { createCompileWorkload } from '../../reconciler/benchmarks/reconciler/_workload';
+import { createCompileWorkload } from '../../reconciler/benchmarks/reconcile/_workload';
 
 /** 以稳定节点 ID 连接矩形，稀疏图每十个节点一条边，链图连接所有相邻节点 */
 export const connectedWorkload = (count: number, topology: 'sparse' | 'chain') => {
