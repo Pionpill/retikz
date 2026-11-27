@@ -1,11 +1,8 @@
 import type { CompiledArrowEnd, Scene, SceneResources } from '@retikz/core';
-import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
-import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { svgToReact } from '../../../src/render/svg-to-react';
-
-type AnyElement = ReactElement<Record<string, unknown> & { children?: unknown }>;
+import { buildSvgDocument, renderToSvgString } from '../../../src/svg';
+import type { SvgNode } from '../../../src/svg';
 
 const arrowSpec: CompiledArrowEnd = {
   shape: 'stealth',
@@ -102,73 +99,72 @@ const scene: Scene = {
   ],
 };
 
-const elementChildren = (element: AnyElement): Array<AnyElement> =>
-  (element.props.children as Array<AnyElement> | undefined) ?? [];
+const elementChildren = (element: SvgNode): Array<SvgNode> => (element.children as Array<SvgNode> | undefined) ?? [];
 
-const findChild = (element: AnyElement, type: string): AnyElement => {
-  const child = elementChildren(element).find(c => c.type === type);
+const findChild = (element: SvgNode, type: string): SvgNode => {
+  const child = elementChildren(element).find(c => c.tag === type);
 
   expect(child).toBeDefined();
-  return child as AnyElement;
+  return child as SvgNode;
 };
 
-describe('字符串反应等价性', () => {
-  it('字符串序列化与 React 映射保持同一份 SVG 语义', () => {
+describe('SVG 字符串与描述树等价性', () => {
+  it('字符串序列化与描述树保持同一份 SVG 语义', () => {
     const idPrefix = 'parity';
     const svgString = renderToSvgString(scene, { idPrefix });
-    const svgElement = svgToReact(buildSvgDocument(scene, { idPrefix })) as AnyElement;
+    const svgElement = buildSvgDocument(scene, { idPrefix });
 
     expect(svgString).toContain('viewBox="0 0 20 20"');
-    expect(svgElement.props.viewBox).toBe('0 0 20 20');
+    expect(svgElement.attrs.viewBox).toBe('0 0 20 20');
 
     expect(svgString).toContain('stroke-width="2"');
     expect(svgString).toContain('style="fill:var(--brand);stroke:var(--outline)"');
 
     const varRect = findChild(svgElement, 'rect');
 
-    expect(varRect.props.strokeWidth).toBe(2);
-    expect(varRect.props.fill).toBeUndefined();
-    expect(varRect.props.stroke).toBeUndefined();
-    expect(varRect.props.style).toEqual({ fill: 'var(--brand)', stroke: 'var(--outline)' });
+    expect(varRect.attrs['stroke-width']).toBe(2);
+    expect(varRect.attrs.fill).toBeUndefined();
+    expect(varRect.attrs.stroke).toBeUndefined();
+    expect(varRect.style).toEqual({ fill: 'var(--brand)', stroke: 'var(--outline)' });
 
     const defs = findChild(svgElement, 'defs');
     const defsChildren = elementChildren(defs);
-    const gradient = defsChildren.find(c => c.type === 'linearGradient');
-    const clipPath = defsChildren.find(c => c.type === 'clipPath');
-    const filter = defsChildren.find(c => c.type === 'filter');
+    const gradient = defsChildren.find(c => c.tag === 'linearGradient');
+    const clipPath = defsChildren.find(c => c.tag === 'clipPath');
+    const filter = defsChildren.find(c => c.tag === 'filter');
 
     expect(svgString).toContain('scale(');
-    expect(gradient?.props.id).toBe('retikz-paint-parity-paint-1');
-    expect(clipPath?.props.id).toBe('retikz-clip-parity-clip-1');
+    expect(gradient?.attrs.id).toBe('retikz-paint-parity-paint-1');
+    expect(clipPath?.attrs.id).toBe('retikz-clip-parity-clip-1');
     expect(filter).toBeDefined();
     expect(svgString).toContain('id="retikz-paint-parity-paint-1"');
     expect(svgString).toContain('id="retikz-clip-parity-clip-1"');
     expect(svgString).toContain('flood-color="#000"');
     expect(svgString).toContain('flood-opacity="0.25"');
 
-    const dropShadow = elementChildren(filter as AnyElement)[0];
+    const dropShadow = elementChildren(filter as SvgNode)[0];
 
-    expect(dropShadow.type).toBe('feDropShadow');
-    expect(dropShadow.props.floodColor).toBe('#000');
-    expect(dropShadow.props.floodOpacity).toBe(0.25);
+    expect(dropShadow.tag).toBe('feDropShadow');
+    expect(dropShadow.attrs['flood-color']).toBe('#000');
+    expect(dropShadow.attrs['flood-opacity']).toBe(0.25);
 
     const group = findChild(svgElement, 'g');
 
-    expect(group.props.clipPath).toBe('url(#retikz-clip-parity-clip-1)');
+    expect(group.attrs['clip-path']).toBe('url(#retikz-clip-parity-clip-1)');
     expect(svgString).toContain('clip-path="url(#retikz-clip-parity-clip-1)"');
 
     const paintedRect = elementChildren(group)[0];
 
-    expect(paintedRect.props.fill).toBe('url(#retikz-paint-parity-paint-1)');
+    expect(paintedRect.attrs.fill).toBe('url(#retikz-paint-parity-paint-1)');
     expect(svgString).toContain('fill="url(#retikz-paint-parity-paint-1)"');
 
-    const collectPaths = (element: AnyElement): Array<AnyElement> => [
-      ...(element.type === 'path' ? [element] : []),
+    const collectPaths = (element: SvgNode): Array<SvgNode> => [
+      ...(element.tag === 'path' ? [element] : []),
       ...elementChildren(element).flatMap(collectPaths),
     ];
-    const arrows = collectPaths(svgElement).filter(path => path.props.d === 'M 0 0 L 10 5 L 0 10 Z');
+    const arrows = collectPaths(svgElement).filter(path => path.attrs.d === 'M 0 0 L 10 5 L 0 10 Z');
     expect(arrows).toHaveLength(2);
-    expect(arrows.map(path => path.props.fill)).toEqual(['#000', '#000']);
+    expect(arrows.map(path => path.attrs.fill)).toEqual(['#000', '#000']);
     expect(svgString.match(/d="M 0 0 L 10 5 L 0 10 Z"/g)).toHaveLength(2);
   });
 });

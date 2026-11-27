@@ -1,10 +1,9 @@
 import type { PathPrimitive, RectPrimitive, SceneResource } from '@retikz/core';
-import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderPaintDefs, renderPrim } from './helpers';
-
-type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
+import type { SvgNode } from '../../../src/svg';
+import { buildPrim } from '../../../src/svg';
+import { renderPaintDefs } from './resource-fixtures';
 
 const rect = (fill: RectPrimitive['fill']): RectPrimitive => ({
   type: 'rect',
@@ -15,42 +14,42 @@ const rect = (fill: RectPrimitive['fill']): RectPrimitive => ({
   fill,
 });
 
-describe('renderPrim — PaintValue fill 分派', () => {
+describe('buildPrim — PaintValue fill 分派', () => {
   it('纯色 string → fill attribute', () => {
-    const el = renderPrim(rect('red'), 0) as AnyEl;
+    const el = buildPrim(rect('red'));
 
-    expect(el.props.fill).toBe('red');
+    expect(el.attrs.fill).toBe('red');
   });
 
   it('var() 纯色 → 走 inline style.fill、attribute 为 undefined', () => {
-    const el = renderPrim(rect('var(--bg)'), 0) as AnyEl;
+    const el = buildPrim(rect('var(--bg)'));
 
-    expect(el.props.fill).toBeUndefined();
-    expect((el.props.style as { fill?: string }).fill).toBe('var(--bg)');
+    expect(el.attrs.fill).toBeUndefined();
+    expect((el.style as { fill?: string }).fill).toBe('var(--bg)');
   });
 
   it('resourceRef → fill="url(#prefix-id)"（经 paintRefUrl）', () => {
-    const el = renderPrim(rect({ kind: 'resourceRef', id: 'paint-1' }), 0, {
+    const el = buildPrim(rect({ kind: 'resourceRef', id: 'paint-1' }), {
       paintRefUrl: id => `url(#X-${id})`,
-    }) as AnyEl;
+    });
 
-    expect(el.props.fill).toBe('url(#X-paint-1)');
+    expect(el.attrs.fill).toBe('url(#X-paint-1)');
   });
 
   it('contextStroke→填充="context-stroke"', () => {
-    const el = renderPrim(rect({ kind: 'contextStroke' }), 0) as AnyEl;
+    const el = buildPrim(rect({ kind: 'contextStroke' }));
 
-    expect(el.props.fill).toBe('context-stroke');
+    expect(el.attrs.fill).toBe('context-stroke');
   });
 
   it('resourceRef 缺省 paintRefUrl → url(#id)', () => {
-    const el = renderPrim(rect({ kind: 'resourceRef', id: 'paint-2' }), 0) as AnyEl;
+    const el = buildPrim(rect({ kind: 'resourceRef', id: 'paint-2' }));
 
-    expect(el.props.fill).toBe('url(#paint-2)');
+    expect(el.attrs.fill).toBe('url(#paint-2)');
   });
 });
 
-describe('renderPrim — PaintValue stroke 分派', () => {
+describe('buildPrim — PaintValue stroke 分派', () => {
   const path: PathPrimitive = {
     type: 'path',
     commands: [
@@ -61,25 +60,24 @@ describe('renderPrim — PaintValue stroke 分派', () => {
   };
 
   it('resourceRef → stroke="url(#prefix-id)"（经 paintRefUrl）', () => {
-    const el = renderPrim(path, 0, {
+    const el = buildPrim(path, {
       paintRefUrl: id => `url(#X-${id})`,
-    }) as AnyEl;
+    });
 
-    expect(el.props.stroke).toBe('url(#X-paint-1)');
+    expect(el.attrs.stroke).toBe('url(#X-paint-1)');
   });
 
   it('var() 纯色 stroke → 走 inline style.stroke', () => {
-    const el = renderPrim({ ...path, stroke: 'var(--outline)' }, 0) as AnyEl;
+    const el = buildPrim({ ...path, stroke: 'var(--outline)' });
 
-    expect(el.props.stroke).toBeUndefined();
-    expect((el.props.style as { stroke?: string }).stroke).toBe('var(--outline)');
+    expect(el.attrs.stroke).toBeUndefined();
+    expect((el.style as { stroke?: string }).stroke).toBe('var(--outline)');
   });
 });
 
 describe('renderPaintDefs — 渐变物化', () => {
-  const childrenOf = (resources: Array<SceneResource>): Array<AnyEl> => {
-    const frag = renderPaintDefs({ resources, idFor: id => `g-${id}` }) as AnyEl;
-    return (frag.props.children as Array<AnyEl>).filter(Boolean);
+  const childrenOf = (resources: Array<SceneResource>): Array<SvgNode> => {
+    return renderPaintDefs({ resources, idFor: id => `g-${id}` });
   };
 
   it('linearGradient：type / id / x1x2（angle 90 = 竖直）/ stops', () => {
@@ -98,22 +96,22 @@ describe('renderPaintDefs — 渐变物化', () => {
       },
     ]);
 
-    expect(g.type).toBe('linearGradient');
-    expect(g.props.id).toBe('g-paint-1');
+    expect(g.tag).toBe('linearGradient');
+    expect(g.attrs.id).toBe('g-paint-1');
 
     // angle 90 → 竖直：x1≈x2=0.5, y1=0→y2=1
-    expect(g.props.x1).toBeCloseTo(0.5, 6);
-    expect(g.props.x2).toBeCloseTo(0.5, 6);
-    expect(g.props.y1).toBeCloseTo(0, 6);
-    expect(g.props.y2).toBeCloseTo(1, 6);
+    expect(g.attrs.x1).toBeCloseTo(0.5, 6);
+    expect(g.attrs.x2).toBeCloseTo(0.5, 6);
+    expect(g.attrs.y1).toBeCloseTo(0, 6);
+    expect(g.attrs.y2).toBeCloseTo(1, 6);
 
     // stops 直接物化成 <stop> 子元素（不再经 <Stops> 包装组件）
-    const stops = g.props.children as Array<AnyEl>;
+    const stops = g.children as Array<SvgNode>;
 
     expect(stops).toHaveLength(2);
-    expect(stops[0].type).toBe('stop');
-    expect(stops[0].props.offset).toBe(0);
-    expect(stops[0].props.stopColor).toBe('#4f8');
+    expect(stops[0].tag).toBe('stop');
+    expect(stops[0].attrs.offset).toBe(0);
+    expect(stops[0].attrs['stop-color']).toBe('#4f8');
   });
 
   it('radialGradient：type / id / 缺省 center·r', () => {
@@ -131,11 +129,11 @@ describe('renderPaintDefs — 渐变物化', () => {
       },
     ]);
 
-    expect(g.type).toBe('radialGradient');
-    expect(g.props.id).toBe('g-paint-1');
-    expect(g.props.cx).toBe(0.5);
-    expect(g.props.cy).toBe(0.5);
-    expect(g.props.r).toBe(0.5);
+    expect(g.tag).toBe('radialGradient');
+    expect(g.attrs.id).toBe('g-paint-1');
+    expect(g.attrs.cx).toBe(0.5);
+    expect(g.attrs.cy).toBe(0.5);
+    expect(g.attrs.r).toBe(0.5);
   });
 
   it('pattern：<pattern> userSpaceOnUse + tile size + 旋转（物化已解析 tile）', () => {
@@ -162,18 +160,18 @@ describe('renderPaintDefs — 渐变物化', () => {
       },
     ]);
 
-    expect(p.type).toBe('pattern');
-    expect(p.props.patternUnits).toBe('userSpaceOnUse');
-    expect(p.props.width).toBe(6);
-    expect(p.props.height).toBe(6);
-    expect(p.props.patternTransform).toBe('rotate(45)');
+    expect(p.tag).toBe('pattern');
+    expect(p.attrs.patternUnits).toBe('userSpaceOnUse');
+    expect(p.attrs.width).toBe(6);
+    expect(p.attrs.height).toBe(6);
+    expect(p.attrs.patternTransform).toBe('rotate(45)');
 
     // tile.motif 物化进 <pattern>（复用 arrow 的 renderMarkerPrim）：横线 path
-    const motif = (p.props.children as Array<AnyEl>).filter(Boolean);
+    const motif = (p.children as Array<SvgNode>).filter(Boolean);
 
     expect(motif).toHaveLength(1);
-    expect(motif[0].type).toBe('path');
-    expect(motif[0].props.stroke).toBe('currentColor');
+    expect(motif[0].tag).toBe('path');
+    expect(motif[0].attrs.stroke).toBe('currentColor');
   });
 
   it('pattern：tile.motif 含背景 rect + dots ellipse 都物化', () => {
@@ -192,20 +190,20 @@ describe('renderPaintDefs — 渐变物化', () => {
         },
       },
     ]);
-    const motif = (p.props.children as Array<AnyEl>).filter(Boolean);
+    const motif = (p.children as Array<SvgNode>).filter(Boolean);
 
-    expect(motif.map(m => m.type)).toEqual(['rect', 'ellipse']);
+    expect(motif.map(m => m.tag)).toEqual(['rect', 'ellipse']);
   });
 
   it('image：<pattern> 套 <image>，fit cover → slice', () => {
     const [p] = childrenOf([{ kind: 'paint', id: 'paint-1', spec: { kind: 'image', href: 'a.png' } }]);
 
-    expect(p.type).toBe('pattern');
+    expect(p.tag).toBe('pattern');
 
-    const img = (p.props.children as Array<AnyEl>)[0];
+    const img = (p.children as Array<SvgNode>)[0];
 
-    expect(img.type).toBe('image');
-    expect(img.props.href).toBe('a.png');
-    expect(img.props.preserveAspectRatio).toBe('xMidYMid slice');
+    expect(img.tag).toBe('image');
+    expect(img.attrs.href).toBe('a.png');
+    expect(img.attrs.preserveAspectRatio).toBe('xMidYMid slice');
   });
 });

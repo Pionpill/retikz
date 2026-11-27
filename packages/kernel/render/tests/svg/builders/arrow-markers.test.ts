@@ -1,10 +1,8 @@
 import type { PathCommand, CompiledArrowEnd, ScenePrimitive } from '@retikz/core';
-import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderArrowMarker } from './helpers';
-
-type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
+import type { SvgNode } from '../../../src/svg';
+import { buildArrowMarker } from '../../../src/svg';
 
 /*
  * renderArrowMarker 物化测试（emit-in-compile 契约）
@@ -12,7 +10,7 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
  *   wrapper 参数（viewBox `0 0 baseSize baseSize` / refX / refY=baseSize/2 / markerWidth / markerHeight）来自
  *   spec，内部元素来自 `spec.marker`（`ScenePrimitive[]`，core 已产）。内置 8 的 d-string 回归改成：给定
  *   resolved marker 几何 → 物化的 path d 等价旧值。
- *   renderArrowMarker 是 FC——直接调函数拿 ReactElement 检查
+ *   直接检查 marker 描述树
  */
 
 /** 构造一个已解析 CompiledArrowEnd（wrapper 参数 + marker 几何） */
@@ -26,20 +24,20 @@ const spec = (overrides: Partial<CompiledArrowEnd> = {}): CompiledArrowEnd => ({
   ...overrides,
 });
 
-const render = (s: CompiledArrowEnd, id = 'mk'): AnyEl => renderArrowMarker({ id, spec: s }) as AnyEl;
+const render = (s: CompiledArrowEnd, id = 'mk'): SvgNode => buildArrowMarker(id, s);
 
 /** 取物化 marker 的 children（数组形态） */
-const innerEls = (el: AnyEl): Array<AnyEl> => {
-  const c = el.props.children;
-  return (Array.isArray(c) ? c : [c]).filter(Boolean) as Array<AnyEl>;
+const innerEls = (el: SvgNode): Array<SvgNode> => {
+  const c = el.children;
+  return (Array.isArray(c) ? c : [c]).filter(Boolean) as Array<SvgNode>;
 };
 
 describe('renderArrowMarker: wrapper 参数物化自 spec（不再 switch / 不算几何）', () => {
   it('viewBox / refY / markerUnits / orient / id 来自 spec', () => {
     const el = render(spec({ baseSize: 10, refX: 3, markerWidth: 6, markerHeight: 6 }), 'arrow-x');
 
-    expect(el.type).toBe('marker');
-    expect(el.props).toMatchObject({
+    expect(el.tag).toBe('marker');
+    expect(el.attrs).toMatchObject({
       id: 'arrow-x',
       viewBox: '0 0 10 10',
       refX: 3,
@@ -52,25 +50,25 @@ describe('renderArrowMarker: wrapper 参数物化自 spec（不再 switch / 不�
     });
   });
 
-  it('refX 直接取 spec.refX（hollow 已在 compile 减 lineWidth/2，react 不再算）', () => {
-    expect(render(spec({ refX: 0.25 })).props.refX).toBe(0.25);
-    expect(render(spec({ refX: 0 })).props.refX).toBe(0);
+  it('refX 直接取 spec.refX（hollow 已在 compile 减 lineWidth/2，renderer 不再算）', () => {
+    expect(render(spec({ refX: 0.25 })).attrs.refX).toBe(0.25);
+    expect(render(spec({ refX: 0 })).attrs.refX).toBe(0);
   });
 
   it('refY = baseSize/2（自定义 baseSize 也跟随）', () => {
-    expect(render(spec({ baseSize: 20 })).props.refY).toBe(10);
-    expect(render(spec({ baseSize: 20 })).props.viewBox).toBe('0 0 20 20');
+    expect(render(spec({ baseSize: 20 })).attrs.refY).toBe(10);
+    expect(render(spec({ baseSize: 20 })).attrs.viewBox).toBe('0 0 20 20');
   });
 
   it('markerWidth / markerHeight 直接取 spec（compile 已乘 scale）', () => {
     const el = render(spec({ markerWidth: 9, markerHeight: 12 }));
 
-    expect(el.props.markerWidth).toBe(9);
-    expect(el.props.markerHeight).toBe(12);
+    expect(el.attrs.markerWidth).toBe(9);
+    expect(el.attrs.markerHeight).toBe(12);
   });
 
   it('opacity 透传到 marker 元素层', () => {
-    expect(render(spec({ opacity: 0.5 })).props.opacity).toBe(0.5);
+    expect(render(spec({ opacity: 0.5 })).attrs.opacity).toBe(0.5);
   });
 });
 
@@ -92,9 +90,9 @@ describe('renderArrowMarker: marker 几何物化（spec.marker → SVG 元素）
     const inner = innerEls(el);
 
     expect(inner).toHaveLength(1);
-    expect(inner[0].type).toBe('path');
-    expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 Z');
-    expect((inner[0].props as Record<string, unknown>).fill).toBe('crimson');
+    expect(inner[0].tag).toBe('path');
+    expect(inner[0].attrs.d).toBe('M 0 0 L 10 5 L 0 10 Z');
+    expect(inner[0].attrs.fill).toBe('crimson');
   });
 
   it('contextStroke fill → SVG context-stroke（主题反应不冻结）', () => {
@@ -103,15 +101,15 @@ describe('renderArrowMarker: marker 几何物化（spec.marker → SVG 元素）
     ];
     const inner = innerEls(render(spec({ marker })));
 
-    expect((inner[0].props as Record<string, unknown>).fill).toBe('context-stroke');
+    expect(inner[0].attrs.fill).toBe('context-stroke');
   });
 
   it('ellipse marker → 物化出 <ellipse>，cx/cy/rx/ry 透传', () => {
     const marker: Array<ScenePrimitive> = [{ type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5, fill: 'black' }];
     const inner = innerEls(render(spec({ marker })));
 
-    expect(inner[0].type).toBe('ellipse');
-    expect(inner[0].props as Record<string, unknown>).toMatchObject({ cx: 5, cy: 5, rx: 5, ry: 5 });
+    expect(inner[0].tag).toBe('ellipse');
+    expect(inner[0].attrs).toMatchObject({ cx: 5, cy: 5, rx: 5, ry: 5 });
   });
 
   it('group marker → 物化出 <g> 并递归子元素', () => {
@@ -125,19 +123,19 @@ describe('renderArrowMarker: marker 几何物化（spec.marker → SVG 元素）
     ];
     const inner = innerEls(render(spec({ marker })));
 
-    expect(inner[0].type).toBe('g');
+    expect(inner[0].tag).toBe('g');
 
-    const groupChildren = (inner[0].props as { children?: unknown }).children as Array<AnyEl>;
+    const groupChildren = inner[0].children as Array<SvgNode>;
 
-    expect(groupChildren[0].type).toBe('path');
-    expect((groupChildren[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 Z');
+    expect(groupChildren[0].tag).toBe('path');
+    expect(groupChildren[0].attrs.d).toBe('M 1 1 L 9 5 Z');
   });
 });
 
 /**
  * 内置 8 marker 的 d-string 回归（golden master）
  * @description 给定 resolved marker 几何（compile 产物的 commands / ellipse 参数）→ 物化的 path d / ellipse
- *   参数等价旧 switch。几何已在 compile，react 只翻成 SVG
+ *   参数等价旧 switch。几何已在 compile，renderer 只翻成 SVG
  */
 describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden master）', () => {
   const pathMarker = (commands: Array<PathCommand>): CompiledArrowEnd => spec({ marker: [{ type: 'path', commands }] });
@@ -154,7 +152,7 @@ describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden maste
       ),
     );
 
-    expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 Z');
+    expect(inner[0].attrs.d).toBe('M 0 0 L 10 5 L 0 10 Z');
   });
 
   it('stealth: V 形倒钩 d="M 0 0 L 10 5 L 0 10 L 3 5 Z"', () => {
@@ -170,7 +168,7 @@ describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden maste
       ),
     );
 
-    expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 L 3 5 Z');
+    expect(inner[0].attrs.d).toBe('M 0 0 L 10 5 L 0 10 L 3 5 Z');
   });
 
   it('diamond: 实心菱形 d="M 0 5 L 5 0 L 10 5 L 5 10 Z"', () => {
@@ -186,7 +184,7 @@ describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden maste
       ),
     );
 
-    expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 5 L 5 0 L 10 5 L 5 10 Z');
+    expect(inner[0].attrs.d).toBe('M 0 5 L 5 0 L 10 5 L 5 10 Z');
   });
 
   it('open: 空心三角 d="M 1 1 L 9 5 L 1 9 Z"', () => {
@@ -201,7 +199,7 @@ describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden maste
       ),
     );
 
-    expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 Z');
+    expect(inner[0].attrs.d).toBe('M 1 1 L 9 5 L 1 9 Z');
   });
 
   it('openStealth: 空心 V 形倒钩 d="M 1 1 L 9 5 L 1 9 L 3 5 Z"', () => {
@@ -217,7 +215,7 @@ describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden maste
       ),
     );
 
-    expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 L 3 5 Z');
+    expect(inner[0].attrs.d).toBe('M 1 1 L 9 5 L 1 9 L 3 5 Z');
   });
 
   it('openDiamond: 空心菱形 d="M 1 5 L 5 1 L 9 5 L 5 9 Z"', () => {
@@ -233,19 +231,19 @@ describe('renderArrowMarker: 内置 8 resolved 几何物化回归（golden maste
       ),
     );
 
-    expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 5 L 5 1 L 9 5 L 5 9 Z');
+    expect(inner[0].attrs.d).toBe('M 1 5 L 5 1 L 9 5 L 5 9 Z');
   });
 
   it('circle: 实心圆 cx=5 cy=5 r=5（ellipse rx=ry=5）', () => {
     const inner = innerEls(render(spec({ marker: [{ type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5 }] })));
 
-    expect(inner[0].type).toBe('ellipse');
-    expect(inner[0].props as Record<string, unknown>).toMatchObject({ cx: 5, cy: 5, rx: 5, ry: 5 });
+    expect(inner[0].tag).toBe('ellipse');
+    expect(inner[0].attrs).toMatchObject({ cx: 5, cy: 5, rx: 5, ry: 5 });
   });
 
   it('openCircle: 空心圆 cx=5 cy=5 r=4.25', () => {
     const inner = innerEls(render(spec({ marker: [{ type: 'ellipse', cx: 5, cy: 5, rx: 4.25, ry: 4.25 }] })));
 
-    expect(inner[0].props as Record<string, unknown>).toMatchObject({ cx: 5, cy: 5, rx: 4.25, ry: 4.25 });
+    expect(inner[0].attrs).toMatchObject({ cx: 5, cy: 5, rx: 4.25, ry: 4.25 });
   });
 });

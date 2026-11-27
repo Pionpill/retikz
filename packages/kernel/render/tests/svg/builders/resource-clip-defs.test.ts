@@ -1,14 +1,12 @@
 import type { GroupPrimitive, SceneClipPath, SceneResource } from '@retikz/core';
-import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderClipDefs, renderPrim } from './helpers';
+import type { SvgNode } from '../../../src/svg';
+import { buildPrim } from '../../../src/svg';
+import { renderClipDefs } from './resource-fixtures';
 
-type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
-
-const clipPathsOf = (resources: Array<SceneResource>): Array<AnyEl> => {
-  const fragment = renderClipDefs({ resources, idFor: (id: string) => `c-${id}` }) as AnyEl;
-  return (fragment.props.children as Array<AnyEl>).filter(Boolean);
+const clipPathsOf = (resources: Array<SceneResource>): Array<SvgNode> => {
+  return renderClipDefs({ resources, idFor: (id: string) => `c-${id}` });
 };
 
 const clipResource = (id: string, path: SceneClipPath): SceneResource => ({ kind: 'clip', id, path });
@@ -38,16 +36,14 @@ describe('renderClipDefs — canonical SceneClipPath 物化', () => {
       }),
     ]);
 
-    expect(clipPath.type).toBe('clipPath');
-    expect(clipPath.props.id).toBe('c-clip-1');
+    expect(clipPath.tag).toBe('clipPath');
+    expect(clipPath.attrs.id).toBe('c-clip-1');
 
-    const path = (
-      Array.isArray(clipPath.props.children) ? clipPath.props.children[0] : clipPath.props.children
-    ) as AnyEl;
+    const path = (Array.isArray(clipPath.children) ? clipPath.children[0] : clipPath.children) as SvgNode;
 
-    expect(path.type).toBe('path');
-    expect(path.props.d).toBe('M 0 0 L 40 0 L 40 40 Z');
-    expect(path.props.clipRule).toBe('evenodd');
+    expect(path.tag).toBe('path');
+    expect(path.attrs.d).toBe('M 0 0 L 40 0 L 40 40 Z');
+    expect(path.attrs['clip-rule']).toBe('evenodd');
   });
 
   it('多 clip 保持顺序并忽略 paint resource', () => {
@@ -67,11 +63,11 @@ describe('renderClipDefs — canonical SceneClipPath 物化', () => {
       clipResource('clip-2', rectPath(5, 5)),
     ]);
 
-    expect(paths.map(path => path.props.id)).toEqual(['c-clip-1', 'c-clip-2']);
+    expect(paths.map(path => path.attrs.id)).toEqual(['c-clip-1', 'c-clip-2']);
   });
 });
 
-describe('renderPrim — GroupPrimitive.clipRef → <g 裁剪路径>', () => {
+describe('buildPrim — GroupPrimitive.clipRef → <g 裁剪路径>', () => {
   const groupWithClip = (clipRef?: string): GroupPrimitive => ({
     type: 'group',
     clipRef,
@@ -79,22 +75,22 @@ describe('renderPrim — GroupPrimitive.clipRef → <g 裁剪路径>', () => {
   });
 
   it('通过 clipRefUrl 物化引用', () => {
-    const element = renderPrim(groupWithClip('clip-1'), 0, {
+    const element = buildPrim(groupWithClip('clip-1'), {
       clipRefUrl: (id: string) => `url(#C-${id})`,
-    }) as AnyEl;
+    });
 
-    expect(element.props.clipPath).toBe('url(#C-clip-1)');
+    expect(element.attrs['clip-path']).toBe('url(#C-clip-1)');
   });
 
   it('缺省 resolver 使用原始 resource id', () => {
-    const element = renderPrim(groupWithClip('clip-2'), 0) as AnyEl;
+    const element = buildPrim(groupWithClip('clip-2'));
 
-    expect(element.props.clipPath).toBe('url(#clip-2)');
+    expect(element.attrs['clip-path']).toBe('url(#clip-2)');
   });
 
   it('无 clipRef 时不设置 clipPath', () => {
-    const element = renderPrim(groupWithClip(), 0) as AnyEl;
+    const element = buildPrim(groupWithClip());
 
-    expect(element.props.clipPath).toBeUndefined();
+    expect(element.attrs['clip-path']).toBeUndefined();
   });
 });

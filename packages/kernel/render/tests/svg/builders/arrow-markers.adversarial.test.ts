@@ -1,16 +1,14 @@
 import type { PathCommand, CompiledArrowEnd } from '@retikz/core';
-import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { renderArrowMarker } from './helpers';
-
-type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
+import type { SvgNode } from '../../../src/svg';
+import { buildArrowMarker } from '../../../src/svg';
 
 /**
  * Arrow marker 物化对抗回归（marker 在 compile 阶段 emit）
  * @description 坏 CompiledArrowEnd（NaN refX / Infinity baseSize / text 注入）已由 compile 运行时栅栏在源头拦下
- *   （见 core 侧 builtin-registry.adversarial），react 作纯物化层不重复兜底。这里保留 marker 几何里 arc /
- *   ellipseArc 命令的物化回归——marker path 与 Scene `PathCommand` 同词汇，react 复用 buildPathD
+ *   （见 core 侧 builtin-registry.adversarial），renderer 作纯物化层不重复兜底。这里保留 marker 几何里 arc /
+ *   ellipseArc 命令的物化回归——marker path 与 Scene `PathCommand` 同词汇，renderer 复用 buildPathD
  *   产 SVG A 段（曾经被静默丢弃，现已补齐）
  */
 
@@ -24,7 +22,7 @@ const spec = (overrides: Partial<CompiledArrowEnd> = {}): CompiledArrowEnd => ({
   ...overrides,
 });
 
-const render = (s: CompiledArrowEnd, id = 'mk'): AnyEl => renderArrowMarker({ id, spec: s }) as AnyEl;
+const render = (s: CompiledArrowEnd, id = 'mk'): SvgNode => buildArrowMarker(id, s);
 
 describe('arrow marker arc 物化', () => {
   it('marker path 用 arc 命令 → 物化出 SVG A 段（不再静默丢）', () => {
@@ -34,8 +32,8 @@ describe('arrow marker arc 物化', () => {
       { kind: 'close' },
     ];
     const el = render(spec({ marker: [{ type: 'path', commands: arcCmds, fill: 'red' }] }));
-    const children = el.props.children as Array<AnyEl>;
-    const d = children[0].props.d as string;
+    const children = el.children as Array<SvgNode>;
+    const d = children[0].attrs.d as string;
 
     expect(d).toContain('A');
     expect(d.startsWith('M 0 5')).toBe(true);
@@ -48,8 +46,8 @@ describe('arrow marker arc 物化', () => {
       { kind: 'ellipseArc', center: [5, 5], radiusX: 5, radiusY: 3, startAngle: 180, endAngle: 0 },
     ];
     const el = render(spec({ marker: [{ type: 'path', commands: cmds, stroke: 'blue' }] }));
-    const children = el.props.children as Array<AnyEl>;
+    const children = el.children as Array<SvgNode>;
 
-    expect(children[0].props.d as string).toContain('A 5 3');
+    expect(children[0].attrs.d as string).toContain('A 5 3');
   });
 });
