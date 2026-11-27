@@ -2,16 +2,7 @@ import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { InputFrame } from '../src/presentation';
-import {
-  axes,
-  axesInputEmbedAdapter,
-  frame,
-  frameDescription,
-  frameInputEmbedAdapter,
-  frameTitle,
-  grid,
-  gridInputEmbedAdapter,
-} from '../src/presentation';
+import { axes, frame, frameDescription, frameTitle, grid } from '../src/presentation';
 
 const input: InputFrame = {
   padding: 12,
@@ -30,9 +21,7 @@ const input: InputFrame = {
 
 describe('框架（）', () => {
   it('正文节点可省略位置且 authoring 保留稀疏 Source', () => {
-    const result = normalizeScene(scene([frame({ children: [{ type: 'node', text: 'origin' }] })]), {
-      adapters: [frameInputEmbedAdapter],
-    });
+    const result = normalizeScene(scene([frame({ children: [{ type: 'node', text: 'origin' }] })]));
 
     expect(result.ir.children[0]).toMatchObject({ children: [{ type: 'node', text: 'origin' }] });
     expect(JSON.stringify(result.ir)).not.toContain('position');
@@ -61,9 +50,9 @@ describe('框架（）', () => {
 
   it('匿名 Frame 经嵌入后仍保持匿名', () => {
     const embed = frame(input);
-    const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [frameInputEmbedAdapter] });
+    const normalized = normalizeScene(scene({ children: [embed] }));
 
-    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.frame' });
+    expect(embed).toMatchObject({ type: 'embed', adapter: { kind: 'standard.frame' } });
     expect(embed).not.toHaveProperty('id');
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'standard',
@@ -75,9 +64,7 @@ describe('框架（）', () => {
     });
     expect(normalized.ir.children[0]).not.toHaveProperty('id');
 
-    const explicit = normalizeScene(scene({ children: [frame({ ...input, id: 'frame-model' })] }), {
-      adapters: [frameInputEmbedAdapter],
-    });
+    const explicit = normalizeScene(scene({ children: [frame({ ...input, id: 'frame-model' })] }));
 
     expect(explicit.ir.children[0]).toHaveProperty('id', 'frame-model');
   });
@@ -91,7 +78,6 @@ describe('框架（）', () => {
           frame(input),
         ],
       }),
-      { adapters: [gridInputEmbedAdapter, axesInputEmbedAdapter, frameInputEmbedAdapter] },
     );
 
     expect(result.contributions).toHaveLength(3);

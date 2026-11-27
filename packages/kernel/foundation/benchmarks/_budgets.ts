@@ -13,7 +13,7 @@ export const resolveFoundationBudget = (scenario: BenchmarkScenario): BenchmarkB
       'Reconciler runtime/source.ts 捕获输入，Core 发布 artifact 与输出时创建深冻结快照。规划假设：1千条小输入、1万条更新、10万条大输入捕获，单次黄/红为4/16.6、16.6/50、50/200ms，给后续编译留时间；条数非图元硬上限，对象每条4字段，百万仅参考';
   } else if (operation === 'createReadonlyMap') {
     rationale =
-      'Vanilla normalize/scene/runtime-meta.ts 创建 identityIndex/parentIndex，Chart/Data 创建注册表。规划假设：单个索引或注册表快照在1千/1万/10万项内黄/红为1/4、4/16.6、16.6/50ms；不包含整个 normalize，百万仅参考';
+      'Chart/Data 创建只读注册表。规划假设：单个索引或注册表快照在1千/1万/10万项内黄/红为1/4、4/16.6、16.6/50ms；仅计快照操作，百万仅参考';
   } else return undefined;
   const [warningMs, errorMs] =
     operation === 'createReadonlyMap'

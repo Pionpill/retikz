@@ -40,9 +40,8 @@ describe('resolveInputEmbedAdapter', () => {
     expect(resolveInputEmbedAdapter(fn)).toBeNull();
   });
 
-  it('非函数 type（字符串 / 普通对象）→ 返回 null', () => {
+  it('宿主元素 type→ 返回 null', () => {
     expect(resolveInputEmbedAdapter('div')).toBeNull();
-    expect(resolveInputEmbedAdapter({})).toBeNull();
   });
 });
 
@@ -51,10 +50,8 @@ describe('isEmbeddableMarked', () => {
     expect(isEmbeddableMarked(markedComponent('dn', makeAdapter('demo.adapter')))).toBe(true);
   });
 
-  it('未标记函数 / 非函数 → false', () => {
+  it('普通组件与宿主标签 → false', () => {
     expect(isEmbeddableMarked(() => null)).toBe(false);
     expect(isEmbeddableMarked('div')).toBe(false);
-    expect(isEmbeddableMarked({})).toBe(false);
-    expect(isEmbeddableMarked(undefined)).toBe(false);
   });
 });

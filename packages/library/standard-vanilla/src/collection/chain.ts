@@ -1,7 +1,8 @@
 import { pathClipProvider } from '@retikz/extension';
 import type { IRChain, IRChainConnection, IRChainParallel, IRChainItem } from '@retikz/standard/collection';
 import { chainProvider, createChain } from '@retikz/standard/collection';
-import type { InputPath, InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputPath, InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
 
 import { standardChainEmbedKind } from '../shared/constants';
@@ -88,7 +89,7 @@ const normalizeConnection = (defaultConnection: InputChainConnection): IRChainCo
 };
 
 /** 递归收集内容，通过 Kernel 归一化一次并保留依赖 */
-export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = {
+export const chainInputEmbedAdapter: InputEmbedAdapter<InputChain> = {
   kind: standardChainEmbedKind,
   lower: (props, context) => {
     const {
@@ -167,9 +168,9 @@ export const chainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
 };
 
 /** 创建保留作者输入的链 */
-export const chain = (input: InputChain): InputEmbed<InputChain> => ({
-  type: 'embed',
-  kind: standardChainEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const chain = (input: InputChain): InputEmbed<InputChain> =>
+  embed({
+    adapter: chainInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

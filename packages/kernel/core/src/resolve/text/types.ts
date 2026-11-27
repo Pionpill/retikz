@@ -13,8 +13,6 @@ export type CanonicalTextLine = TextContentLine &
   Readonly<{
     /** 拼接后的纯文本，不含公式 */
     plainText: string;
-    /** 是否包含公式 */
-    hasMath: boolean;
     /** 是否需要按片段输出 */
     mixed: boolean;
   }>;

@@ -1,7 +1,13 @@
-import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema, ScopePropsSchema } from '@retikz/core';
+import {
+  BoxSpacingValueSchema,
+  CompositeBaseSchema,
+  NodeSchema,
+  RectangleStepSchema,
+  ScopePropsSchema,
+} from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
-import { array, enum as zodEnum, literal, strictObject, union } from 'zod';
+import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { StandardPathBorderStyleSchema } from '../../shared/schemas';
@@ -21,8 +27,6 @@ export const FrameTitleSchema = strictObject(frameHeaderShape).describe(
 export const FrameDescriptionSchema = strictObject(frameHeaderShape).describe(
   'Node-like supporting description authored without an explicit position.',
 );
-
-const FramePaddingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
 
 /** 校验 Frame 的边框样式与圆角，并提供默认描边 */
 export const FrameBorderSchema = strictObject({
@@ -44,9 +48,7 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   border: FrameBorderSchema.default(() => FrameBorderSchema.parse({})).describe(
     'Border Path style and corner radius, separate from the root Scope cascade.',
   ),
-  padding: FramePaddingSchema.default(8).describe(
-    'Border padding around the final body and header bounds. Side fields override axis fields, then default.',
-  ),
+  padding: BoxSpacingValueSchema.default(8).describe('Border padding around the final body and header bounds.'),
   gap: NonNegativeNumberSchema.default(4).describe(
     'Gap between adjacent header parts and between the header and body.',
   ),

@@ -11,7 +11,7 @@ export type CrowFootArrowPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderCrowFootArrowPreview = (values: CrowFootArrowPreviewValues) => (
-  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [crowFootArrowDefinition] }}>
+  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} compile={{ arrows: [crowFootArrowDefinition] }}>
     <Draw
       way={[
         [-120, 0],

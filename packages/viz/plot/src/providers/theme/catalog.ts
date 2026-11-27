@@ -14,11 +14,10 @@ import {
 export const getNeutralPlotDefaults = (
   mode: ThemeMode,
   categorical: NonEmptyReadonlyArray<CssColorValue> = resolveDefaultCoreThemeColors(mode).categorical,
-): IRPlotDefaults =>
-  structuredClone({
-    plotArea: getNeutralPlotAreaDefaults(mode),
-    typography: getNeutralTypographyDefaults(mode),
-    axis: getNeutralAxisDefaults(mode),
-    legend: getNeutralLegendDefaults(mode),
-    palette: getNeutralPaletteDefaults(categorical),
-  });
+): IRPlotDefaults => ({
+  plotArea: getNeutralPlotAreaDefaults(mode),
+  typography: getNeutralTypographyDefaults(mode),
+  axis: getNeutralAxisDefaults(mode),
+  legend: getNeutralLegendDefaults(mode),
+  palette: getNeutralPaletteDefaults(categorical),
+});

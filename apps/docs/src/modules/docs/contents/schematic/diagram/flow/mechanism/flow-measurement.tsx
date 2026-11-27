@@ -1,4 +1,4 @@
-import { Layout, Node, Path } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import { Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
@@ -40,7 +40,7 @@ const FlowMeasurement: FC<FlowMeasurementProps> = props => {
         layout={{ width: 80, minimumSize: { height: 40 }, padding: 4 }}
         style={{ font: { size: 14 } }}
       />
-      <Path
+      <Draw
         way={['receive.right', 'verify.left']}
         arrow="->"
         label={{ text: t.next, font: { size: 12 }, sloped: false }}
@@ -51,7 +51,7 @@ const FlowMeasurement: FC<FlowMeasurementProps> = props => {
         text={t.labelSize}
         style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}
       />
-      <Path
+      <Draw
         way={[
           [168, 41],
           [212, 41],
@@ -61,7 +61,7 @@ const FlowMeasurement: FC<FlowMeasurementProps> = props => {
         ]}
         style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
       />
-      <Path
+      <Draw
         way={[
           [54, 95],
           [134, 95],
@@ -69,7 +69,7 @@ const FlowMeasurement: FC<FlowMeasurementProps> = props => {
         arrow="<->"
         label={{ text: t.width, font: { size: 12 }, textColor: 'gray', side: 'bottom' }}
       />
-      <Path
+      <Draw
         way={[
           [18, 45],
           [18, 85],
@@ -77,21 +77,21 @@ const FlowMeasurement: FC<FlowMeasurementProps> = props => {
         arrow="<->"
         label={{ text: t.height, font: { size: 12 }, textColor: 'gray', side: 'left', sloped: false }}
       />
-      <Path
+      <Draw
         way={[
           [38, 117],
           [38, 135],
         ]}
         style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
       />
-      <Path
+      <Draw
         way={[
           [54, 85],
           [54, 135],
         ]}
         style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
       />
-      <Path
+      <Draw
         way={[
           [38, 135],
           [54, 135],
@@ -106,7 +106,7 @@ const FlowMeasurement: FC<FlowMeasurementProps> = props => {
         data={{ kind: 'leaf', id: 'receive', size: { width: 80, height: 40 } }}
         defaultCell={{ style: { font: { size: 13 } } }}
       />
-      <Path
+      <Draw
         way={['group.bottom', 'input.top']}
         arrow="->"
         label={{ text: t.measure, font: { size: 12 }, textColor: 'gray', sloped: false, side: 'right', distance: 16 }}

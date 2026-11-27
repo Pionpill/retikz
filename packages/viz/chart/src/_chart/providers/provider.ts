@@ -1,5 +1,4 @@
-import type { CoreDependencyProvider, CoreProviderContribution, CanonicalTheme } from '@retikz/core';
-import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import type { CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import { flexLayoutProvider } from '@retikz/layout';
 import type { PlotsLoweringOptions, PlotDataPreparationOptions } from '@retikz/plot';
 import { plotProviderKey, preparePlotData } from '@retikz/plot';
@@ -8,10 +7,11 @@ import { surfaceProvider } from '@retikz/standard/presentation';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
 import { eraseChartRecipeDefinition } from '../contract';
+import { resolveSelectedChartPlot } from '../resolve';
 import type { IRChartSource } from '../schemas';
 import { chartProviderKeyOf, createChartDefinition } from './composite';
-import { resolveChartProviderRegistry } from './registry';
-import { resolveChartFromProvider } from './resolve';
+import { resolveChartProviderRegistry, resolveChartRecipeRegistry } from './registry';
+import { selectChartRecipe } from './resolve';
 import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';
 
 /** 从同键的 recipe 参数物化 Chart family 定义 */
@@ -85,14 +85,13 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
 };
 
 /**
- * 复用具体 Chart provider 的精确语义与 Theme，先准备生成 Plot 的全部数据作用域
+ * 复用具体 Chart provider 的数据语义，先准备生成 Plot 的全部数据作用域
  * @template TSource 数据执行器消费的原生源句柄类型，默认 never 表示不接入原生源
  */
 export const prepareChartData = async <TSource = never>(
   source: IRChartSource,
   request: PlotDataPreparationOptions<TSource>,
   contribution: CoreProviderContribution,
-  theme: CanonicalTheme = DEFAULT_RESOLVED_THEME,
   lowerOptions: PlotsLoweringOptions = {},
 ) => {
   const contributions: Array<ChartRecipeProviderContribution> = [];
@@ -104,9 +103,12 @@ export const prepareChartData = async <TSource = never>(
     }
   }
 
-  const registry = resolveChartProviderRegistry(contributions);
+  const registry = resolveChartRecipeRegistry(contributions);
   const parsed = registry.schema.parse(source);
-  const resolution = resolveChartFromProvider(parsed, { registry, theme });
+  const resolution = resolveSelectedChartPlot(parsed, {
+    recipe: selectChartRecipe(parsed, registry),
+    runtime: registry.runtime,
+  });
 
   return preparePlotData(resolution.plot, request, lowerOptions);
 };

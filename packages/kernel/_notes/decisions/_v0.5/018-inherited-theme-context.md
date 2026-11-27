@@ -114,7 +114,7 @@ React `<Layout theme>` 写入根 `IRScene.theme`，`<Scope theme>` 写入 `IRSco
 - 作用范围：Scope Theme 只影响其后代 Composite；普通 Core Node、Path、Coordinate 和 Scope 自身不会自动获得 fill、stroke、font 或其它样式
 - lowering 行为：无布局 Composite 在当前有效 Theme 下生成正式领域 IR 或 Core IR；完整 compile 继续支持 layout-aware Composite，`lowerIRToKernel()` 对 layout-aware definition 保持 callback 前 fail-loud。最终 Scene 只保留已经物化的样式，不携带 Theme，也不要求 renderer 理解 preset
 - 嵌套行为：Composite 展开或 probe 的子节点继承调用点 Theme；普通输出 Scope 或 runtime Scope 可以通过自己的 Theme 建立更内层环境。Opaque replay 保留 probe 时的有效 Theme；要切换 Theme 必须在 probe 输入中显式包裹带 Theme 的 `IRScope`
-- retained 行为：Theme 是 compile 输入。Theme 变化必须使可能消费它的后代 Composite 失效；不能证明更窄依赖时走完整重编译，并与 fresh compile 等价
+- session 行为：Theme 是 compile 输入。Theme 变化必须使可能消费它的后代 Composite 失效；不能证明更窄依赖时走完整重编译，并与 fresh compile 等价
 - 失败与诊断：Theme 必须是普通 JSON 对象，并拒绝未知字段和非法 style / mode；错误指向对应 Scene / Scope theme 的具体字段路径。领域 token、palette 或映射失败继续由领域 owner fail-loud
 - 重置语义：不新增 `resetTheme`。需要回到基线时显式写入完整 `neutral + light`
 - Core 兼容性：Scene / Scope 的可选字段和 Composite callback 的只读上下文是可忽略的新增能力，IR major version 保持不变
@@ -145,7 +145,7 @@ effective Scene / Scope Theme
 
 ## 最终实现
 
-Core 已交付严格且 JSON-safe 的 Theme schema、Scene / Scope 字段级继承、完整冻结的 Composite context、runtime Scope、expand / full compile / lowering-only 一致的来源诊断，以及 Theme 变化时与 fresh compile 等价的 retained full fallback。React 与 Vanilla 均构造同一 Theme IR，保留合法普通对象的输入脱离与宿主逐字段覆盖，并把伪造的非 JSON 对象交回 Core fail-loud。最终 Scene 与 SVG / Canvas renderer 仍不读取 Theme；第三方 Composite 已证明可以在领域 owner 内独立物化完整 token mapping。
+Core 已交付严格且 JSON-safe 的 Theme schema、Scene / Scope 字段级继承、完整冻结的 Composite context、runtime Scope、expand / full compile / lowering-only 一致的来源诊断，以及 Theme 变化时与 fresh compile 等价的 session full fallback。React 与 Vanilla 均构造同一 Theme IR，保留合法普通对象的输入脱离与宿主逐字段覆盖，并把伪造的非 JSON 对象交回 Core fail-loud。最终 Scene 与 SVG / Canvas renderer 仍不读取 Theme；第三方 Composite 已证明可以在领域 owner 内独立物化完整 token mapping。
 
 契约由 schema、compile、adapter 与 renderer parity 层级共同锁定；真实领域的 preset / token 映射与旧字段迁移仍由后续领域 ADR 负责。
 

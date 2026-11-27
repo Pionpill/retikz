@@ -11,6 +11,8 @@ keywords: 'Layout、Inspector、inspect、CompileResult、InputScope.inspect、i
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-011](./011-layout-artifacts-capabilities-adapters.md) · [Kernel ADR-021](../../../../../kernel/_notes/decisions/_v0.5/021-extensible-inspector-content.md)
 - 后继：[Layout ADR-001](../../layout/_v0.1/001-layout-package-family.md) 接管当前 Layout Inspector owner；本 ADR 保留 Standard 验证期历史
 
+> 有关 Inspector 与 /inspect 入口的条款已由 [Kernel ADR-090](../../../../../kernel/_notes/decisions/_v0.5/090-remove-inspect.md) 替代；Layout 领域产物保持独立。
+
 ## 后续演进
 
 [Kernel ADR-021](../../../../../kernel/_notes/decisions/_v0.5/021-extensible-inspector-content.md) 进一步取代本 ADR 中由 Core、Render 与基础 adapter 内置 Inspector 的归属。Core 只保留最终 occurrence 观测与隔离片段编译；Inspector contract、选择策略、辅助平面和宿主接线迁入可选 `@retikz/inspect`，Layout 实现迁入 `@retikz/standard/inspect`
@@ -135,7 +137,7 @@ type StaticRenderFrame = {
 };
 ```
 
-retained renderer 接收：
+renderer 接收：
 
 ```ts
 type RenderFrameSnapshot = {
@@ -144,7 +146,7 @@ type RenderFrameSnapshot = {
 };
 ```
 
-custom retained renderer 必须声明 `inspectionCapability`。不支持 inspection 的 renderer 在 prepare 前 fail-loud；支持的 renderer 在同一个 prepared token 中提交或回滚完整 frame，`read()` 只暴露最近一次 committed frame。
+custom renderer 必须声明 `inspectionCapability`。不支持 inspection 的 renderer 在 prepare 前 fail-loud；支持的 renderer 在同一个 prepared token 中提交或回滚完整 frame，`read()` 只暴露最近一次 committed frame。
 
 后端行为固定为：
 
@@ -155,13 +157,13 @@ custom retained renderer 必须声明 `inspectionCapability`。不支持 inspect
 
 ### 6. React 与 Vanilla 共享同一 Core 语义
 
-React `<Layout>`、`<Scope>` 和 Standard Layout component 只构造 sidecar。static、retained、SVG SSR 与 Canvas 均把 Core 输出交给 Render frame API，不在 adapter 中解释或绘制 primitive。
+React `<Layout>`、`<Scope>` 和 Standard Layout component 只构造 sidecar。static、session、SVG SSR 与 Canvas 均把 Core 输出交给 Render frame API，不在 adapter 中解释或绘制 primitive。
 
 Vanilla 顶层 `inspect` 是唯一公开根入口；`compile` 明确排除 `inspection`，避免调用方提交两份互相冲突的 Core policy。`InputScope.inspect` 控制 authored 子树，`InputEmbed.inspect` 由 adapter 的第二泛型精确约束 family-local options，且不进入 props、IR 或 runtime metadata。
 
 预编译 Scene 缺少 artifact、definition 与 authored occurrence，React / Vanilla 在配合 `inspect` 使用时同步 fail-loud，不从 Scene 反推布局。
 
-retained 中修改 inspection options 可以完整重新 compile，但单次 compile 只运行一轮布局求解。React 重建使用新 frame 的 runtime；Vanilla 原子建立新 runtime 后再退休旧 runtime。新 runtime 失败时保留旧 committed frame；旧 runtime cleanup 失败会保留并重试，诊断独立排队消费。
+session 中修改 inspection options 可以完整重新 compile，但单次 compile 只运行一轮布局求解。React 重建使用新 frame 的 runtime；Vanilla 原子建立新 runtime 后再退休旧 runtime。新 runtime 失败时保留旧 committed frame；旧 runtime cleanup 失败会保留并重试，诊断独立排队消费。
 
 ## 公开 API 与兼容性
 

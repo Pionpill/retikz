@@ -12,7 +12,7 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { sectorShapeDefinition } from '@retikz/extension';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
-import { createInputScene, Layout, Node, Scope } from '@retikz/react';
+import { convertReactToInputScene, Layout, Node, Scope } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react/presentation';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { normalizeScene } from '@retikz/vanilla';
@@ -20,8 +20,6 @@ import type { FC } from 'react';
 import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
 import {
@@ -31,9 +29,6 @@ import {
   previewEmbedPropsOf,
 } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import PathInspectorDemo, {
-  previewSource as pathInspectorPreviewSource,
-} from '../../src/modules/docs/contents/kernel/components/path/step/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
 } from '../../src/modules/docs/contents/library/standard/presentation/frame/frame-playground.demo';
@@ -163,8 +158,6 @@ const staticIR = buildPreviewIR(StaticDemo).ir;
 
 const alternateIR = buildPreviewIR(AlternateDemo).ir;
 
-const PathInspectorCanonical: FC = () => pathInspectorPreviewSource.canonicalRender();
-
 const createInput = (overrides: Record<string, unknown> = {}) => ({
   Component: StaticDemo,
   name: 'demo',
@@ -180,7 +173,7 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 describe('buildPreviewSource', () => {
   it('形状扩展贯穿 IR 预览、Vanilla 渲染与生成源码，Definition 不进入 JSON', () => {
     const Demo: FC = () => (
-      <Layout extensions={{ shapes: [sectorShapeDefinition] }}>
+      <Layout compile={{ shapes: [sectorShapeDefinition] }}>
         <Node
           position={[0, 0]}
           shape={{
@@ -239,18 +232,6 @@ describe('buildPreviewSource', () => {
     expect(renderToStaticMarkup(complete.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
-  it('让 Path Inspector 保持可见，同时不写入 canonical IR 与 Vanilla', () => {
-    const preview = buildPreviewIR(PathInspectorCanonical);
-    const vanilla = buildVanillaPreview(preview);
-    const html = renderToStaticMarkup(<PathInspectorDemo />);
-
-    expect(preview).not.toHaveProperty('inspectionRoots');
-    expect(vanilla.code).not.toMatch(/\binspect\b/);
-    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-    expect(html).toContain('data-retikz-readonly-layer');
-    expect(html).toContain('stroke-dasharray="4 3"');
-  });
-
   it('默认从静态 demo 派生 React、IR 与 Vanilla 源码', () => {
     const result = buildPreviewSource(createInput());
 
@@ -283,9 +264,9 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("description: { text: 'Preview source' }");
     expect(result.source?.vanilla?.files[0]?.code).toContain('padding: { x: 8, y: 10 }');
     expect(result.source?.vanilla?.files[0]?.code).toContain("headerDirection: 'vertical'");
-    expect(result.source?.vanilla?.files[0]?.code).toContain('gridInputEmbedAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('axesInputEmbedAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('frameInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).not.toContain('gridInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).not.toContain('axesInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).not.toContain('frameInputEmbedAdapter');
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
@@ -320,10 +301,10 @@ describe('buildPreviewSource', () => {
       throw new Error('ChartDemo must return one function-component root');
     }
 
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
     );
-    const normalized = normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
+    const normalized = normalizeScene(input);
 
     expect(normalized).not.toHaveProperty('sourceIr');
     expect(buildPreviewIR(ChartDemo).sourceIr.children[0]).toMatchObject({ namespace: 'chart', type: 'point' });
@@ -349,9 +330,7 @@ describe('buildPreviewSource', () => {
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.scale');
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.guide');
     expect(vanilla?.files[0]?.code).toContain("import { renderChart } from '@retikz/chart-vanilla'");
-    expect(vanilla?.files[0]?.code).toContain(
-      "import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
-    );
+    expect(vanilla?.files[0]?.code).toContain("import { scatterChart } from '@retikz/chart-vanilla/point'");
     expect(vanilla?.files[0]?.code).not.toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain("title: { text: 'Income and life expectancy' }");
     expect(vanilla?.files[0]?.code).toContain("source: { text: 'World Bank' }");
@@ -380,9 +359,7 @@ describe('buildPreviewSource', () => {
       presentation: { title: { text: 'Income, life expectancy, and population' } },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
-    expect(vanilla?.files[0]?.code).toContain(
-      "import { bubbleChart, bubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
-    );
+    expect(vanilla?.files[0]?.code).toContain("import { bubbleChart } from '@retikz/chart-vanilla/point'");
     expect(vanilla?.files[0]?.code).toContain("size: 'population'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
@@ -404,9 +381,7 @@ describe('buildPreviewSource', () => {
       },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "strip"');
-    expect(vanilla?.files[0]?.code).toContain(
-      "import { stripChart, stripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
-    );
+    expect(vanilla?.files[0]?.code).toContain("import { stripChart } from '@retikz/chart-vanilla/point'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });
@@ -418,7 +393,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
-    expect(vanilla?.files[0]?.code).toContain('tableInputEmbedAdapter');
+    expect(vanilla?.files[0]?.code).not.toContain('tableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).toContain("category: 'A'");
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');
@@ -431,7 +406,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
-    expect(vanilla?.files[0]?.code).toContain('tableInputEmbedAdapter');
+    expect(vanilla?.files[0]?.code).not.toContain('tableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');

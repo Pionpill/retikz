@@ -64,7 +64,7 @@ Plot、Table、Graph 等领域包先把 channel、scale、表格规则、图式�
 
 ## 非目标
 
-- 排版布局 schema、solver、artifact、inspection 与 adapter
+- 排版布局 schema、solver、artifact 与 adapter
 - 一般图的 Tree / Layered / Force 算法布局、GraphModel、自动 edge routing 与碰撞避让
 - Plot / Table 数据语义、Graph 图式语义、领域 provenance 与交互
 - Core IR、Scene、renderer、运行时资源或编辑器状态

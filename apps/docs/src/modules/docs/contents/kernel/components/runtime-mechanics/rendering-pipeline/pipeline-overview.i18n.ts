@@ -10,7 +10,7 @@ export const pipelineOverviewI18n: Record<
     input: 'Vanilla Input',
     external: '已有 IR',
     prepare: '输入处理',
-    runtime: 'retained 时构建',
+    runtime: '客户端提交后保留会话',
     compile: '编译',
   },
   en: {
@@ -18,7 +18,7 @@ export const pipelineOverviewI18n: Record<
     input: 'Vanilla Input',
     external: 'Existing IR',
     prepare: 'Prepare input',
-    runtime: 'Built in retained mode',
+    runtime: 'Retained after commit',
     compile: 'Compile',
   },
 };

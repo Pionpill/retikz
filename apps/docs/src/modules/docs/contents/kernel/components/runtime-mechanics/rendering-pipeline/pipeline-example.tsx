@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 /** 用固定尺寸的两个节点追踪声明、编译与渲染 */
 const PipelineExample: FC = () => (
-  <Layout runtime={{ mode: 'static' }} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="A"
       position={[0, 0]}

@@ -1,5 +1,6 @@
+import { compileLayers } from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
-import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, layerFromInput, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { embedPlot, plot, plotInputEmbedAdapter, plotIROf } from '../src';
@@ -7,8 +8,7 @@ import { embedPlot, plot, plotInputEmbedAdapter, plotIROf } from '../src';
 const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'plot',
-  layerId: 'chart',
-  identityPath: ['chart', id],
+  identityPath: [id],
 });
 
 const salesSpec = (id?: string) =>
@@ -115,29 +115,24 @@ describe('Plot Vanilla Tier2 适配器', () => {
   it('经 scene/layer runtime 渲染 Plot embed', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
-    const inputScene = scene({
-      layers: [
-        layer({ id: 'chart', children: [embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })] }),
-      ],
-    });
-    const svg = renderToSvgString(inputScene, {
-      adapters: [plotInputEmbedAdapter],
+    const layerScene = scene([embedPlot({ spec }, datasets, { layout: { width: 360, height: 200 } })]);
+    const layers = [layerFromInput({ name: 'chart', scene: layerScene })];
+    const [compiled] = compileLayers(layers);
+    const svg = renderToSvg(compiled.result.scene, {
       output: { width: 360, height: 200 },
     });
 
     expect(svg).toContain('<rect');
     expect(spec).toEqual(input);
-    expect(normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
-      'sales',
-    ]);
+    expect(compiled.name).toBe('chart');
   });
 
   it('保持 lineage 在 IRPlot、Core IR 与 Scene meta 之外', () => {
     const inputScene = scene([embedPlot({ spec: salesSpec('sales') }, datasets)]);
-    const normalized = normalizeScene(inputScene, { adapters: [plotInputEmbedAdapter] });
+    const normalized = normalizeScene(inputScene);
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
-    expect(renderToSvgString(inputScene, { adapters: [plotInputEmbedAdapter] })).not.toContain('lineage');
+    expect(renderToSvg(compileToScene(inputScene).scene)).not.toContain('lineage');
   });
 
   it('保留显式 root identity 且不为匿名 spec 派生 id', () => {
@@ -210,7 +205,7 @@ describe('Plot Vanilla Tier2 适配器', () => {
   it('缺失 dataset reference 时 fail-loud', () => {
     const inputScene = scene([embedPlot({ spec: salesSpec() }, {})]);
 
-    expect(() => renderToSvgString(inputScene, { adapters: [plotInputEmbedAdapter] })).toThrow(/sales/i);
+    expect(() => renderToSvg(compileToScene(inputScene).scene)).toThrow(/sales/i);
   });
 
   it('重用 Source id 并保留匿名 Source 而不发明 id', () => {

@@ -758,10 +758,10 @@ export const executeFlowLayout = (
         placementInput,
         cloneAndFreezeJson(placementContext.placeLayout(placementInput), `Flow Layout '${layoutId}' placement output`),
       );
-      const record = cloneAndFreezeJson({ input: placementInput, output: placementOutput });
-      placements.set(layoutId, record);
+      const output = cloneAndFreezeJson(placementOutput);
+      placements.set(layoutId, { input: placementInput, output });
 
-      return record.output;
+      return output;
     },
   });
 

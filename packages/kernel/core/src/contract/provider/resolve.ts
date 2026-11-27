@@ -115,7 +115,7 @@ const buildProviderIndex = (
     roots.push(...contribution.roots);
 
     for (const provider of contribution.providers) {
-      const dependencies = [...(provider.dependencies ?? [])];
+      const dependencies = provider.dependencies ?? [];
       const existing = findProvider(index, provider.key);
       if (existing === undefined) {
         const entry: ProviderEntry = {

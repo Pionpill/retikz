@@ -35,6 +35,7 @@ class TransformExecutor<TSource> implements DataTransformExecutor<TSource> {
   private readonly implementations = new Map<string, AnyTransformImplementation>();
 
   constructor(private readonly options: DataTransformExecutionOptions<TSource>) {
+    this.prepare = this.prepare.bind(this);
     for (const registration of options.externalProviders ?? []) {
       if (this.providers.has(registration.name))
         throw new RetikzDataError(`data: duplicate external provider "${registration.name}"`);
@@ -50,11 +51,11 @@ class TransformExecutor<TSource> implements DataTransformExecutor<TSource> {
   }
 
   /** 固定本请求的全部阶段选择；预检期间不执行数据计算 */
-  prepare = async (
+  async prepare(
     descriptor: DataTransformInputDescriptor<TSource>,
     resolution: DataTransformResolution,
     request: DataTransformRequestOptions = {},
-  ): Promise<DataTransformPreparation<TSource>> => {
+  ): Promise<DataTransformPreparation<TSource>> {
     assertDataExecutionActive(request.signal);
     assertDataTransformModel(resolution.inputModel, descriptor.model);
     const options = this.options;
@@ -169,7 +170,7 @@ class TransformExecutor<TSource> implements DataTransformExecutor<TSource> {
         ],
       };
     return plan;
-  };
+  }
 }
 
 /**

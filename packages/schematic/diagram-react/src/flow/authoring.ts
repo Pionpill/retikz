@@ -7,7 +7,8 @@ import type {
   InputFlowRelation,
 } from '@retikz/diagram-vanilla/flow';
 import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
-import type { LayoutExtensions, LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { LayoutProps, ReactInputEmbedContext } from '@retikz/react';
+import type { CompileOptions } from '@retikz/reconciler';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -17,11 +18,11 @@ import type { FlowRelationItem, FlowRelationsProps } from './FlowRelations';
 
 /** Flow standalone 模式承接的完整 Layout 宿主属性 */
 export type FlowDiagramLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
+  LayoutProps & CompileOptions,
   | 'authoring'
-  | 'compileDriver'
   | 'handlers'
-  | 'runtime'
+  | 'reconciler'
+  | 'onDiagnostic'
   | 'width'
   | 'height'
   | 'viewBox'
@@ -50,9 +51,9 @@ export type FlowDiagramLayoutHostProps = Pick<
 /** Flow standalone-only Layout props 的完整字段表 */
 const flowDiagramLayoutHostPropKeys = [
   'authoring',
-  'compileDriver',
   'handlers',
-  'runtime',
+  'reconciler',
+  'onDiagnostic',
   'width',
   'height',
   'viewBox',
@@ -310,9 +311,9 @@ export const collectFlowDiagramInput = (
   const {
     children,
     authoring: _authoring,
-    compileDriver: _compileDriver,
     handlers: _handlers,
-    runtime: _runtime,
+    reconciler: _reconciler,
+    onDiagnostic: _onDiagnostic,
     width: _width,
     height: _height,
     viewBox: _viewBox,
@@ -340,9 +341,9 @@ export const collectFlowDiagramInput = (
     ...input
   } = props;
   void _authoring;
-  void _compileDriver;
   void _handlers;
-  void _runtime;
+  void _reconciler;
+  void _onDiagnostic;
   void _width;
   void _height;
   void _viewBox;

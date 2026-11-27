@@ -78,7 +78,7 @@ describe('Ribbon 的 Vanilla 预览', () => {
   it('将 React 演示 Path 携带到生成的源和 SVG 渲染中', () => {
     const preview = buildPreviewIR(RibbonBasicDemo);
 
-    expect(preview.paths).toEqual([ribbonPathDefinition]);
+    expect(preview.compile?.paths).toEqual([ribbonPathDefinition]);
 
     const vanilla = buildVanillaPreview(preview);
 

@@ -9,6 +9,8 @@ keywords: 'FlexLayout、GridLayout、OverlayLayout、LayoutItem、React 子项�
 - 决策日期：2026-08-09
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Layout v0.1 roadmap](./roadmap.md) · [Layout 布局库设计](../../../architecture/layout-library-design.md) · [Library 能力库设计](../../../architecture/library-design.md)
 
+> 有关 Inspector 与 /inspect 入口的条款已由 [Kernel ADR-090](../../../../../kernel/_notes/decisions/_v0.5/090-remove-inspect.md) 替代；Layout 领域产物保持独立。
+
 ## 背景与目标
 
 FlexLayout、GridLayout、OverlayLayout、LayoutItem、共享 Box 词汇、layout artifact、Inspector、React 与 Vanilla authoring 已形成从 schema、确定性求解、layout-aware compile、placement 到 inspection 的纵向闭环，不再只是 Standard 中的一组绘图 composite

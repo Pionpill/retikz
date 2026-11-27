@@ -271,34 +271,8 @@ export type InputRelationWay = Readonly<{
 #### <ApiSourceLink label={"relationInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/relation.ts"} startLine={18}>relationInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const relationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInputEmbedProps>;
+export declare const relationInputEmbedAdapter: InputEmbedAdapter<RelationInputEmbedProps>;
 ```
-
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable variant="parameters">
-
-| 类别   | 名称 | 类型 / 签名                                    | 说明                                                                |
-| ------ | ---- | ---------------------------------------------- | ------------------------------------------------------------------- |
-| 返回值 | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
-```
-
-</DocTab>
-
-</DocTabs>
 
 #### <ApiSourceLink label={"createRelation"} path={"packages/schematic/graph/src/contract/authoring/relation.ts"} startLine={14}>createRelation</ApiSourceLink> / <ApiSourceLink label={"RelationCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/relation.ts"} startLine={7}>RelationCreateOptions</ApiSourceLink>
 

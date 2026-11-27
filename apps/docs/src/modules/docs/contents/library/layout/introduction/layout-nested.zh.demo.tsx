@@ -69,7 +69,7 @@ const Demo: FC = () => (
   </Layout>
 );
 
-/** canonical IR 只保存布局输入，不保存运行时 Inspector 选择 */
+/** canonical IR 只保存布局输入 */
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (

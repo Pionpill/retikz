@@ -24,21 +24,16 @@ export type MeasuredLegendItem = Readonly<{
 }>;
 
 /** 将 Legend sample/label 的测量结果映射为共享 paired flow 的两个 layout child */
-const pairedFlowChildOf = (child: MeasuredLegendChild): PairedFlowItem['primary'] =>
-  Object.freeze({
-    minimum: Object.freeze({ ...child.minimum.slotSize }),
-    natural: Object.freeze({ ...child.natural.slotSize }),
-  });
+const pairedFlowChildOf = (child: MeasuredLegendChild): PairedFlowItem['primary'] => ({
+  minimum: child.minimum.slotSize,
+  natural: child.natural.slotSize,
+});
 
 /** 将 Legend item 语义映射为共享布局所需的 primary/secondary descriptor */
 export const pairedFlowItemsOf = (items: ReadonlyArray<MeasuredLegendItem>): ReadonlyArray<PairedFlowItem> =>
-  Object.freeze(
-    items.map(item =>
-      Object.freeze({
-        key: item.authored.key,
-        sourceIndex: item.sourceIndex,
-        primary: pairedFlowChildOf(item.sample),
-        ...(item.label === undefined ? {} : { secondary: pairedFlowChildOf(item.label) }),
-      }),
-    ),
-  );
+  items.map(item => ({
+    key: item.authored.key,
+    sourceIndex: item.sourceIndex,
+    primary: pairedFlowChildOf(item.sample),
+    ...(item.label === undefined ? {} : { secondary: pairedFlowChildOf(item.label) }),
+  }));

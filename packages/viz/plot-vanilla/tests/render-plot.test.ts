@@ -2,7 +2,7 @@ import type { ExternalDatasets } from '@retikz/data';
 import { defineFieldOrder } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
-import { renderToSvgString } from '@retikz/vanilla';
+import { renderToSvg } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
@@ -110,14 +110,14 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(() => renderPlot(spec, {}, { layout: { width: 480, height: 300 } })).toThrow();
   });
 
-  it('与手写 SceneReconciler + renderToSvgString 等价（证明薄包装不引入额外语义）', () => {
+  it('与手写 SceneReconciler + renderToSvg 等价（证明薄包装不引入额外语义）', () => {
     const viaRenderPlot = renderPlot(spec, data, { layout: { width: 480, height: 300 } });
     const scene = compileTestResult(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(data, { layout: { width: 480, height: 300 } }) },
     ).scene;
 
-    expect(viaRenderPlot).toBe(renderToSvgString(scene, { output: { width: 480, height: 300 } }));
+    expect(viaRenderPlot).toBe(renderToSvg(scene, { output: { width: 480, height: 300 } }));
   });
 
   it('把 positionAdjustmentDefinitions 传到 lowering 并保持 SSR 与直接 Plot lowering 等价', () => {
@@ -138,7 +138,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       { composites: lowerPlots(data, options) },
     ).scene;
 
-    expect(viaRenderPlot).toBe(renderToSvgString(scene, { output: { width: 480, height: 300 } }));
+    expect(viaRenderPlot).toBe(renderToSvg(scene, { output: { width: 480, height: 300 } }));
   });
 
   it('注入 width/height 到 <svg>（产物有显示尺寸，与 React <Plot> 对齐）', () => {
@@ -181,7 +181,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
 
     expect(collectSceneGroupIds(scene.primitives as Array<ScenePrimLike>)).toEqual(expect.arrayContaining(semanticIds));
 
-    const svg = renderToSvgString(scene, { output: { width: 480, height: 300 } });
+    const svg = renderToSvg(scene, { output: { width: 480, height: 300 } });
 
     for (const id of semanticIds) {
       expect(svg).toMatch(new RegExp(`<g[^>]*data-retikz-id="${id}"`));
@@ -247,7 +247,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(seriesA?.children?.some(child => child.type === 'path')).toBe(true);
     expect(seriesB?.children?.some(child => child.type === 'path')).toBe(true);
 
-    const svg = renderToSvgString(scene, { output: { width: 300, height: 250 } });
+    const svg = renderToSvg(scene, { output: { width: 300, height: 250 } });
 
     for (const id of ['series-demo.lines', 'series-demo.series.A', 'series-demo.series.B']) {
       expect(svg).toMatch(new RegExp(`<g[^>]*data-retikz-id="${id}"`));

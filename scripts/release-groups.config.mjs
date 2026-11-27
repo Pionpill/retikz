@@ -32,7 +32,6 @@ export const releaseGroups = {
       '@retikz/math',
       '@retikz/core',
       '@retikz/reconciler',
-      '@retikz/inspect',
       '@retikz/render',
       '@retikz/react',
       '@retikz/vanilla',

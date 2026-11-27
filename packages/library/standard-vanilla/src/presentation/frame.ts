@@ -11,13 +11,8 @@ import {
   RetikzStandardError,
   RetikzStandardErrorCode,
 } from '@retikz/standard/presentation';
-import type {
-  InputChild,
-  InputEmbed,
-  SynchronousInputEmbedAdapter,
-  InputEmbedContribution,
-  InputNode,
-} from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContribution, InputNode } from '@retikz/vanilla';
 
 import { standardFrameEmbedKind } from '../shared/constants';
 
@@ -51,7 +46,7 @@ export const frameTitle = (input: InputFrameTitle): IRFrameTitle => ({ ...input 
 export const frameDescription = (input: InputFrameDescription): IRFrameDescription => ({ ...input });
 
 /** Standard Frame 的 InputEmbed adapter */
-export const frameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = {
+export const frameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
   kind: standardFrameEmbedKind,
   lower: (props, context) => {
     /** 将已归一化的 Node 转换为 Frame header input */
@@ -132,9 +127,9 @@ export const frameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = 
 };
 
 /** 创建由 frameInputEmbedAdapter 下沉的 Standard Frame embed */
-export const frame = (input: InputFrame): InputEmbed<InputFrame> => ({
-  type: 'embed',
-  kind: standardFrameEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const frame = (input: InputFrame): InputEmbed<InputFrame> =>
+  embed({
+    adapter: frameInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

@@ -2,9 +2,10 @@ import { ChartData, ChartLayout } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import type { CoreProviderContribution } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
+import { graph, block } from '@retikz/graph-vanilla';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Draw, Layout, Node } from '@retikz/react';
-import type { LayoutProps } from '@retikz/react';
+import type { ScopeStyleProps } from '@retikz/react';
 import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '@retikz/standard-react/shape';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
@@ -75,7 +76,11 @@ const HookedEmbeddable: FC & {
   inputEmbedAdapter?: InputEmbedAdapter;
 } = () => {
   useMemo(() => 1, []);
-  return <Layout width={40} height={20} />;
+  return (
+    <Layout width={40} height={20}>
+      {null}
+    </Layout>
+  );
 };
 
 HookedEmbeddable.displayName = 'HookedEmbeddable';
@@ -180,11 +185,11 @@ describe('buildPreviewIR', () => {
     expect(vanilla.svg).toContain('stroke="#123456"');
   });
 
-  it.each<LayoutProps['rootScope']>([undefined, {}, { defaults: { style: {} } }, { defaults: { reset: false } }])(
-    '不为无效的 rootScope %j 或宿主 props 添加 Scope',
+  it.each<ScopeStyleProps | undefined>([undefined, {}, { defaults: undefined }])(
+    'rootScope %j 没有 defaults 时不添加 Scope',
     rootScope => {
       const preview = buildPreviewIR(() => (
-        <Layout rootScope={rootScope} style={{ opacity: 0.5 }} runtime={{ mode: 'static' }}>
+        <Layout rootScope={rootScope} style={{ opacity: 0.5 }}>
           <Node id="A" position={[0, 0]} />
         </Layout>
       ));
@@ -194,9 +199,9 @@ describe('buildPreviewIR', () => {
     },
   );
 
-  it('当提供 rootScope 时，保持完整的 IR 不变', () => {
+  it('直接传入完整 IR 时保留其引用', () => {
     const ir = { type: 'scene' as const, version: 1 as const, children: [] };
-    const preview = buildPreviewIR(() => <Layout ir={ir} rootScope={{ defaults: { style: { stroke: 'red' } } }} />);
+    const preview = buildPreviewIR(() => <Layout ir={ir} />);
 
     expect(preview.sourceIr).toBe(ir);
     expect(preview.ir).toBe(ir);
@@ -279,23 +284,7 @@ describe('buildPreviewIR', () => {
     const source = buildPreviewSourceIR(
       {
         type: 'scene',
-        children: [
-          {
-            type: 'embed',
-            kind: 'graph.graph',
-            id: 'graph',
-            props: {
-              children: [
-                {
-                  type: 'embed',
-                  kind: 'graph.block',
-                  id: 'block',
-                  props: { id: 'block' },
-                },
-              ],
-            },
-          },
-        ],
+        children: [graph({ children: [block({ id: 'block' })] })],
       },
       {
         type: 'scene',

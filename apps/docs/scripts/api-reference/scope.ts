@@ -43,7 +43,6 @@ export const scopeSchemaLocalizations = {
   },
   ScopeAnchorPositionSchema: {
     descriptions: {
-      kind: '锚点定位的判别字段',
       target: '父坐标系中的定位目标',
       selfAnchor: '变换后 Scope 包络上的对齐点；省略时使用 center',
     },
@@ -70,6 +69,7 @@ const scopeConfig: ApiReferencePackageConfig = {
     {
       source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
       title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+      fullMemberSymbols: ['ScopeProps', 'ScopeStyleProps'],
       symbols: ['Scope', 'ScopeProps', 'ScopeStyleProps'],
       symbolPairs: [['Scope', 'ScopeProps']],
       memberValueSets: {
@@ -94,7 +94,7 @@ export const scopeApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> 
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
         title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
-        symbols: ['scope', 'InputScope'],
+        symbols: ['scope', 'ScopeOptions', 'InputScope'],
         fullMemberSymbols: ['InputScope'],
         symbolPairs: [['scope', 'InputScope']],
       },

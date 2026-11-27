@@ -67,7 +67,6 @@ export const blockApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'normalizeBlockHeader',
       'normalizeBlockSection',
       'normalizeBlockRow',
-      'createGraphVanillaAdapters',
     ],
     pairs: [
       ['block', 'BlockInputEmbedProps'],

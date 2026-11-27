@@ -83,7 +83,7 @@ describe('<Layout onArtifacts>', () => {
     container.remove();
   });
 
-  it('只有内联回调身份发生变化时，不再通知', async () => {
+  it('内联回调变化时，新回调收到当前产物', async () => {
     let notificationCount = 0;
     const ir: IRScene = {
       version: 1,
@@ -114,7 +114,7 @@ describe('<Layout onArtifacts>', () => {
       root.render(renderLayout(1));
     });
 
-    expect(notificationCount).toBe(1);
+    expect(notificationCount).toBe(2);
 
     root.unmount();
     container.remove();

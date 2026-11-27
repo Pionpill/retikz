@@ -2,7 +2,7 @@ import type { CanonicalTheme, CompositeCompileContext } from '@retikz/core';
 import {
   CompileExpansionKind,
   LayoutChildProbeKind,
-  createCompositeContractError,
+  createContractViolationError,
   guardProviderOutput,
   isFatalProbeError,
 } from '@retikz/core';
@@ -11,7 +11,7 @@ import type { CompositeReplayMaterializeContext } from '../../runtime';
 import { freezeOccurrence, wrapLayoutProbeError } from '../../shared';
 import type { SubtreeCompileRuntime } from '../subtree';
 import { createLayoutChildFailure } from './failure';
-import { snapshotCompositeLayoutChild } from './handle';
+import { readCompositeChild } from './handle';
 import { boundsRectOf, contributionOfBounds, projectContribution } from './layout';
 import type { CompositeProbeContext } from './probe';
 import { evaluateCompositeLayout, probeCompositeLayout } from './probe';
@@ -30,18 +30,17 @@ const createMeasureChild = (
   const { runtime, owner, key, occurrence, compositeDepth } = probeContext;
   let measurementEnvironmentIdentity: number | undefined;
   return (nextChild, proposal, axis) => {
-    /** 准备约束、子项和来源快照，绑定子项必须属于当前回调 */
+    /** 准备布局约束与子项，绑定子项必须属于当前回调 */
     const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
     const inputEntry = runtime.state.composite.outputChildren.get(nextChild);
     if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
-      throw createCompositeContractError(`${owner.label} measureChild requires a child from this callback`);
+      throw createContractViolationError(`${owner.label} measureChild requires a child from this callback`);
     const inputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
-    // ⚡绑定子项已在创建句柄时脱离并冻结，直接复用快照
-    const clonedChild =
+    const child =
       inputEntry?.child.kind === 'bound'
         ? inputEntry.child.child
         : guardProviderOutput(owner.label, () =>
-            snapshotCompositeLayoutChild(owner.label, nextChild, probeSequence.index),
+            readCompositeChild(owner.label, nextChild, `layoutChild input at probe ${probeSequence.index}`),
           );
     const probeIndex = probeSequence.index++;
 
@@ -54,7 +53,7 @@ const createMeasureChild = (
       runtime.state.composite.identityOf(inputs?.source ?? nextChild),
       inputs === undefined ? runtime.state.composite.identityOf(owner) : null,
       inputs?.sourcePath,
-      runtime.state.composite.internMeasurementChild(clonedChild),
+      runtime.state.composite.internMeasurementChild(child),
       axis,
       clonedProposal,
       measurementEnvironmentIdentity,
@@ -76,7 +75,7 @@ const createMeasureChild = (
     try {
       const { laid } = evaluateCompositeLayout(
         probeContext,
-        clonedChild,
+        child,
         clonedProposal,
         probeOccurrence,
         frame.context.transformChains,
@@ -95,7 +94,7 @@ const createMeasureChild = (
         runtime.state.composite.failures,
         owner,
         wrapLayoutProbeError(thrown),
-        'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type,
+        'namespace' in child ? `${child.namespace}.${child.type}` : child.type,
         probeOccurrence,
       );
       return { kind: 'failed', failure };
@@ -112,22 +111,21 @@ const createLayoutChild = (
 ): CompositeCompileContext['layoutChild'] => {
   const { runtime, owner, key, occurrence } = probeContext;
   return (nextChild, proposal) => {
-    /** 准备约束、子项和来源快照，保留绑定子项的运行时输入 */
+    /** 准备布局约束与子项，保留绑定子项的运行时输入 */
     const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
     const inputEntry = runtime.state.composite.outputChildren.get(nextChild);
     if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} layoutChild requires an authored or bound child from this callback`,
       );
 
     const probeInputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
-    const clonedChild = guardProviderOutput(owner.label, () =>
-      snapshotCompositeLayoutChild(
-        owner.label,
-        inputEntry?.child.kind === 'bound' ? inputEntry.child.child : nextChild,
-        probeSequence.index,
-      ),
-    );
+    const child =
+      inputEntry?.child.kind === 'bound'
+        ? inputEntry.child.child
+        : guardProviderOutput(owner.label, () =>
+            readCompositeChild(owner.label, nextChild, `layoutChild input at probe ${probeSequence.index}`),
+          );
     const probeOccurrence = freezeOccurrence({
       sourcePath: occurrence.sourcePath,
       expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Probe, index: probeSequence.index }],
@@ -138,7 +136,7 @@ const createLayoutChild = (
     try {
       const probed = probeCompositeLayout(
         probeContext,
-        clonedChild,
+        child,
         clonedProposal,
         probeOccurrence,
         frame.context.transformChains,
@@ -157,7 +155,7 @@ const createLayoutChild = (
       }: CompositeReplayMaterializeContext) =>
         probeCompositeLayout(
           probeContext,
-          clonedChild,
+          child,
           clonedProposal,
           probeOccurrence,
           scopeChain,
@@ -180,8 +178,7 @@ const createLayoutChild = (
       if (isFatalProbeError(thrown)) throw thrown;
 
       const error = wrapLayoutProbeError(thrown);
-      const fallbackProviderKey =
-        'namespace' in clonedChild ? `${clonedChild.namespace}.${clonedChild.type}` : clonedChild.type;
+      const fallbackProviderKey = 'namespace' in child ? `${child.namespace}.${child.type}` : child.type;
       const failure = createLayoutChildFailure(
         runtime.state.composite.failures,
         owner,

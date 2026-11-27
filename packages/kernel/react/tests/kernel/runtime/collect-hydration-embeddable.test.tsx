@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Node, Scope } from '../../../src';
-import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hydration-handlers';
+import { collectHydrationHandlers } from '../../../src/container/hydration';
 
 /*
  * 水合：collectHydrationHandlers 对可嵌入 Tier2 子组件的处理

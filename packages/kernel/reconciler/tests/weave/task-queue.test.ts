@@ -14,7 +14,8 @@ const createEntries = () => {
       { type: 'coordinate', id: 'c', position: [2, 0] },
     ],
   });
-  return manager.mount().root.current!.children.filter(entry => entry.type === 'coordinate');
+  manager.mount();
+  return manager.root.current!.children.filter(entry => entry.type === 'coordinate');
 };
 
 describe('Weave 阶段就绪队列', () => {

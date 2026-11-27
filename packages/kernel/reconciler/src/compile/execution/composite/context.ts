@@ -7,7 +7,7 @@ import type {
 } from '@retikz/core';
 import {
   captureCompositeInputScope,
-  createCompositeContractError,
+  createContractViolationError,
   naturalLayoutProposal,
   resolveTheme,
   selectCompositeInputScope,
@@ -75,7 +75,7 @@ export const createCompositeCallbackContext = (
     resolvePathTargets: (result, query) => {
       const entry = runtime.state.composite.layoutResults.get(result);
       if (entry === undefined || entry.owner !== owner)
-        throw createCompositeContractError(`${owner.label} target query requires a layout result from this callback.`);
+        throw createContractViolationError(`${owner.label} target query requires a layout result from this callback.`);
       return entry.resolvePathTargets(query);
     },
     warn: (code, message, subPath) =>

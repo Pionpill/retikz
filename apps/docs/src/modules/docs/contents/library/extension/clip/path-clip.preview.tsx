@@ -12,7 +12,7 @@ export type PathClipPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderPathClipPreview = (values: PathClipPreviewValues) => (
-  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} extensions={{ clips: [pathClipDefinition] }}>
+  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} compile={{ clips: [pathClipDefinition] }}>
     <Node
       position={[0, 0]}
       shape="rectangle"

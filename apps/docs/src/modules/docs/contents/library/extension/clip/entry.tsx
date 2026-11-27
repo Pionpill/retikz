@@ -4,7 +4,7 @@ import type { FC } from 'react';
 
 /** 展示按需装配后的圆形裁剪 */
 const Entry: FC = () => (
-  <Layout viewBox={{ x: -100, y: -75, width: 200, height: 150 }} extensions={{ clips: [circleClipDefinition] }}>
+  <Layout viewBox={{ x: -100, y: -75, width: 200, height: 150 }} compile={{ clips: [circleClipDefinition] }}>
     <Scope clip={{ kind: 'circle', params: { cx: 0, cy: 0, r: 50 } }}>
       <Node
         layout={{ minimumSize: { width: 160, height: 120 } }}

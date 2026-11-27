@@ -10,7 +10,7 @@ import type {
   SubtreeCompileState,
   TreeOutputState,
 } from '../compile';
-import { compileWarningOccurrenceOf, importSceneResources } from '../compile';
+import { captureLeafProvenance, compileWarningOccurrenceOf, importSceneResources } from '../compile';
 import { collectContributionResources } from './shared';
 import type { WeaveContribution } from './shared';
 
@@ -22,6 +22,7 @@ export const captureWeaveContribution = (
   bindings: ReadonlyArray<NamespaceFrameChange>,
   resources: SceneResources,
   occurrence: CompileOccurrenceLocator,
+  isLeaf: boolean,
   semanticOwner?: CompileOwnerKey,
 ): WeaveContribution => {
   const primitives = state.primitives as Array<ScenePrimitive>;
@@ -29,6 +30,7 @@ export const captureWeaveContribution = (
   const captureProvenance = () => {
     const tracker = runtime.state.execution.provenanceTracker;
     if (semanticOwner === undefined || tracker === undefined) return;
+    if (isLeaf) return tracker[captureLeafProvenance](primitives, semanticOwner);
     const snapshot = tracker.capture(primitives);
     const owners = new Map<CompileOwnerKey, CompileProvenanceOwner>();
     owners.set(semanticOwner, snapshot.ownerMap.get(semanticOwner)!);

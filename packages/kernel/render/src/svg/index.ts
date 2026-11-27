@@ -20,7 +20,6 @@ export {
   buildPrim,
   buildSvgDocument,
   buildSvgFragment,
-  buildSvgFrameDocument,
 } from './builders';
 export type { SvgDocumentOptions, SvgPrimitiveBuildContext } from './builders';
 export * from './serialize';

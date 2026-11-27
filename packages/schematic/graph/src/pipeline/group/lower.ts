@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRNodeLabelBoundaryPosition, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRNodeLabelSidePosition, IRScope } from '@retikz/core';
 import type { IRFlexLayoutItem } from '@retikz/layout';
 import { createFlexLayout, FlexLayoutDirection, LayoutAlignment, LayoutOverflow } from '@retikz/layout';
 import type { IRSurface } from '@retikz/standard/presentation';
@@ -9,7 +9,7 @@ import type { IRGroup, IRGroupCaptionText } from '../../schemas';
 
 const DEFAULT_GROUP_PADDING = 10;
 
-const DEFAULT_GROUP_LABEL_POSITION: IRNodeLabelBoundaryPosition = { boundary: 'bottom', fraction: 0 };
+const DEFAULT_GROUP_LABEL_POSITION: IRNodeLabelSidePosition = { side: 'bottom', fraction: 0 };
 
 const DEFAULT_GROUP_LABEL_FONT = { size: 'xs' as const };
 

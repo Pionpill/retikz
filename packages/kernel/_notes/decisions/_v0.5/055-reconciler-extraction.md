@@ -10,7 +10,7 @@ keywords: Reconciler、Core、Runtime、迁移、编译来源、ScenePatch、静
 - 状态：Accepted
 - 决策日期：2026-10-18
 - 接受日期：2026-10-18
-- 关联：[v0.5 Roadmap](./roadmap.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)、[050](./050-runtime-trace-owner-declarations.md)、[Drawing Complete](../../architecture/core-drawing-complete.md)
+- 关联：[v0.5 Roadmap](./roadmap.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-renderer.md)、[016](./016-runtime-execution-policy.md)、[050](./050-runtime-trace-owner-declarations.md)、[Drawing Complete](../../architecture/core-drawing-complete.md)
 
 > 后续调整：[061](./061-weave-core-integration.md) 已替代本文的 CoreChange 提示、快照 diff 索引与 mismatch 诊断约定；完整输入和 Scene 提交边界继续保留。
 
@@ -30,7 +30,7 @@ Core 继续拥有 IR、Definition / registry、resolve、几何、布局、Compo
 
 Reconciler 拥有 Core Source 与 Composite 输入 Source 的 Runtime 包装、Computation 接线、跨次身份关联、输入 Diff、复用状态、局部更新选择、运行时快照及 Scene Patch 契约与生成。Runtime 继续拥有通用 Source / Computation / Participant、revision 和事务；Reconciler 不维护第二个提交时钟或事务引擎。
 
-Render 的 retained 能力消费 Reconciler 的公开输出契约，静态能力继续消费 Core Scene。Vanilla 组装 Reconciler、Runtime 与 Render，React 继续通过 Vanilla 接入；本决策只要求已有消费者适配新的所有权，不新增上层局部更新入口或领域增量算法。
+Render 的 session 能力消费 Reconciler 的公开输出契约，静态能力继续消费 Core Scene。Vanilla 组装 Reconciler、Runtime 与 Render，React 继续通过 Vanilla 接入；本决策只要求已有消费者适配新的所有权，不新增上层局部更新入口或领域增量算法。
 
 ## 基础数据结构与公开契约
 

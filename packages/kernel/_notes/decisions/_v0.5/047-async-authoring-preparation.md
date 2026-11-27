@@ -1,17 +1,17 @@
 ---
-description: Vanilla 统一异步作者输入准备与候选发布，支持 Tier 2 嵌入、SSR、更新和失效隔离，保持 Core 编译与 Runtime 事务同步
+description: 已撤销的历史设计：Vanilla 统一异步作者输入准备与候选发布，支持 Tier 2 嵌入、SSR、更新和失效隔离，保持 Core 编译与 Runtime 事务同步
 keywords: Vanilla、InputEmbed、prepare、Promise、SSR、revision、AbortSignal、processing
 ---
 
 # ADR-047：共享异步作者输入准备
 
-> 后续入口收敛：[ADR-082](./082-scene-reconciler-entry.md) 将下述一次性异步入口命名为 Vanilla 的 `compileToSceneAsync`，其作者准备、取消、结果与发布语义保持。
+> 本提案已撤销。Vanilla 仅消费就绪输入；领域计算和请求取舍由调用方管理。下文保留原决策的动机与取舍，不是当前 API。实例数据的同步绑定见 [048](./048-composite-runtime-input.md)，编译与采用边界见 [082](./082-scene-reconciler-entry.md)。
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-10-02
 - 关联：[kernel v0.5 roadmap](./roadmap.md) · [包职能设计](../../../../../notes/architecture/package-responsibility-design.md) · [Core 能力边界](../../architecture/core-drawing-complete.md)
 - 前置：[Vanilla Authoring](./029-vanilla-authoring-normalization.md) · [匿名嵌入身份](./045-anonymous-input-embed-identity.md)
-- 约束：[同步事务](./012-computation-transaction-lifecycle.md) · [Retained Renderer](./014-scene-patch-retained-renderer.md)
+- 约束：[同步事务](./012-computation-transaction-lifecycle.md) · [Renderer](./014-scene-patch-renderer.md)
 - 实例接入：[Composite 运行时输入](./048-composite-runtime-input.md)
 
 ## 背景与目标
@@ -22,7 +22,7 @@ Tier 2 作者输入可能先等待数据引擎等异步结果，再生成可同�
 
 ## 决策：在同步编译前准备完整作者贡献
 
-`@retikz/vanilla` processing 提供异步作者入口。它确定与同步路径相同的声明位置、匿名身份和有效 Theme，先收集本次作者树的全部 preparation，准备成功后才依声明顺序执行并汇合 contribution。之后复用唯一的同步 Source 归一化、provider graph resolver、compile driver 和 static/retained 发布链。
+`@retikz/vanilla` processing 提供异步作者入口。它确定与同步路径相同的声明位置、匿名身份和有效 Theme，先收集本次作者树的全部 preparation，准备成功后才依声明顺序执行并汇合 contribution。之后复用唯一的同步 Source 归一化、provider graph resolver、compile result extension 和 static/session 发布链。
 
 prepare 只检查能力、解析声明和建立依赖，不执行数据变换或搬运行数据。execute 完成领域计算并生成既有 InputEmbedContribution；所有 contribution 就绪后才开始 Core 编译和 Runtime transaction。准备失败或输入失效不发布部分 contribution、部分 Scene 或新 revision。
 
@@ -56,11 +56,11 @@ prepareChildren 在准备阶段收集作者声明中的嵌套输入，返回由�
 
 ## 行为、失败语义与兼容性
 
-完整贡献通过 ADR-048 的 runtimeInputs 与实际 Source 位置关联。嵌套作者子项由父 adapter 按实际输出字段转交绑定；共享 processing 在同一请求内完成 Source、provider 与绑定汇合，并在 retained 更新时将 Source 和绑定置于同一事务。重复 Layout 测量只消费准备结果，不再次执行 preparation。
+完整贡献通过 ADR-048 的 runtimeInputs 与实际 Source 位置关联。嵌套作者子项由父 adapter 按实际输出字段转交绑定；共享 processing 在同一请求内完成 Source、provider 与绑定汇合，并在 session 更新时将 Source 和绑定置于同一事务。重复 Layout 测量只消费准备结果，不再次执行 preparation。
 
 - 同步 processing options 的 adapters 收窄为 SynchronousInputEmbedAdapter；async options 只接受具有 prepare 的 adapter。提供 lower 的 adapter 必须在计算前诊断当前输入不能同步消费的情况；不能调用 prepare、执行部分异步任务或在 callback 返回后检测 Promise。两种入口共用完整贡献与编译链，是明确的执行能力边界，不是新旧兼容路径。
 - React 的同步 SSR 消费现有同步 lower 路径；需要异步准备的 SSR 通过 Vanilla 静态异步入口等待完整结果再交给 renderer，不在同步 React render 中启动网络任务。客户端异步作者路径复用 AsyncProcessingController；输入/结果和 AbortSignal 的框架接线不解释领域 mode 或重复调用引擎。
-- React Layout 的 `runtime.preparation` 选择 `sync` 或 `async`，省略为 `sync`；`runtime.signal` 控制异步路径的生命周期。此选择与 retained/static 更新方式独立，异步树的每个 adapter 都必须具有 prepare。官方 Viz 独立组件使用异步客户端路径，同步 React SSR 仍消费 lower；异步 SSR 由应用等待 Vanilla 的静态入口。
+- React Layout 的 `runtime.preparation` 选择 `sync` 或 `async`，省略为 `sync`；`runtime.signal` 控制异步路径的生命周期。此选择与 session/static 更新方式独立，异步树的每个 adapter 都必须具有 prepare。官方 Viz 独立组件使用异步客户端路径，同步 React SSR 仍消费 lower；异步 SSR 由应用等待 Vanilla 的静态入口。
 - 每次请求固定 typed Input 的声明结构、位置、IR 和 options；准备期间应用不得修改借入的 props、行数据或源资源。回调与 opaque 句柄只留在 runtime，Vanilla 不做任意 class/连接实例的 JSON 克隆。
 - prepare/execute 前后及进入同步编译、事务、发布前都检查任务失效。adapter 忽略 signal 也不能让旧结果发布；网络中止只是额外的资源优化。dispose 使所有待提交任务失效，之后 read/update/subscribe 遵守既有 disposed 错误语义。
 - prepare 或 execute 的同步抛错、Promise rejection、身份冲突与非法贡献均终止当前请求。Vanilla 添加嵌入位置并包装为 RetikzVanillaError，保留领域错误和原始 cause 链；当前请求发生的外部副作用和应用日志不获得回滚保证。

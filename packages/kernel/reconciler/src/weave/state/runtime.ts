@@ -10,8 +10,6 @@ import { WeaveTransaction } from './transaction';
 
 /** 完成基础树编译后可提交的完整结果 */
 export type WeaveCompilation<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = {
-  /** 保持身份稳定的声明根 */
-  root: WeaveRoot;
   /** 可交给输出事务提交的完整快照 */
   compilation: SceneCompilationSnapshot<TComposite>;
   /** 本次实际编译的元素数，不含缓存复用 */
@@ -36,7 +34,7 @@ type WeavePersistentState<TComposite extends AnyCompositeDefinition = AnyComposi
   readonly scopeIds: IdAllocator;
   /** 名称读取身份与稳定节点的对应关系 */
   readonly bindings: Map<object, WeaveEntry>;
-  /** 最近完成的声明输入 */
+  /** 首次挂载输入；挂载后仅保留根属性，子声明以作者树为准 */
   source: IRScene;
   /** 已提交声明的派生寻址结构 */
   addresses?: WeaveAddressIndex;

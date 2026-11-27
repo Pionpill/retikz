@@ -7,7 +7,7 @@ keywords: Runtime、trace、Core、owner、RuntimeTracePhaseDefinition、阶段�
 
 - 状态：Superseded（[064](./064-remove-runtime.md)：Runtime trace 注入与阶段注册已移除；共享 record / sink 属于 Foundation，各 owner 发射观测记录）
 - 决策日期：2026-10-10
-- 关联：[v0.5 Roadmap](./roadmap.md)、[能力完备性与模块边界](../../../../../notes/architecture/capability-design.md)、[包职能设计](../../../../../notes/architecture/package-responsibility-design.md)、[Drawing Complete](../../architecture/core-drawing-complete.md)、[010](./010-performance-observability-baseline.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)
+- 关联：[v0.5 Roadmap](./roadmap.md)、[能力完备性与模块边界](../../../../../notes/architecture/capability-design.md)、[包职能设计](../../../../../notes/architecture/package-responsibility-design.md)、[Drawing Complete](../../architecture/core-drawing-complete.md)、[010](./010-performance-observability-baseline.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-renderer.md)
 
 ## 背景与目标
 

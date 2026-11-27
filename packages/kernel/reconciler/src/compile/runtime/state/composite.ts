@@ -18,7 +18,6 @@ import type {
   SceneResources,
   Transform,
 } from '@retikz/core';
-import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompileProvenanceSnapshot } from '../../provenance';
 import type { CompositeArtifact } from '../../shared';
@@ -36,6 +35,8 @@ export type CompositeReplayMaterializeContext = Readonly<{
 
 /** 保存布局探测的完整副作用快照，使成功结果可在最终位置仅重放一次 */
 export type CompositeReplayTransaction = {
+  /** 已验证的独立布局快照身份；输出块不持有回调凭证 */
+  layoutIdentity?: object;
   /** 创建 transaction 的 layout-aware composite callback owner */
   owner: CompositeCompileOwner;
   /** probe 根 occurrence，用于 replay 时保留 probe 内部路径后缀 */
@@ -64,10 +65,10 @@ export type CompositeReplayTransaction = {
   warnings: Array<CompileWarning>;
   /** 仅在 replay 时发布的 artifacts */
   artifacts: Array<CompositeArtifact>;
-  /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
-  styleFingerprint: string;
-  /** probe 时的有效 Theme 语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
-  themeFingerprint: string;
+  /** probe 时的有效样式，用于判断 replay 是否需要在新 Scope 中重新物化 */
+  defaults: MergedScopeDefaults;
+  /** probe 时的有效 Theme ，用于判断 replay 是否需要在新 Scope 中重新物化 */
+  theme: CanonicalTheme;
   /** replay transaction 是否已经在当前 Scope preliminary chain 中完成 layout publication 投影 */
   scopeChainApplied?: boolean;
   /** 在 authored Scope 样式 / Theme 改变时重新走 Core probe channel 的内部物化器 */
@@ -136,8 +137,6 @@ export type LayoutProbeFailureEntry = Readonly<{
   owner: CompositeCompileOwner;
   /** 最接近失败位置的 provider 标识 */
   providerKey: string;
-  /** 失败子项在原始 IR 中的路径 */
-  sourcePath: PropertyPath;
   /** 保留复合展开路径的完整失败位置 */
   occurrence: CompileOccurrenceLocator;
   /** 用于重新抛出时构造诊断的失败详情 */
@@ -154,7 +153,7 @@ export class CompositeCompileState {
   /** 有界的编译内成功贡献缓存 */
   private measurements: Map<string, LayoutContribution> = new Map();
 
-  /** 已冻结子项快照的内容编号，避免同一快照被反复序列化 */
+  /** 稳定子项的内容编号，避免同一输入被反复序列化 */
   private measurementChildMap: WeakMap<IRChild, number> = new WeakMap();
 
   /** 子项与环境的 JSON 内容到编译内短编号，限制不同内容数量 */
@@ -198,11 +197,11 @@ export class CompositeCompileState {
     return identity;
   }
 
-  /** 为已脱离并冻结的测量子项复用内容编号 */
+  /** 为调用方保持稳定的测量子项复用内容编号 */
   internMeasurementChild(child: IRChild): number {
     const existing = this.measurementChildMap.get(child);
     if (existing !== undefined) return existing;
-    // ⚡同一不可变快照只序列化一次，相同内容的不同快照仍可共享编号
+    // ⚡同一子项只序列化一次，相同内容的不同子项仍可共享编号
     const identity = this.internMeasurementContent(JSON.stringify(child));
     this.measurementChildMap.set(child, identity);
     return identity;

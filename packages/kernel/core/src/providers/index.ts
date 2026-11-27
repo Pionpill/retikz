@@ -3,7 +3,7 @@ export { resolveBoundaryRegistry } from './boundary';
 export { resolveClipRegistry } from './clip';
 export * from './composite';
 export * from './mark';
-export { resolvePathRegistry } from './path';
+export { compileBuiltinStroke, resolvePathRegistry } from './path';
 export { resolvePatternRegistry } from './pattern';
 export { getProviderDefinition } from './registry';
 export type { ProviderRegistry } from './registry';

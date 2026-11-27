@@ -1,6 +1,6 @@
 ---
 description: 标签应跟随它标注的图元，而不是依靠一个碰巧相邻的屏幕坐标。
-keywords: 'IRNodeLabel、IRNodeLabelBoundaryPosition、IRStepLabel、IRPathLabel、节点标签与引线、node、Node、label、Step.label、angleBoundaryOf、label.distance、rotate'
+keywords: 'IRNodeLabel、IRNodeLabelSidePosition、IRStepLabel、IRPathLabel、节点标签与引线、node、Node、label、Step.label、angleBoundaryOf、label.distance、rotate'
 ---
 
 # 标签附着与定位
@@ -13,7 +13,7 @@ keywords: 'IRNodeLabel、IRNodeLabelBoundaryPosition、IRStepLabel、IRPathLabel
 
 ### 节点标签与引线
 
-`IRNodeLabel` 描述节点上的标签；`IRNodeLabelBoundaryPosition` 指定沿边界的附着位置。
+`IRNodeLabel` 描述节点上的标签；`IRNodeLabelSidePosition` 指定沿边界的附着位置。
 
 标签随节点定位，不是另一个参加布局的同级节点；移动节点不应要求作者同步移动标签。文字排版与标签挂在宿主哪一侧是不同决策。
 

@@ -27,12 +27,10 @@ import { Tree } from '@retikz/standard-react/collection';
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { tree, treeInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { tree } from '@retikz/standard-vanilla/collection';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 
-renderToSvgString(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] }), {
-  adapters: [treeInputEmbedAdapter],
-});
+renderToSvg(compileToScene(scene({ children: [tree({ root: { content: 'A', children: ['B', 'C'] } })] })).scene);
 ```
 
 </DocTab>

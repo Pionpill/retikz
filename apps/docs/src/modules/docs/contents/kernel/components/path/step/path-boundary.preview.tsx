@@ -29,7 +29,7 @@ export const PathBoundaryPreview = (values: PathBoundaryPreviewValues) => {
   return (
     <Layout
       viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
-      extensions={{ shapes: [starShapeDefinition] }}
+      compile={{ shapes: [starShapeDefinition] }}
       rootScope={{
         defaults: {
           node: {

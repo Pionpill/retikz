@@ -1,4 +1,4 @@
-﻿# Reconciler 编译性能基准
+# Reconciler 编译性能基准
 
 本目录只测 Core IR 到完整编译结果的计算、组装及 Reconciler 内部事务，不包含 React/Vanilla normalize、SVG/Canvas 绘制、DOM 或真实宿主 target。
 
@@ -6,14 +6,26 @@
 
 | 前缀     | 操作                   | 计时内                                       | 计时外                                            | 场景数 |
 | -------- | ---------------------- | -------------------------------------------- | ------------------------------------------------- | -----: |
-| full-    | 非增量新会话首次编译   | 创建、mount、返回结果                        | fixture、oracle、校验、逐样本dispose              |     97 |
-| mount-   | 增量新会话首次编译     | 创建、mount、返回结果                        | fixture、oracle、校验、逐样本dispose              |     97 |
+| full-    | 非增量新会话首次编译   | 创建、mount、返回结果                        | fixture、oracle、校验、逐样本dispose              |    105 |
+| mount-   | 增量新会话首次编译     | 创建、mount、返回结果                        | fixture、oracle、校验、逐样本dispose              |    105 |
 | replace- | 已挂载会话完整输入替换 | replace、完整重建和内部提交                  | 初始mount、输入准备、校验、dispose                |     12 |
-| update-  | 增量持久会话批次更新   | 编辑、依赖传播、计算、完整输出组装、内部提交 | 初始mount、批次准备、oracle、校验、trace、dispose |    228 |
+| update-  | 增量持久会话批次更新   | 编辑、依赖传播、计算、完整输出组装、内部提交 | 初始mount、批次准备、oracle、校验、trace、dispose |    245 |
 
-整体共434项，其中10000节点背景扩容有4项参考场景。用例按Node/Path/Scope/Scene/Composite拆文件，仍只用一层reconciler目录。full表示非增量首次编译；update/.../full表示增量会话的强制全量批次，不是同一操作。
+整体共467项，其中10000节点背景扩容有4项参考场景。会话基准在 `reconcile/`，Composite 工作负载独立放在 `composite/`。full表示非增量首次编译；update/.../full表示增量会话的强制全量批次，不是同一操作。
 
 replace单列的原因是完整输入消费方并不自动转成Weave批次。首次编译结果不能代替已挂载完整替换，Weave update成绩也不能推导上层processing已获得同样收益。
+
+## Composite 专项
+
+组件全部在本包基准内定义，不依赖 Standard 或其他 Tier 2 包。每个规模有 8 个首屏场景（两种模式）和 11 个 auto 更新场景（不测强制全量更新）。三个规模共 57 项，计入整体总数。
+
+| 结构            | N 的含义                                                                                | 更新 A ↔ B                                                                   |
+| --------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| direct / replay | N 个独立 Cell 实例，分别直接展开或试算后重放；各自产生 artifact                         | 仅改中间实例，或改外部锚点颜色、移动锚点                                     |
+| collection      | 一个实例生成 N 个 Scope，每项同时有 Node 和 Path；末项发布 Coordinate，外部 Path 引用它 | 等值替换、中间项改色、中间项改宽并移动后续项；用私有 memo 复用未变的图元声明 |
+| layout          | 一个实例执行 N 次 layoutChild 并重放；只有中间节点依赖外部锚点                          | 中间节点改色、外部锚点移动                                                   |
+
+全量首屏和增量首屏都计会话创建至 mount 返回；更新只计持久会话一次 update 至同步提交，不含 renderer。100 / 1000 档每项预热 10 次、正式测量 100 次；10000 档不预热、正式测量 10 次，仅报告。输入准备、全量结果对照及独立 trace 校验不计时。
 
 ## 工作负载
 
@@ -56,7 +68,7 @@ replace单列的原因是完整输入消费方并不自动转成Weave批次。�
 
 ## Weave输入情况专项
 
-weave目录有Coordinate/Node/Path/Scope的同引用、浅等值、嵌套等值、显式默认、真实变化和后续失效，共33项；Context再提供带标签改色、祖先平移、复杂变换下后代移动的1/100/1000规模，共9项。总计42项独立输入情况观察，不合入整体434项预算。
+weave目录有Coordinate/Node/Path/Scope的同引用、浅等值、嵌套等值、显式默认、真实变化和后续失效，共33项；Context再提供带标签改色、祖先平移、复杂变换下后代移动的1/100/1000规模，共9项。总计42项独立输入情况观察，不合入整体467项预算。
 
 每个样本在计时外重建会话、mount并重放前置步骤，仅测当前一次完整update；与整体持久A/B会话是不同协议，不能直接混比。该专项仍仅报告，缓存行为由功能测试断言，不在性能基准重复建设命中率框架。
 
@@ -69,6 +81,9 @@ weave目录有Coordinate/Node/Path/Scope的同引用、浅等值、嵌套等值�
 ```bash
 # 整体完整编译/首屏/替换/更新
 pnpm --filter @retikz/reconciler exec vitest bench --run --config vitest.bench.config.ts --fsModuleCache=false
+
+# 只测 Composite（不包含其它 reconcile / weave 用例）
+pnpm bench --workspace packages/kernel/reconciler benchmarks/composite/
 
 # Weave输入情况专项，上一条完成后运行
 pnpm --filter @retikz/reconciler bench:weave

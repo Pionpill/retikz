@@ -20,6 +20,7 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - 目录与非组件文件的语义部分使用 kebab-case；内部领域基础目录使用 `_<domain>` 的条件见 [分层命名](references/layers.md)。源码名通常用一至两个语义词，只有确实区分独立概念时才用第三个；`.test` / `.demo` / `.data` / locale 后缀不计入词数
 
 - 类型、接口、类、React 组件及 const object enum 使用 PascalCase。hook、store、context 分别使用 `useXxx`、`useXxxStore`、`useXxxContext`；其余值和函数使用 camelCase
+- 类方法统一使用普通方法语法，不用箭头函数类字段代替；需要脱离实例调用时显式绑定或转发，保留调用方依赖的 `this` 和回调身份
 - 类成员按“属性 → get / set 访问器 → 构造函数 → 公开方法 → 私有方法”排列；同一属性的 get / set 相邻，同一方法的重载声明与实现相邻，方法名应直接表达动作与职责
 - `index.ts` 只用作目录 barrel：导出 owner 的稳定表面，不承载业务逻辑
 - 默认按语义单文件组织强相关声明，仅内容较多且职责或依赖确需分离时拆技术分类文件；拆分后 `types.ts` 放导出或 owner 内共享类型，`constants.ts` 放稳定常量与 const object enum，`utils.ts` 只放没有更窄职责的纯 helper
@@ -28,6 +29,8 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - 具名结构必须由符号自身显式表达语义角色，不能依赖字段名、目录或调用位置补足含义；当职责已由类型或局部上下文明确时，字段与局部变量可使用简洁的 `context`、`schema`、`diagnostic(s)`、`options`
 
 ## 命名核心准则
+
+- 仅主动推进执行流程的对象使用 `Driver`；消费既有结果并附加产物或诊断的对象按扩展目标命名。返回贡献的方法按动作命名，仅响应事件的回调用 `on<Event>`。
 
 - 名称必须语义自解释；只看变量、参数、属性或函数名，就应能推断其作用、数据类别和适用范围。避免无上下文的 `data`、`value`、`item`、`base`、`target`、`result`、`key` 等泛化名称；只有在类型或局部上下文已经明确职责时才可简化
 - 函数通常采用动宾短语：前面的动词表达动作，后面的名词表达对象或细节，如 `resolvePath`、`formatName`、`isKeyEqual`；不要使用 `keyEqual` 这类缺少动作的名称。导出函数使用完整领域语义，如 `admitInspectionSelection`；仅内部使用且上下文已明确时可简化为 `admitSelection`
@@ -43,7 +46,9 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 - 前缀必须描述整个类型在所属领域内的保证，不能因为个别字段已处理就给整个对象加阶段前缀；阶段词统一见 [分层命名](references/layers.md#按语义阶段命名符号)
 - 主体及后缀明确数据用途，如 `MergedNodeStyle`、`CompiledNodeLayout`；结构角色如 `NodeResolveContext`、`NodeDefinition` 无需额外阶段前缀。避免用 `Data`、`Info` 等泛词掩盖真实用途
-- 输入类型统一使用 `InputXxx`，包括 authoring、操作参数、Definition 和 Options 输入；用途与角色保留在后缀，如 `InputNodeLayout`、`InputNodeOptions`、`InputNodeDefinition`，不使用 `XxxInput`。此前缀不限定所属包，也不表示输入未经类型检查；仅在需要独立输入契约时定义类型
+- 除下述 Vanilla 作者工厂与 React 组件外，输入类型统一使用 `InputXxx`，包括 authoring、操作参数、Definition 和 Options 输入；用途与角色保留在后缀，如 `InputNodeLayout`、`InputNodeOptions`、`InputNodeDefinition`，不使用 `XxxInput`。此前缀不限定所属包，也不表示输入未经类型检查；仅在需要独立输入契约时定义类型
+- React 包已有的显式组件名由本包 `<领域>DisplayName` 常量对象维护；成员用组件名，值用 `Retikz<领域><组件名>`（PascalCase，如 `RetikzKernelCoordinate`）。不为命名改变原有组件识别方式。
+- Vanilla 作者工厂的选项对象命名为 `XxxOptions`，形参用 `options`，构造结果仍用 `InputXxx`。React 组件输入命名为 `XxxProps`；有对应工厂时从其 Options 派生，只补充或替换 JSX 特有字段，无对应工厂时不另造 Options
 - 仅为实际存在且需要区分的形态命名，不为凑齐命名结构新增类型、包装或状态；既有 `IRXxx`、`InputXxx`、`BuiltinXxx` 等专用角色按分层规则使用，不堆叠同义限定词
 - 函数仍用“动作 + 对象”，如 `mergeNodeStyle`；变量按实际内容命名，如 `mergedNodeStyle`，局部上下文明确时可简化。枚举成员、常量、目录和文件继续遵循各自形式，不机械套用类型组合
 

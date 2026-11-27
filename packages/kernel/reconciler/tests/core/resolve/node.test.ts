@@ -79,7 +79,7 @@ describe('resolveNode', () => {
     expect(result.style.fill).toMatchObject({
       kind: 'paint',
       spec: { kind: 'pattern', shape: 'dots' },
-      pattern: { name: 'dots', size: 8, definition: { emit: expect.any(Function) } },
+      pattern: { size: 8, definition: { emit: expect.any(Function) } },
     });
     expect(result.style.stroke).toBe('red');
     expect(source.style?.fill).toEqual({ kind: 'pattern', shape: 'dots' });
@@ -234,7 +234,7 @@ describe('resolveNode', () => {
         rotate: 0,
       },
       text: {
-        lines: [{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }], mixed: false, hasMath: false }],
+        lines: [{ plainText: 'A', segments: [{ text: 'A', font: { size: 16 } }], mixed: false }],
         font: { size: 16 },
         lineHeight: 19.2,
         textAlign: 'middle',
@@ -300,7 +300,7 @@ describe('resolveNode', () => {
         node({
           label: {
             text: 'explicit',
-            position: { boundary: 'left', fraction: 0 },
+            position: { side: 'left', fraction: 0 },
             placement: 'inside',
             distance: 0,
             keepUpright: false,
@@ -312,7 +312,7 @@ describe('resolveNode', () => {
       {
         text: { lines: [{ plainText: 'explicit' }] },
         align: 'middle',
-        position: { boundary: 'left', fraction: 0 },
+        position: { side: 'left', fraction: 0 },
         placement: 'inside',
         distance: 0,
         keepUpright: false,
@@ -344,11 +344,11 @@ describe('resolveNode', () => {
   });
 
   it('当其位置省略 1 时，填充边界标签分数', () => {
-    expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).labels).toMatchObject([
+    expect(resolve(node({ label: { text: 'boundary', position: { side: 'right' } } })).labels).toMatchObject([
       {
         text: { lines: [{ plainText: 'boundary' }] },
         align: 'middle',
-        position: { boundary: 'right', fraction: 0.5 },
+        position: { side: 'right', fraction: 0.5 },
         placement: 'outside',
         distance: 12,
       },

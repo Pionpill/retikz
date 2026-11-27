@@ -1,100 +1,22 @@
-import type { CompositeInputBinding, CompositeInputPath, CoreProviderContribution } from '@retikz/core';
+import type { CompositeInputBinding, CoreProviderContribution } from '@retikz/core';
+import type { PropertyPath } from '@retikz/foundation';
 
-import type { AnyInputEmbed, InputEmbedThemeContext, InputPath, InputScope, InputStep } from '../element';
-import type { InputAuthoringSite, InputChild, InputLayer, InputNormalizeOptions, InputScene } from './types';
-import { InputLayerCache } from './types';
-
-/** 隐式 children 简写使用的默认 Layer 身份 */
-const DEFAULT_LAYER_ID = 'default';
-
-/** 当前 embed 在所有 slot 中可共用一次的外层 identity */
-export type ReusedEmbedIdentity = {
-  id: string;
-  used: boolean;
-};
+import type { AnyInputEmbed, InputScope } from '../element';
+import type { InputAuthoringSite } from './types';
 
 /** 规范化过程共享的上下文 */
 export type SceneNormalizeContext = {
-  runtimePath: CompositeInputPath;
+  runtimePath: PropertyPath;
   runtimeInputs: Array<CompositeInputBinding>;
-  layerId: string;
-  parentId: string;
   path: Array<string>;
-  adapters: InputNormalizeOptions['adapters'];
-  embedThemeContext?: InputEmbedThemeContext;
-  resolveEmbedScopeTheme?: NonNullable<InputNormalizeOptions['embedThemeContext']>['resolveScope'];
   contributions: Array<CoreProviderContribution>;
-  identityIndex: Map<string, Array<string>>;
-  parentIndex: Map<string, string>;
-  identityFrame: string;
-  reusedEmbedIdentity?: ReusedEmbedIdentity;
   sourcePath: string;
   authoringSites: Array<InputAuthoringSite>;
 };
 
-/** 从 children 简写或显式 layers 取得稳定排序的 Layer 栈 */
-export const asLayerStack = (scene: InputScene): Array<InputLayer> => {
-  const layers: Array<InputLayer> =
-    'children' in scene
-      ? [
-          {
-            type: 'layer' as const,
-            id: DEFAULT_LAYER_ID,
-            cache: InputLayerCache.Auto,
-            children: scene.children ?? [],
-          },
-        ]
-      : [...scene.layers];
-  return layers
-    .map((entry, index) => ({ entry, index }))
-    .sort((left, right) => (left.entry.zIndex ?? 0) - (right.entry.zIndex ?? 0) || left.index - right.index)
-    .map(({ entry }) => entry);
-};
-
-/** 进入 localNamespace Scope 后创建与 Core NameStack 对齐的 identity frame */
-export const nestedIdentityFrame = (ctx: SceneNormalizeContext, identity: string | undefined): string =>
-  [ctx.identityFrame, identity ?? ctx.sourcePath].filter(segment => segment.length > 0).join('/');
-
-/** 读取可选 IR identity */
-export const readIdentity = (child: object): string | undefined =>
-  'id' in child && typeof child.id === 'string' ? child.id : undefined;
-
-/** 判断一个 child 是否为 InputEmbed */
-export const isInputEmbed = (child: InputChild): child is AnyInputEmbed => child.type === 'embed';
-
 /** 读取或为匿名 InputEmbed 确定仅运行时可见的稳定身份 */
 export const inputEmbedIdentityOf = (input: AnyInputEmbed, context: SceneNormalizeContext): string =>
-  input.id ?? `__retikz-embed:${context.layerId}:${context.sourcePath}:${input.kind}`;
-
-/** 只有作者侧 target 简写需要转换，纯 Core 步骤保持原样 */
-const hasTargetShorthand = (step: InputStep): boolean =>
-  ('to' in step && typeof step.to === 'string') ||
-  (step.kind === 'rectangle' && typeof step.from === 'string') ||
-  (step.kind === 'arc' && typeof step.center === 'string') ||
-  (step.kind === 'smooth' && step.points.some(point => typeof point === 'string'));
-
-/** 判断一个 child 是否为需经 Vanilla 处理的作者侧路径 */
-export const isInputPath = (child: InputChild): child is InputPath =>
-  !('namespace' in child) &&
-  child.type === 'path' &&
-  ('authoring' in child ||
-    'way' in child ||
-    typeof child.arrow === 'string' ||
-    child.children?.some(hasTargetShorthand) === true);
-
-/** 判断已带 Scope 判别字段的容器是否仍含有需要 Vanilla 归一化的 authoring 子树 */
-const hasNestedInput = (scope: InputScope): boolean =>
-  scope.children.some(
-    child =>
-      'authoring' in child ||
-      child.type === 'embed' ||
-      isInputPath(child) ||
-      (child.type === 'scope' && !('namespace' in child) && hasNestedInput(child)),
-  );
-
-/** 判断一个 child 是否为 Core Scope 或 InputScope */
-export const isInputScope = (child: InputChild): child is InputScope =>
-  !('namespace' in child) && child.type === 'scope' && ('authoring' in child || hasNestedInput(child));
+  input.id ?? `__retikz-embed:${context.sourcePath}:${input.adapter.kind}`;
 
 /** 当前父容器中一个 child 的 authoring 路径 */
 export const childSourcePath = (context: SceneNormalizeContext, index: number): string =>
@@ -104,22 +26,11 @@ export const childSourcePath = (context: SceneNormalizeContext, index: number): 
 export const embedSlotSourcePath = (sourcePath: string, slotIndex: number): string =>
   slotIndex === 0 ? `${sourcePath}.embed` : `${sourcePath}.embed.slots[${slotIndex}]`;
 
-/** 同步归一化与准备 traversal 共用的 Scope 位置及有效 Theme */
-export const scopeContextOf = (
-  input: InputScope,
-  identity: string | undefined,
-  ctx: SceneNormalizeContext,
-): SceneNormalizeContext => {
-  const scopeThemeContext =
-    ctx.embedThemeContext === undefined || ctx.resolveEmbedScopeTheme === undefined
-      ? undefined
-      : ctx.resolveEmbedScopeTheme(ctx.embedThemeContext, input.theme, `${ctx.sourcePath}.theme`);
+/** 进入 Scope 时更新身份路径与作者来源路径 */
+export const scopeContextOf = (input: InputScope, ctx: SceneNormalizeContext): SceneNormalizeContext => {
   return {
     ...ctx,
-    parentId: identity ?? ctx.parentId,
-    path: identity === undefined ? ctx.path : [...ctx.path, identity],
-    ...(input.localNamespace ? { identityFrame: nestedIdentityFrame(ctx, identity) } : {}),
+    path: input.id === undefined ? ctx.path : [...ctx.path, input.id],
     sourcePath: `${ctx.sourcePath}.scope`,
-    ...(scopeThemeContext === undefined ? {} : { embedThemeContext: scopeThemeContext }),
   };
 };

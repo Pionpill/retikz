@@ -70,7 +70,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const Example = () => <Layout ir={ir} extensions={definitions} />;
+export const Example = () => <Layout ir={ir} compile={{ ...definitions }} />;
 ```
 
 </DocTab>
@@ -78,7 +78,7 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { lineChart, lineChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { lineChart } from '@retikz/chart-vanilla/line';
 import { lineData } from './line-basic.data';
 
 const chart = lineChart({
@@ -86,7 +86,7 @@ const chart = lineChart({
   layout: { width: 640, height: 320 },
   encodings: { x: 'x', y: 'y', series: 'series' },
 });
-export const svg = renderChart(chart, { adapters: [lineChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>
@@ -100,7 +100,7 @@ import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { lineData } from './line-basic.data';
 import { compileToScene } from '@retikz/reconciler';
-import { renderToSvgString } from '@retikz/vanilla';
+import { renderToSvg } from '@retikz/vanilla';
 
 const chart = LineChartSchema.parse({
   namespace: 'chart',
@@ -118,7 +118,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+export const svg = renderToSvg(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

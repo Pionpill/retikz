@@ -1,5 +1,4 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputStack } from '@retikz/standard-vanilla/collection';
 import { stackInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRStack, IRCell } from '@retikz/standard/collection';
@@ -64,7 +63,7 @@ const createStackInput = (props: Readonly<Record<string, unknown>>, context: Rea
     items: collected.cells,
   };
 
-  return withInputEmbedAdapters(result, collected.adapters);
+  return result;
 };
 
 const StackComponent: FC<StackProps> = () => null;

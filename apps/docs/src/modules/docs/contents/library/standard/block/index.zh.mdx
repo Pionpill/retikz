@@ -1,0 +1,35 @@
+---
+title: block · 结构块
+description: 为类、对象和逻辑说明组合统一的标题、主体与结尾结构。
+---
+
+Block 家族用于呈现类、对象和逻辑块的结构化说明。当前已建立包内基础框架；ClassBlock 等上层组件将在后续提供各自的公开接口与语义。
+
+## 基础框架
+
+框架采用可组合的区域结构，布局与编译不依赖 DOM、React 或特定渲染后端。
+
+包内结构的一种组合形式如下：
+
+```text
+Block
+├── BlockHeader
+│   ├── BlockTitle
+│   ├── BlockDescription
+│   └── BlockAccessory
+├── BlockContent
+│   └── BlockSection
+└── BlockFooter
+```
+
+> **备注：** 上述 Block 与 BlockXxx 均为 Standard 包内实现，不对外导出，也不是可供用户直接调用的组件 API。后续仅 ClassBlock 等上层组件对外暴露。
+
+树中的名称表示内部结构角色，统一使用 Block 前缀。Block 提供统一外框，按声明顺序纵向排列内容；BlockHeader 放置 BlockTitle、BlockDescription 和可选的 BlockAccessory 辅助图形；BlockContent 容纳任意主体绘图，可用 BlockSection 进一步分区。BlockFooter 在自然布局中排列结尾内容，默认向主轴末端对齐。
+
+区域可以省略、重复或嵌套。外框复用 [Surface](/library/standard/presentation/surface)，尺寸与排列复用 [Layout](/library/layout)，标题和说明使用普通 Node。框架共享结构，不解释类成员、对象字段或执行语义。
+
+## 使用边界
+
+基础框架仅供 Standard 包内封装使用，不提供独立导入入口、React 组件、Vanilla helper 或 JSON 类型。最终作者将使用 ClassBlock 等上层组件；这些组件目前尚未提供。
+
+当前需要组合内容面板时，可以使用 Surface 和 Layout。已有 [Graph Block](/schematic/graph/block) 仍按现行接口使用，其替代迁移将在上层组件完成后进行。

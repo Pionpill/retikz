@@ -15,7 +15,7 @@ This is the persistent input contract. Factories preserve omitted fields; parse(
 | Member                | Type                                                                                                                                                                                                               | Default                                           | Description                                                                       |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `alignItems?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | `"center"`                                        | Default vertical alignment inherited by aligned and positioned items.             |
-| `readonly authoring?` | `unknown`                                                                                                                                                                                                          | —                                                 | Opaque authoring data interpreted by an optional compilation driver               |
+| `readonly authoring?` | `unknown`                                                                                                                                                                                                          | —                                                 | Opaque authoring data retained during normalization                               |
 | `readonly children?`  | `ReactNode`                                                                                                                                                                                                        | `[]`                                              | Direct children must be overlay layout items; omission creates an empty container |
 | `justifyItems?`       | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | `"center"`                                        | Default horizontal alignment inherited by aligned and positioned items.           |
 | `overflow?`           | `"visible" \| "clip"`                                                                                                                                                                                              | `"visible"`                                       | Container visual overflow policy.                                                 |
@@ -111,7 +111,7 @@ export type OverlayLayoutItemProps = Omit<InputOverlayLayoutItemConfig, 'child' 
 
 ## Direct calls
 
-#### <ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={55}>overlayLayout</ApiSourceLink> / <ApiSourceLink label={"InputOverlayLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={43}>InputOverlayLayout</ApiSourceLink>
+#### <ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={36}>overlayLayout</ApiSourceLink> / <ApiSourceLink label={"InputOverlayLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={43}>InputOverlayLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -128,7 +128,7 @@ export type OverlayLayoutItemProps = Omit<InputOverlayLayoutItemConfig, 'child' 
 | `padding?`               | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`                                               | Insets from allocation box to content box.                                       |
 | `size?`                  | `InputOverlayLayoutConfig['size']`                                                                                                                                                                                 | `{"x":{"kind":"content"},"y":{"kind":"content"}}` | Container allocation size including padding.                                     |
 | `input` (Parameter)      | `InputOverlayLayout`                                                                                                                                                                                               | —                                                 | Container and item input; the input object reference is retained                 |
-| `authoring?` (Parameter) | `unknown`                                                                                                                                                                                                          | —                                                 | Opaque data for the compilation driver; omitted input adds no authoring data     |
+| `authoring?` (Parameter) | `unknown`                                                                                                                                                                                                          | —                                                 | Opaque data retained during normalization; omitted input adds no authoring data  |
 | Returns                  | `InputEmbed<InputOverlayLayout>`                                                                                                                                                                                   | —                                                 | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
 
 </ApiTable>
@@ -184,11 +184,10 @@ export type InputOverlayLayoutItem = InputLayoutItem<InputOverlayLayoutItemConfi
 
 </DocTabs>
 
-#### <ApiSourceLink label={"overlayLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={12}>overlayLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"overlayLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={13}>overlayLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const overlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>>;
+export declare const overlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayout>;
 ```
 
 #### <ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/composite.ts"} startLine={30}>createOverlayLayout</ApiSourceLink> / <ApiSourceLink label={"InputOverlayLayoutConfig"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>InputOverlayLayoutConfig</ApiSourceLink>

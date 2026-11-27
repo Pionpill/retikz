@@ -26,7 +26,11 @@ export type CompositeBinding =
       /** 组件定义声明的完整 IR schema */
       schema: ZodType;
       /** 接收已解析的组件 IR 并执行编译的回调 */
-      compile: (ir: unknown, context: CompositeCompileContext) => CompositeEvaluationResult<JsonValue>;
+      compile: (
+        ir: unknown,
+        context: CompositeCompileContext,
+        memo?: object,
+      ) => CompositeEvaluationResult<JsonValue, object>;
       /** 用于校验组件附加产物的可选 schema */
       artifactSchema?: ZodType<JsonValue>;
     }>;

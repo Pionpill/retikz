@@ -1,3 +1,9 @@
+/** 节点及 Frame 标题共用的可选正文来源 */
+const nodeContentBranches = [
+  { value: 'text', field: 'text', required: true, label: { zh: '正文属性', en: 'Text prop' } },
+  { value: 'children', field: 'text', type: 'never', label: { zh: 'JSX 子元素', en: 'JSX children' } },
+] as const;
+
 /** LLM 审阅的分支名称，以判别字段类型或入口必填性匹配，避免依赖 TypeScript 分支顺序 */
 export const apiReferenceBranchLabels: Readonly<
   Partial<
@@ -762,13 +768,16 @@ export const apiReferenceBranchLabels: Readonly<
     },
     { value: 'malformed-svg', field: 'kind', type: "'malformed-svg'", label: { zh: '无效 SVG', en: 'Malformed SVG' } },
   ],
-  '@retikz/inspect#InspectionTarget': [
-    { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
-    { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
+  '@retikz/react#LayoutProps': [
+    { value: 'ir', field: 'ir', required: true, label: { zh: '完整 IR', en: 'Complete IR' } },
+    { value: 'children', field: 'children', required: true, label: { zh: 'JSX 子元素', en: 'JSX children' } },
   ],
-  '@retikz/inspect#InspectorSubject': [
-    { value: 'primitive', field: 'kind', type: "'primitive'", label: { zh: '场景图元', en: 'Scene primitive' } },
-    { value: 'artifact', field: 'kind', type: "'artifact'", label: { zh: '复合产物', en: 'Composite artifact' } },
+  '@retikz/react#NodeProps': nodeContentBranches,
+  '@retikz/standard-react/presentation#FrameTitleProps': nodeContentBranches,
+  '@retikz/standard-react/presentation#FrameDescriptionProps': nodeContentBranches,
+  '@retikz/react#PathProps': [
+    { value: 'definition', field: 'kind', required: true, label: { zh: '定义提供几何', en: 'Definition geometry' } },
+    { value: 'children', field: 'children', required: true, label: { zh: 'JSX 子步骤', en: 'JSX steps' } },
   ],
   '@retikz/vanilla#InputPath': [
     { value: 'children', field: 'children', required: true, label: { zh: '显式步骤', en: 'Explicit steps' } },
@@ -803,20 +812,6 @@ export const apiReferenceBranchLabels: Readonly<
   '@retikz/react#FoldStepProps': [
     { value: 'two-segments', field: 'via', type: "'-|' | '|-'", label: { zh: '两段折线', en: 'Two segments' } },
     { value: 'three-segments', field: 'via', type: "'-|-' | '|-|'", label: { zh: '三段折线', en: 'Three segments' } },
-  ],
-  '@retikz/react#LayoutRuntimeOptions': [
-    {
-      value: 'retained',
-      field: 'mode',
-      type: 'typeof LayoutRuntimeMode.Retained',
-      label: { zh: '保留模式', en: 'Retained' },
-    },
-    {
-      value: 'static',
-      field: 'mode',
-      type: 'typeof LayoutRuntimeMode.Static',
-      label: { zh: '静态模式', en: 'Static' },
-    },
   ],
   '@retikz/standard-react/collection#QueueProps': [
     { value: 'items', field: 'items', required: true, label: { zh: '显式单元格', en: 'Explicit cells' } },

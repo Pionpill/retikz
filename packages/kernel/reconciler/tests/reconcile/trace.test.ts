@@ -4,7 +4,7 @@ import type { PerformanceTraceRecord } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { SceneReconciler, ReconcilerLifecyclePhase, ReconcilerTraceUnit } from '../../src';
+import { ReconcilerMode, SceneReconciler, ReconcilerLifecyclePhase, ReconcilerTraceUnit } from '../../src';
 import { compileTestResult } from '../helpers/compilation';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
@@ -12,7 +12,7 @@ const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: '
 describe('协调器编译跟踪', () => {
   it('完整模式首次 replace 报告挂载，后续替换报告更新，清理仅报告一次', () => {
     const records: Array<PerformanceTraceRecord> = [];
-    const session = new SceneReconciler({}, { incremental: false, trace: record => records.push(record) });
+    const session = new SceneReconciler({}, { trace: record => records.push(record) });
     session.replace(scene([]));
     session.updateTarget();
     session.replace(scene([]));
@@ -117,7 +117,7 @@ describe('协调器编译跟踪', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const trace = (record: PerformanceTraceRecord) => records.push(record);
 
-    const session = new SceneReconciler({}, { trace });
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental, trace });
     session.mount(
       scene([
         { type: 'node', id: 'outside', position: [0, 0] },
@@ -147,7 +147,7 @@ describe('协调器编译跟踪', () => {
     const trace = (record: PerformanceTraceRecord) => records.push(record);
     const input = scene([]);
 
-    const session = new SceneReconciler({}, { trace });
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental, trace });
     const mounted = session.mount(input);
     const traced = mounted.compilation.result;
     expect(session.update({ operations: [] })).toBe(mounted);
@@ -185,7 +185,7 @@ describe('协调器编译跟踪', () => {
       },
     });
 
-    const session = new SceneReconciler({ composites: [composite] }, { trace });
+    const session = new SceneReconciler({ composites: [composite] }, { mode: ReconcilerMode.Incremental, trace });
     session.mount(scene([{ namespace: 'trace', type: 'replay' }]));
     session.replace(
       scene([

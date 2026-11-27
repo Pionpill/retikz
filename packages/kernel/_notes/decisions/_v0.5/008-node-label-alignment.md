@@ -46,7 +46,7 @@ type IRNodeLabel = {
     | 'bottom-right'
     | 'center'
     | number
-    | { boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number };
+    | { side: 'top' | 'right' | 'bottom' | 'left'; fraction?: number };
   placement?: 'outside' | 'inside';
   distance?: number;
   rotate?: 'none' | 'radial' | 'tangent' | number;

@@ -36,7 +36,7 @@ export const renderRibbonAppearancePreview = (values: RibbonAppearancePreviewVal
   })();
 
   return (
-    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [ribbonPathDefinition] }}>
+    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} compile={{ paths: [ribbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={{ width: { kind: 'taper', start: 16, end: 44, interpolation: 'smooth' } }}

@@ -3,8 +3,8 @@ import type { Lang } from '@/i18n';
 /** 增量更新机制图文案 */
 export const text: Record<Lang, Record<string, [string, string]>> = {
   zh: {
-    edge0: ['incremental: true', ''],
-    edge1: ['incremental: false', ''],
+    edge0: ['mode: ReconcilerMode.Incremental', ''],
+    edge1: ['mode: ReconcilerMode.Full', ''],
     edge2: ['编译成功', ''],
     check: ['编译模式', '包含基础元素与 Composite'],
     local: ['构建 Weave', '保留实际阶段产物'],
@@ -13,8 +13,8 @@ export const text: Record<Lang, Record<string, [string, string]>> = {
     replace: ['替换完整 Scene', 'replaceScene'],
   },
   en: {
-    edge0: ['incremental: true', ''],
-    edge1: ['incremental: false', ''],
+    edge0: ['mode: ReconcilerMode.Incremental', ''],
+    edge1: ['mode: ReconcilerMode.Full', ''],
     edge2: ['Prepared', ''],
     check: ['Compilation mode', 'Basic elements and Composites'],
     local: ['Build Weave', 'Retain actual stage products'],

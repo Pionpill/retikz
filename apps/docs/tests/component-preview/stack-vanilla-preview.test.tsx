@@ -1,5 +1,5 @@
-import { createInputScene } from '@retikz/react';
-import { createProcessingController } from '@retikz/vanilla';
+import { convertReactToInputScene } from '@retikz/react';
+import { SceneRuntime } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
@@ -7,11 +7,10 @@ import { buildVanillaPreview } from '../../src/modules/docs/components/component
 import { renderStackPreview as renderComposition } from '../../src/modules/docs/contents/library/standard/collection/stack/stack-composition.preview';
 import { renderStackPreview as renderInputs } from '../../src/modules/docs/contents/library/standard/collection/stack/stack-inputs.preview';
 import { renderStackPreview as renderLayout } from '../../src/modules/docs/contents/library/standard/collection/stack/stack-layout.preview';
-import { synchronousInputAdaptersOf } from '../../src/modules/docs/lib';
 
 it('Stack 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
   const input = (incoming: boolean, outgoing: boolean) =>
-    createInputScene(
+    convertReactToInputScene(
       renderLayout({
         direction: 'right',
         border: true,
@@ -23,7 +22,7 @@ it('Stack 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
       }).props.children,
     );
   const first = input(true, true);
-  const controller = createProcessingController(first.scene, { adapters: synchronousInputAdaptersOf(first.adapters) });
+  const controller = SceneRuntime.fromInput(first);
   try {
     for (const [incoming, outgoing] of [
       [false, true],
@@ -31,8 +30,8 @@ it('Stack 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
       [false, false],
       [true, true],
     ]) {
-      controller.update(input(incoming, outgoing).scene);
-      const serialized = JSON.stringify(controller.read().scene);
+      controller.replace(input(incoming, outgoing));
+      const serialized = JSON.stringify(controller.current.compilation.result.scene);
       expect(serialized.includes('dodgerblue')).toBe(incoming);
       expect(serialized.includes('darkorange')).toBe(outgoing);
       const result = buildVanillaPreview(
@@ -62,7 +61,7 @@ it('Stack 预览通过 Vanilla 适配器渲染所有输入和空状态', () => {
       const result = buildVanillaPreview(buildPreviewIR(() => renderInputs({ input, empty, expand: true })));
       expect(result.svg).toContain('<svg');
       expect(result.code).toContain('stack(');
-      expect(result.code).toContain('stackInputEmbedAdapter');
+      expect(result.code).not.toContain('stackInputEmbedAdapter');
     }
   }
 });
@@ -78,13 +77,13 @@ it('Stack 预览保留嵌套的 Matrix 和外部单元格引用', () => {
 
 it.each([true, false])('matrix=%s 时 Stack 虚线单元格在保留模式更新中可切换', matrix => {
   const input = (dashed: boolean) =>
-    createInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
+    convertReactToInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
   const first = input(true);
-  const controller = createProcessingController(first.scene, { adapters: synchronousInputAdaptersOf(first.adapters) });
+  const controller = SceneRuntime.fromInput(first);
   try {
     for (const dashed of [false, true, false]) {
-      controller.update(input(dashed).scene);
-      expect(JSON.stringify(controller.read().scene).includes('"dashPattern":[4,3]')).toBe(dashed);
+      controller.replace(input(dashed));
+      expect(JSON.stringify(controller.current.compilation.result.scene).includes('"dashPattern":[4,3]')).toBe(dashed);
     }
   } finally {
     controller.dispose();

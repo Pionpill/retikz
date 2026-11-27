@@ -11,8 +11,8 @@ import type {
   TextPrimitive,
 } from '@retikz/core';
 
-import { resolveSceneResourceMap } from '../shared';
 import {
+  resolveSceneResourceMap,
   countScenePrimitiveOccurrences,
   startArrowPlacement,
   endArrowPlacement,

@@ -45,7 +45,7 @@ export const renderRibbonEndpointsPreview = (values: RibbonEndpointsPreviewValue
       : { name: values.cap };
 
   return (
-    <Layout viewBox={{ x: -290, y: -170, width: 580, height: 360 }} extensions={{ paths: [ribbonPathDefinition] }}>
+    <Layout viewBox={{ x: -290, y: -170, width: 580, height: 360 }} compile={{ paths: [ribbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={{

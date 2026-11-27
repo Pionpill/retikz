@@ -15,7 +15,7 @@ describe('完整节点契约的被测模型输入', () => {
     const payload = JSON.parse(prompt!.user);
     expect(Object.keys(payload).sort()).toEqual(['schema', 'task']);
     expect(Object.keys(payload.schema.properties)).toHaveLength(16);
-    expect(Object.keys(payload.schema.$defs)).toHaveLength(309);
+    expect(Object.keys(payload.schema.$defs)).toHaveLength(265);
     expect(payload.task).toBe(testCase.task);
     expect(prompt!.system).toContain('只输出一个完整 Node JSON 对象');
     expect(prompt!.user).not.toContain('private-id-6abc');

@@ -13,7 +13,7 @@ import {
   allocationPointsOf,
   bindComposite,
   cloneAndFreezeJson,
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   guardProviderOutput,
   isFatalProbeError,
@@ -32,17 +32,18 @@ import type { CompositeArtifact } from '../../shared';
 import { createCompileChildPath, formatCompileOccurrence, freezeCompileArtifact } from '../../shared';
 import type { SubtreeCompileOptions, SubtreeCompileRuntime } from '../subtree';
 import { createCompositeCallbackContext } from './context';
-import { isCompositeOutputHandle, snapshotCompositeOutputChild } from './handle';
+import { isCompositeOutputHandle, readCompositeChild } from './handle';
 import { snapshotAlignmentGuides, snapshotAllocationBounds } from './layout';
 import { compileCompositeOutput } from './output';
 import { preflightCompositeOutputs } from './preflight';
 import type { CompositeProbeContext } from './probe';
-import type { CompositeExecutionContext } from './types';
+import type { CompositeExecutionContext, CompositeMemoSlot } from './types';
 
 /** 当前组件的执行模式、测量轴及输出来源归属 */
 type CompositeCompileOptions = Pick<SubtreeCompileOptions, 'probe' | 'measurementAxis'> & {
   /** 当前组件的语义来源 owner */
   semanticOwner?: CompileOwnerKey;
+  memoSlot?: CompositeMemoSlot;
 };
 
 /**
@@ -50,7 +51,7 @@ type CompositeCompileOptions = Pick<SubtreeCompileOptions, 'probe' | 'measuremen
  * @description 测量分支返回冻结的尺寸贡献；完整布局分支返回子项、显式布局信息和领域产物的快照，供后续预检与编译消费
  */
 const snapshotCompositeCompileResult = (
-  callbackResult: CompositeEvaluationResult<JsonValue>,
+  callbackResult: CompositeEvaluationResult<JsonValue, object>,
   definition: Pick<ReturnType<typeof resolveComposite>, 'artifactSchema' | 'namespace' | 'type'>,
   { runtime, owner, key, occurrence }: Pick<CompositeProbeContext, 'runtime' | 'owner' | 'key' | 'occurrence'>,
   measurementAxis?: LayoutMeasurementAxis,
@@ -59,10 +60,10 @@ const snapshotCompositeCompileResult = (
     /** 尺寸测量分支：只有贡献结果带 kind，检查请求模式、返回轴和有限非负尺寸后直接返回 */
     if ('kind' in callbackResult) {
       if (measurementAxis === undefined)
-        throw createCompositeContractError(`${owner.label} returned a contribution during full layout`);
+        throw createContractViolationError(`${owner.label} returned a contribution during full layout`);
       const { contribution } = callbackResult;
       if (contribution.axis !== measurementAxis)
-        throw createCompositeContractError(`${owner.label} returned a different contribution axis`);
+        throw createContractViolationError(`${owner.label} returned a different contribution axis`);
       const dimensions =
         contribution.axis === 'x'
           ? [contribution.width]
@@ -70,17 +71,17 @@ const snapshotCompositeCompileResult = (
             ? [contribution.height]
             : [contribution.width, contribution.height];
       if (dimensions.some(dimension => !Number.isFinite(dimension) || dimension < 0))
-        throw createCompositeContractError(`${owner.label} returned an invalid contribution size`);
+        throw createContractViolationError(`${owner.label} returned an invalid contribution size`);
       return { kind: 'contribution' as const, contribution: Object.freeze({ ...contribution }) };
     }
 
     const { children, allocationBounds, alignmentGuides, artifact } = callbackResult;
 
-    /** 子项快照：普通 IR 脱离回调对象，运行时句柄保留身份，供后续检查归属和使用次数 */
-    const snapshotChildren = Array.from(children, (output, outputIndex) => {
-      if (isCompositeOutputHandle(runtime, output)) return output;
-      return snapshotCompositeOutputChild(owner.label, output, outputIndex);
-    });
+    /** 普通子项直接借用；未登记的句柄不能作为普通 IR 进入分派 */
+    for (const [index, child] of children.entries()) {
+      if (!isCompositeOutputHandle(runtime, child))
+        readCompositeChild(owner.label, child, `output child at index ${index}`);
+    }
 
     /** 布局信息快照：保留组件显式声明的占位边界和对齐线，供父级布局消费 */
     const explicitAllocation =
@@ -94,7 +95,7 @@ const snapshotCompositeCompileResult = (
     let compositeArtifact: CompositeArtifact | undefined;
     if (artifact !== undefined) {
       if (definition.artifactSchema === undefined) {
-        throw createCompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
+        throw createContractViolationError(`Composite '${key}' returned artifact without artifactSchema.`);
       }
 
       let frozenArtifact: JsonValue;
@@ -103,7 +104,7 @@ const snapshotCompositeCompileResult = (
         frozenArtifact = cloneAndFreezeJson(artifact, `Composite '${key}' artifact`);
       } catch (cause) {
         const detail = safeThrownDetail(cause);
-        throw createCompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
+        throw createContractViolationError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
       }
 
       compositeArtifact = freezeCompileArtifact({
@@ -117,7 +118,7 @@ const snapshotCompositeCompileResult = (
     /** 汇总完整布局结果，交给后续输出预检和编译阶段消费 */
     return {
       kind: 'layout' as const,
-      children: snapshotChildren,
+      children,
       explicitAllocation,
       explicitAlignmentGuides,
       compositeArtifact,
@@ -170,8 +171,9 @@ const evaluateCompositeCallback = (
   irPath: PropertyPath,
   context: CompositeProbeContext,
   measurementAxis?: LayoutMeasurementAxis,
+  memoSlot?: CompositeMemoSlot,
 ) => {
-  let callbackResult: CompositeEvaluationResult<JsonValue>;
+  let callbackResult: CompositeEvaluationResult<JsonValue, object>;
   const callbackContext = createCompositeCallbackContext(
     callable.source,
     frame,
@@ -182,7 +184,8 @@ const evaluateCompositeCallback = (
 
   /** 执行组件回调：包装外部异常 */
   try {
-    callbackResult = callable.compile(callable.ir, callbackContext(frame.context.inheritance.theme));
+    callbackResult = callable.compile(callable.ir, callbackContext(frame.context.inheritance.theme), memoSlot?.memo);
+    if (memoSlot && !('kind' in callbackResult)) memoSlot.memo = callbackResult.memo;
   } catch (thrown) {
     if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
 
@@ -307,7 +310,7 @@ export const compileComposite = (
   const context = { runtime, host, owner, key, occurrence, compositeDepth };
 
   /** 尺寸贡献直接返回给测量方，完整布局结果继续编译子项或提交 replay */
-  const result = evaluateCompositeCallback(callable, frame, irPath, context, measurementAxis);
+  const result = evaluateCompositeCallback(callable, frame, irPath, context, measurementAxis, options.memoSlot);
   if (result.kind === 'contribution') return result.contribution;
 
   compileCompositeLayout(result, frame, context, semanticOwner);

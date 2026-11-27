@@ -9,10 +9,7 @@ export type EllipticCapsuleExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderEllipticCapsuleExamplePreview = (values: EllipticCapsuleExamplePreviewValues) => (
-  <Layout
-    viewBox={{ x: -120, y: -90, width: 240, height: 180 }}
-    extensions={{ shapes: [ellipticCapsuleShapeDefinition] }}
-  >
+  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} compile={{ shapes: [ellipticCapsuleShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'ellipticCapsule', params: { axis: values.axis, capDepth: values.capDepth } }}

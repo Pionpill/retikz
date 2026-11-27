@@ -36,14 +36,14 @@ export const labelCases: Array<NodeEvalCase> = [
   },
   {
     id: 'NH003',
-    task: '矩形节点右侧边上四分之一处放标签“Q”，标签在外侧、距旋转后的标签视觉框最近间隙为 7 个用户单位；保留边上比例表达。',
+    task: '从矩形节点右边的顶端往下量四分之一处放标签“Q”，标签在外侧、距旋转后的标签视觉框最近间隙为 7 个用户单位；保留边上比例表达。',
     expected: {
       type: 'node',
       shape: 'rectangle',
       label: {
         text: 'Q',
         position: {
-          boundary: 'right',
+          side: 'right',
           fraction: 0.25,
         },
         distance: 7,
@@ -58,7 +58,7 @@ export const labelCases: Array<NodeEvalCase> = [
       label: {
         text: 'M',
         position: {
-          boundary: 'bottom',
+          side: 'bottom',
         },
       },
     },
@@ -171,7 +171,7 @@ export const labelCases: Array<NodeEvalCase> = [
   },
   {
     id: 'NH012',
-    task: '节点整体不透明度 50%；右侧外标签“L”的不透明度因子 60%，引线用默认有效标签不透明度，不给它额外覆盖；标签字体只改字重为 bold。',
+    task: '节点整体不透明度为 50%，右侧外标签“L”的不透明度因子为 60%。画一条引线，让它沿用标签的有效不透明度，不单设引线样式。标签字体只改字重为 bold。',
     expected: {
       type: 'node',
       style: {
@@ -191,7 +191,7 @@ export const labelCases: Array<NodeEvalCase> = [
   },
   {
     id: 'NH013',
-    task: '节点额外标签两行“甲”“乙”，正文块内部右对齐，行高 18、自动折行上限 60；标签沿附着切线采用 start 对齐，文字 #123456、70% 不透明度、等宽字体、字号 1rem、数值字重 600、斜体。',
+    task: '给节点加一个标签，分两行写“甲”和“乙”。标签内的文字右对齐，行高 18，自动折行上限 60；标签框沿附着切线采用 start 对齐。标签文字用 #123456、70% 不透明度、等宽字体、字号 1rem、数值字重 600、斜体。',
     expected: {
       type: 'node',
       label: {

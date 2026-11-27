@@ -17,23 +17,17 @@ export type BuiltinShape = ValueOf<typeof BuiltinShape>;
 
 /** Core 内置 shape 与自定义注册名共享的开放名称 schema */
 export const ShapeNameSchema = createOpenStringSchema(BuiltinShape).describe(
-  'Shape name: a Core built-in or a custom name registered via CompileOptions.shapes.',
+  'Built-in shape or custom name registered via CompileOptions.shapes. Unknown names fail at compile time.',
 );
 
 /** 校验形状名称与 JSON 参数；具体参数约束由注册定义处理 */
 export const ShapeRefSchema = strictObject({
-  type: ShapeNameSchema.describe(
-    'Shape name; built-in or registered via CompileOptions.shapes. Unregistered names are rejected at compile time.',
-  ),
-  params: JsonObjectSchema.optional().describe(
-    'JSON parameter object for parametric shapes. The registered shape validates its own parameter fields.',
-  ),
-}).describe('Shape reference: type name + optional JSON params, validated at compile time by the registered shape.');
+  type: ShapeNameSchema,
+  params: JsonObjectSchema.optional().describe('The selected shape validates these parameters at compile time.'),
+});
 
 /** Core shape 值：裸 provider 名或带 JSON 参数的结构化引用 */
-export const ShapeValueSchema = union([ShapeNameSchema, ShapeRefSchema]).describe(
-  'Core shape value: a non-blank shape name or a structured shape reference.',
-);
+export const ShapeValueSchema = union([ShapeNameSchema, ShapeRefSchema]);
 
 /** shape 引用：type 名 + 可选 JSON params（编译期由注册的 shape 校验字段形态） */
 export type IRShapeRef = ZodInfer<typeof ShapeRefSchema>;

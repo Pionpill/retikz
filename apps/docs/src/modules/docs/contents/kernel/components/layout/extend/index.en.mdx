@@ -17,13 +17,15 @@ Start with [Basic usage](/kernel/components/layout/usage). Use the options below
 
 Explicit `theme` fields override the root theme in existing IR; omitted fields keep their values. See [Theme](/kernel/components/design/theme) for inheritance rules.
 
-## Capability injection
+## Compile options
 
-Pass extension definitions by capability through `Layout.extensions`. `shapes` is one category: the `ShapeDefinition` below supplies the folded file's footprint, connection boundary, and emitted primitives, then registers through `extensions={{ shapes: [fileShape] }}`. Both Nodes reference the registered `drawio-file` name, and the connector ends on the custom outline.
+Pass the complete Vanilla `compile` configuration, including layout settings such as `padding` and `precision`, as well as extension definitions. For example: `<Layout ir={sceneIR} compile={{ padding: 12, precision: 3 }} />`.
+
+Pass extension definitions by capability through `Layout.compile`. `shapes` is one category: the `ShapeDefinition` below supplies the folded file's footprint, connection boundary, and emitted primitives, then registers through `compile={{ shapes: [fileShape] }}`. Both Nodes reference the registered `drawio-file` name, and the connector ends on the custom outline.
 
 <ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
 
-`extensions` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path definitions (`paths`), composites (`composites`), and themes (`themeDefinitions`). These definitions enter their respective registries through `extensions` and are consumed during compilation.
+`compile` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path definitions (`paths`), composites (`composites`), and themes (`themeDefinitions`). These definitions enter their respective registries through `compile` and are consumed during compilation.
 
 This section demonstrates shape injection only; later custom-usage guides for each topic explain how to define and use the other capabilities. See the [API reference](/kernel/components/layout/reference) for the complete fields.
 
@@ -31,33 +33,27 @@ This section demonstrates shape injection only; later custom-usage guides for ea
 
 Use `onArtifacts` to read domain artifacts returned by composites, such as the container and item layout of FlexLayout. Artifacts are collected automatically. The callback runs after React commits, and later updates leave previous snapshots unchanged.
 
+Replacing `onArtifacts` or `onCompileResult` delivers the current result to the new callback without recompiling. Pass a stable function reference to avoid repeat notifications when the parent renders.
+
 <ComponentPreview files="layout-artifacts" size="xs" />
 
 The example displays the artifact count and the FlexLayout domain value outside the drawing. Each component defines its fields and coordinate semantics; ordinary nodes do not produce separate layout artifacts.
 
 ## Execution modes and update strategies
 
-Choose whether to retain processing state and allow incremental computation:
-
-| Configuration               | Update behavior                             | Use case                                                            |
-| --------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
-| `retained + auto` (default) | Retain state; allow incremental computation | Local updates; keep the last successful result on failure           |
-| `retained + full`           | Retain state; recompute on changes          | Full recomputation;<br />keep the last successful result on failure |
-| `static`                    | Process the current figure afresh           | Reduce resident processing state                                    |
+Layout passes `reconciler` to Vanilla. The default `full` mode does not retain an incremental cache; `incremental` retains the cache and supports batch update strategies. In either mode, new JSX or complete IR goes through `replace` and is compiled in full. Layout does not infer a batch from changed props.
 
 ```tsx
-<Layout /> {/* retained + auto */}
-<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
-<Layout runtime={{ mode: 'static' }} />
+<Layout><Node /></Layout>
+<Layout ir={sceneIR} reconciler={{ mode: 'incremental', updateStrategy: 'auto' }} />
+<Layout ir={sceneIR} onDiagnostic={diagnostic => console.warn(diagnostic.message)} />
 ```
 
-If processing a subsequent input fails in retained mode, the last successful result stays visible. This does not provide undo or history navigation. Receive structured diagnostics through `runtime.onDiagnostic`, for example `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`.
-
-`runtime.mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`.
+If replacing the input fails, the last successful result stays visible. Both modes deliver structured diagnostics through `onDiagnostic`.
 
 ## Additional notes
 
-- **Empty configuration**: An omitted or empty `rootScope`, overrides containing only optional fields set to `undefined`, and isolated `defaults.reset: false` / `[]` create no root Scope wrapper.
+- **Root Scope**: Omitting `rootScope.defaults` leaves the children unwrapped. Passing even an empty defaults object creates a root Scope.
 - **Host styles**: `Layout.style` always means host CSS. See [Basic usage](/kernel/components/layout/usage#whole-figure-defaults) for whole-figure primitive defaults.
 
 ## Related props
@@ -67,9 +63,9 @@ These are the props most relevant to this page. See the [API reference](/kernel/
 <ComponentProps
   items={[
     {
-      name: 'extensions',
+      name: 'compile',
       kind: 'property',
-      type: 'LayoutExtensions',
+      type: 'CompileOptions',
       description: 'Injects custom definitions into React Layout, including clips, boundaries, and path capabilities',
     },
     {
@@ -79,10 +75,10 @@ These are the props most relevant to this page. See the [API reference](/kernel/
       description: 'Receives the result after artifact collection completes',
     },
     {
-      name: 'runtime',
+      name: 'reconciler',
       kind: 'property',
-      type: 'LayoutRuntimeOptions',
-      description: 'Configures reactive update strategy, static mode, and diagnostic callbacks',
+      type: "ProcessOptions['reconciler']",
+      description: 'Reconciler options passed to Vanilla',
     },
   ]}
 />

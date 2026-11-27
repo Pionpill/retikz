@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-import { pathLabelSchemaDescriptions, pathSchemaDescriptions } from '../schema-reference/path';
+import { pathLabelSchemaDescriptions, pathSchemaDescriptions, resolveStepLocalization } from '../schema-reference/path';
 import { translateDrawApiReference } from './draw.en';
 import { writeReferenceFile } from './merged-reference';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
@@ -19,10 +19,13 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
         title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+        fullMemberSymbols: ['PathProps', 'DrawProps'],
         symbolPairs: [
           ['Path', 'PathProps'],
           ['Draw', 'DrawProps'],
           ['Step', 'StepProps'],
+          ['StepLabel', 'StepLabelProps'],
+          ['PathLabel', 'PathLabelProps'],
         ],
         symbols: [
           'Draw',
@@ -31,6 +34,10 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
           'PathProps',
           'Step',
           'StepProps',
+          'StepLabel',
+          'StepLabelProps',
+          'PathLabel',
+          'PathLabelProps',
           'MoveStepProps',
           'LineStepProps',
           'AxisLineStepProps',
@@ -48,6 +55,7 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
+    resolveSchemaLocalization: resolveStepLocalization,
     schemaLocalizations: {
       PathLabelSchema: { descriptions: pathLabelSchemaDescriptions },
       PathSchema: { descriptions: pathSchemaDescriptions },
@@ -62,9 +70,10 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
         title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
         fullMemberSymbols: ['InputPath'],
+        declarationOnlySymbols: ['PathOptions'],
         symbolPairs: [['path', 'InputPath']],
         omitPairedCallDetails: true,
-        symbols: ['path', 'InputPath', 'InputStep', 'DrawWay', 'WayDSL', 'WayItem'],
+        symbols: ['path', 'PathOptions', 'InputPath', 'InputStep', 'DrawWay', 'WayDSL', 'WayItem'],
       },
     ],
     translate: translateDrawApiReference,

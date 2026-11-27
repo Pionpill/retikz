@@ -15,7 +15,7 @@ const Demo: FC = () => (
     <Node
       id="input"
       position={[-175, 0]}
-      text={['React collector', 'createInputScene']}
+      text={['React collector', 'convertReactToInputScene']}
       cornerRadius={4}
       style={{ stroke: 'dodgerblue', fill: 'dodgerblue', font: { size: 12, weight: 'bold' }, opacity: { fill: 0.08 } }}
       layout={{ padding: 8 }}

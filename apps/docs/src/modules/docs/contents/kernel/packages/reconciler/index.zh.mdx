@@ -1,0 +1,174 @@
+---
+title: 编译协调 · reconciler
+description: 从两个节点和一条连线出发，了解 Reconciler 怎样执行首次编译、处理局部更新，并向输出目标发布结果
+---
+
+<ComponentAlert
+  type="tip"
+  title="阅读前提"
+  description={
+    <>
+      本系列默认你已读过 <a href="/kernel/packages/core">编译核心 · core</a> 系列文档。
+    </>
+  }
+/>
+
+**Core 定义绘图语义，Reconciler 组织编译。** 以连接两个节点的路径为例：Core 提供计算节点边界和连接端点的规则；Reconciler 遍历整张图的声明，在节点布局就绪后调用 Core 求出端点，再把图元和资源组装成 Scene，交给 Render 绘制。
+
+**什么时候需要全量编译？** 首次打开一张图，还没有可复用的结果，需要从完整声明算出整张 Scene。若只生成一张静态 SVG，编译一次就够了，可以关闭增量模式。如果用一份新声明替换整张图，也应执行完整编译。
+
+**什么时候需要增量编译？** 在编辑器里连续拖动节点 B 时，连线端点要跟着移动，图中无关元素的计算结果则可以复用。
+
+**Weave 是增量编译的实现核心。** 首次编译时，它按声明树中的节点缓存输入、解析结果和编译产物，同时维护两类拓扑关系：元素属于哪个作用域，以及哪些元素依赖其他元素的计算结果。例如，连接 B 的路径读取了 B 的边界。B 移动后，Weave 更新 B 的几何数据，沿这条依赖找到路径并重新计算端点，其余未受影响的结果直接从缓存复用。应用拿到的仍是完整 Scene，如何重绘由渲染后端决定。
+
+## 职责一览
+
+| 部分              | 职责                                                                   | 何时阅读                               |
+| ----------------- | ---------------------------------------------------------------------- | -------------------------------------- |
+| 执行（compile）   | 遍历声明树，准备上下文，调用 Core 的计算阶段，将图元和资源组装成 Scene | 追踪一份输入怎样得到第一张图           |
+| 增量（weave）     | 保存元素的计算结果与依赖，根据一批编辑决定哪些结果可以复用             | 解释移动一个节点为什么会影响一条连线   |
+| 协调（reconcile） | 管理会话版本，并将计算结果与可选的输出目标一起提交                     | 接入宿主，或判断此刻读到的是哪一版结果 |
+
+## 从首次编译到局部更新
+
+图中的路径用名称引用 A 和 B。首次编译时，需要先得到节点的形状与布局，才能确定连线在节点边缘的端点。
+
+<ComponentPreview
+  files={[
+    '/kernel/packages/core/compilation/compilation-example',
+    '/kernel/packages/core/compilation/compilation-example.data',
+  ]}
+  size="xs"
+  hideCode
+  type="illustration"
+/>
+
+现在设想把 B 向上移动。路径声明里的两个名字都没改，但 B 的边缘位置已经变了。增量会话保留了路径读取节点几何的依赖，因此能找到受影响的路径，重新计算连接端点。应用拿到的仍是完整 Scene，可以和首次编译的结果用同一种方式绘制。
+
+计算完成与发布结果是两个时刻。如果接入了输出目标，会话先让目标准备这次更新，再协调提交；只有提交成功，新结果才成为会话的当前版本。
+
+## 安装与使用
+
+日常绘图和更新可以直接使用 [Vanilla 的简化 API](/kernel/packages/vanilla)。通常只有在需要自行管理编译会话或接入自定义输出目标时，才需要直接使用 `SceneReconciler`。以下示例仅用于说明一次底层会话如何挂载和更新图形。
+
+<PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
+
+下面显式选择增量模式，编译这张图，再更新 B。批次通过根作用域标识和节点名定位 B；`input` 给出更新后完整的节点声明。
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { ReconcilerMode, SceneReconciler, WeaveOperationKind } from '@retikz/reconciler';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'B', position: [180, 0], text: 'B' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'line', to: { id: 'B' } },
+      ],
+    },
+  ],
+};
+
+const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
+try {
+  const first = session.mount(ir);
+  const next = session.update({
+    operations: [
+      {
+        kind: WeaveOperationKind.Update,
+        target: { kind: 'id', scopeId: session.getScopeId(), id: 'B' },
+        input: { type: 'node', id: 'B', position: [180, 60], text: 'B' },
+      },
+    ],
+  });
+  console.log(first.revision, next.revision); // 0, 1
+  console.log(next.compilation.result.scene);
+} finally {
+  session.dispose();
+}
+```
+
+首次挂载返回版本 0，移动 B 后返回版本 1。示例没有接入输出目标，可以直接读取新 Scene。如果只需一次完整编译，可用 `new SceneReconciler()` 关闭跨次状态保留；该模式支持完整替换，不接受局部编辑批次。
+
+## 首次出图与后续更新的耗时
+
+拖动节点需要连续更新画面。为了看清首次编译的成本与后续编辑的代价，下面比较三张图：节点都是同一作用域内没有文字的矩形；有连线时，每条线连接两个相邻节点。每次编辑只将中间节点水平移动 3 个单位。
+
+| 场景                     | 全量首屏 | 增量首屏 | 增量移动一个节点 |
+| ------------------------ | -------: | -------: | ---------------: |
+| 100 个节点，无连线       |  1.25 ms |  2.66 ms |          0.35 ms |
+| 100 个节点，99 条连线    |  4.23 ms |  7.96 ms |          0.64 ms |
+| 1,000 个节点，999 条连线 | 39.27 ms | 80.79 ms |          9.36 ms |
+
+在这三张图中，增量首屏耗时是全量的 1.88–2.13 倍。两种模式首次都要编译整张图，增量模式还要建立供后续更新使用的状态。这个倍数不是固定开销：小图无连线时两者只差约 1.4 ms，大图有连线时相差约 42 ms。已挂载的会话移动一个节点比重新编译整张图便宜，但即使编辑的节点数相同，更新耗时也会随场景而变。
+
+“首屏”从新建会话计到完整 Scene 就绪，“移动一个节点”只计已有会话的一次更新。两者都不含浏览器启动或 SVG / Canvas 绘制。表中数据均在作者的电脑上测得。
+
+## 包边界与阅读顺序
+
+节点形状、坐标和连接端点的求值规则见[编译核心 · core](/kernel/packages/core)；将 Scene 绘制为 SVG 或 Canvas 见[渲染后端 · render](/kernel/packages/render)。Reconciler 负责在两者之间安排计算、复用结果并发布版本。
+
+读执行源码时，先看一次完整编译如何得到 Scene，再看 Weave 如何缩小下一次计算的范围。接入输出目标时则可以从协调层开始：先弄清结果何时对外可见，再按需追踪它是怎样算出来的。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: '执行 / 编译调度',
+      description: '沿一次完整编译追踪路径占位、节点几何登记与整图组装',
+      url: '/kernel/packages/reconciler/compile-scheduling',
+    },
+    {
+      title: '执行 / 运行上下文',
+      description: '从运行环境的创建过程理解编译器共用的配置、宿主服务和当前场景输入',
+      url: '/kernel/packages/reconciler/compile-runtime',
+    },
+    {
+      title: '执行 / 运行状态',
+      description: '跟随树遍历，追踪名称与坐标、工作区资源及组件试算结果如何记录与使用',
+      url: '/kernel/packages/reconciler/compile-state',
+    },
+    {
+      title: '执行 / 作用域与遍历',
+      description: '跟随嵌套作用域追踪名称、坐标和返回父层的输出',
+      url: '/kernel/packages/reconciler/compile-traversal',
+    },
+    {
+      title: '执行 / 元素组装',
+      description: '对照节点、命名坐标和路径怎样贡献布局、引用与图元',
+      url: '/kernel/packages/reconciler/compile-elements',
+    },
+    {
+      title: '执行 / Composite 求值',
+      description: '从尺寸测量、隔离试排到提交子树',
+      url: '/kernel/packages/reconciler/compile-composite',
+    },
+    {
+      title: '执行 / 产物来源',
+      description: '沿着节点 B 的图元读取 Scene、绘制资源、领域产物、警告与来源记录',
+      url: '/kernel/packages/reconciler/compile-artifacts',
+    },
+    {
+      title: '增量 / 状态模型',
+      description: '从作者树、读取依赖和阶段记录理解 Weave 如何保存增量编译状态',
+      url: '/kernel/packages/reconciler/weave-state',
+    },
+    {
+      title: '增量 / 变更追踪',
+      description: '跟随一次批次编辑，理解候选树如何维护地址、登记变化并保留回滚依据',
+      url: '/kernel/packages/reconciler/weave-changes',
+    },
+    {
+      title: '增量 / 依赖调度',
+      description: '跟随两条读取同一节点的路径，看 Weave 如何解析绑定、等待几何就绪并按读取结果传播变化',
+      url: '/kernel/packages/reconciler/weave-scheduling',
+    },
+  ]}
+/>

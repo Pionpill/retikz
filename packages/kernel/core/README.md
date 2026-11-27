@@ -23,7 +23,7 @@ import { compileToScene } from '@retikz/vanilla';
 const { scene, artifacts } = compileToScene(ir);
 // Pass drawing providers and host options through options.compile
 // hand `scene` to @retikz/render/svg, @retikz/render/canvas, or a runtime
-// inspect `artifacts` when composite definitions or node layout collection publish compile DTOs
+// inspect `artifacts` when composite definitions publish domain results
 ```
 
 Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.com/package/@retikz/react) or [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla). Use core directly when you build IR programmatically, persist/transport scenes, or write a custom renderer.

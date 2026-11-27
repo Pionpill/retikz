@@ -59,3 +59,6 @@ export type CompositeExecutionContext = {
   /** 递归与诊断调度能力 */
   host: CompositeCompileHost;
 };
+
+/** 单个作者实例的一轮领域状态交换，不传递给生成的子项 */
+export type CompositeMemoSlot = { memo?: object };

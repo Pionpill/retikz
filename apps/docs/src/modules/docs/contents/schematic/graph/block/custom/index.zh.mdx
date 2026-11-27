@@ -58,7 +58,7 @@ const source: ServiceSource = {
   logic: { body: { kind: 'text', text: 'loadUser(id)' } },
 };
 const Example: FC = () => (
-  <Layout extensions={{ themeDefinitions: [coreStyle] }}>
+  <Layout compile={{ themeDefinitions: [coreStyle] }}>
     <ServiceBlock {...source} />
   </Layout>
 );
@@ -68,8 +68,8 @@ const Example: FC = () => (
 <DocTab value="vanilla" label="Vanilla">
 
 ```ts
-import { scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { embed, scene } from '@retikz/vanilla';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const source: ServiceSource = {
   namespace: 'example',
@@ -78,9 +78,8 @@ const source: ServiceSource = {
   name: 'UserService',
   logic: { body: { kind: 'text', text: 'loadUser(id)' } },
 };
-const input = scene({ children: [{ type: 'embed', kind: adapter.kind, props: source }] });
-const view = mount(document.getElementById('diagram')!, input, {
-  adapters: [adapter],
+const input = scene({ children: [embed({ adapter, props: source })] });
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { themeDefinitions: [coreStyle] },
 });
 // view.dispose() on teardown

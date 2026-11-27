@@ -41,8 +41,8 @@ const createControls = (lang: Lang) => {
           },
           {
             kind: 'select',
-            id: 'boundary',
-            label: t.boundary,
+            id: 'side',
+            label: t.side,
             defaultValue: 'top',
             visibleWhen: { controlId: 'positionMode', oneOf: ['boundary'] },
             options: [
@@ -97,7 +97,7 @@ export const createPreviewControlContract = (lang: Lang) =>
       text: 'values',
       positionMode: 'direction',
       direction: 'top',
-      boundary: 'top',
+      side: 'top',
       fraction: 0.5,
       align: 'middle',
       distance: 16,

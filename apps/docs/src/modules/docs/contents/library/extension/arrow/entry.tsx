@@ -4,7 +4,7 @@ import type { FC } from 'react';
 
 /** 展示按需装配后的单个箭头 */
 const Entry: FC = () => (
-  <Layout viewBox={{ x: -110, y: -45, width: 220, height: 90 }} extensions={{ arrows: [diamondArrowDefinition] }}>
+  <Layout viewBox={{ x: -110, y: -45, width: 220, height: 90 }} compile={{ arrows: [diamondArrowDefinition] }}>
     <Draw
       way={[
         [-70, 0],

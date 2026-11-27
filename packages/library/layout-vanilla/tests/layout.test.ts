@@ -9,16 +9,8 @@ import {
   overlayLayoutDefinition,
   overlayLayoutProvider,
 } from '@retikz/layout';
-import {
-  flexLayout,
-  flexLayoutInputEmbedAdapter,
-  gridLayout,
-  gridLayoutInputEmbedAdapter,
-  layoutInputEmbedAdapters,
-  overlayLayout,
-  overlayLayoutInputEmbedAdapter,
-} from '@retikz/layout-vanilla';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { flexLayout, gridLayout, overlayLayout } from '@retikz/layout-vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 const nestedGrid = createGridLayout({ columns: [{ kind: 'fixed', value: 10 }] });
@@ -29,7 +21,6 @@ describe('Layout Vanilla 系列', () => {
       scene({
         children: [flexLayout({}), gridLayout({ columns: [{ kind: 'fixed', value: 10 }] }), overlayLayout({})],
       }),
-      { adapters: layoutInputEmbedAdapters },
     );
 
     expect(normalized.contributions).toEqual([
@@ -53,12 +44,12 @@ describe('Layout Vanilla 系列', () => {
         overlayLayout({}),
       ],
     });
-    const normalized = normalizeScene(input, { adapters: layoutInputEmbedAdapters });
+    const normalized = normalizeScene(input);
 
-    expect(input.children.map(child => ('kind' in child ? child.kind : undefined))).toEqual([
-      'layout.flexLayout',
-      'layout.gridLayout',
-      'layout.overlayLayout',
+    expect(input.children).toMatchObject([
+      { adapter: { kind: 'layout.flexLayout' } },
+      { adapter: { kind: 'layout.gridLayout' } },
+      { adapter: { kind: 'layout.overlayLayout' } },
     ]);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['flexLayout', 'gridLayout', 'overlayLayout']);
     expect(normalized.ir.children[0]).toMatchObject({ gap: { column: 4, row: 8 } });
@@ -78,22 +69,11 @@ describe('Layout Vanilla 系列', () => {
           }),
         ],
       }),
-      { adapters: layoutInputEmbedAdapters },
     );
 
     const item = (normalized.ir.children[0] as { children: Array<Record<string, unknown>> }).children[0];
 
     expect(item).not.toHaveProperty('key');
-  });
-
-  it('按容器顺序导出浅冻结系列适配器数组', () => {
-    expect(layoutInputEmbedAdapters).toEqual([
-      flexLayoutInputEmbedAdapter,
-      gridLayoutInputEmbedAdapter,
-      overlayLayoutInputEmbedAdapter,
-    ]);
-    expect(Object.isFrozen(layoutInputEmbedAdapters)).toBe(true);
-    expect(Object.isFrozen(flexLayoutInputEmbedAdapter)).toBe(false);
   });
 
   it('拒绝 Source schema 边界处的外部 Vanilla 嵌入有效负载', () => {
@@ -129,9 +109,7 @@ describe('Layout Vanilla 系列', () => {
         }),
       ],
     });
-    const normalized = normalizeScene(input, {
-      adapters: layoutInputEmbedAdapters,
-    });
+    const normalized = normalizeScene(input);
 
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'layout',
@@ -145,12 +123,9 @@ describe('Layout Vanilla 系列', () => {
       ],
     });
     expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([flexLayoutProvider]);
-    expect(
-      renderToSvgString(input, {
-        adapters: layoutInputEmbedAdapters,
-        compile: { composites: [gridLayoutDefinition] },
-      }),
-    ).toMatch(/^<svg/);
+    expect(renderToSvg(compileToScene(input, { compile: { composites: [gridLayoutDefinition] } }).scene)).toMatch(
+      /^<svg/,
+    );
   });
 
   it('通过输入项转发嵌套的 Layout 依赖项，无需 React 参与', () => {
@@ -169,7 +144,7 @@ describe('Layout Vanilla 系列', () => {
       ],
     });
 
-    const normalized = normalizeScene(input, { adapters: layoutInputEmbedAdapters });
+    const normalized = normalizeScene(input);
 
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'layout',

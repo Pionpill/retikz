@@ -153,7 +153,7 @@ describe('解析/路径提供者绑定', () => {
     });
     const resolvedMark = resolution.canon.arrow?.end;
     if (resolvedMark === undefined) throw new Error('Expected endpoint arrow');
-    const arrowResolution = resolution.arrows.get(resolvedMark);
+    const arrowResolution = resolution.stroke.arrows.get(resolvedMark);
 
     expect(arrowResolution?.definition).toBe(arrow);
     expect(arrowResolution?.mark.fill).toBeUndefined();

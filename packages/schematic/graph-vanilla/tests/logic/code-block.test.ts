@@ -1,3 +1,4 @@
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import {
   CodeBlockPropsSchema,
   createBlockHeader,
@@ -5,12 +6,10 @@ import {
   defineCodeBlock,
   defineGraphTheme,
 } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
-import { normalizeScene, compileToScene } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
+import { embed, normalizeScene, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
-
-import { prepareProcessingInput } from '../../../../kernel/vanilla/src/processing/prepare';
 
 const schema = CodeBlockPropsSchema.safeExtend({ namespace: literal('test'), type: literal('service') });
 
@@ -45,26 +44,25 @@ const adapter: InputEmbedAdapter<typeof source> = {
   lower: props => ({ node: { ...props }, providerDependencies: contribution }),
 };
 
-const embed: InputEmbed<typeof source> = { type: 'embed', kind: adapter.kind, id: 'authoring', props: source };
+const inputEmbed = embed({ adapter, id: 'authoring', props: source });
 
 describe('自定义代码块 Vanilla 编写', () => {
   it('保留 Source 并使用与 Direct IR 相同的提供者和本地主题', () => {
-    const input = { children: [embed] };
-    const normalized = normalizeScene(input, { adapters: [adapter] });
+    const input = { type: 'scene' as const, children: [inputEmbed] };
+    const normalized = normalizeScene(input);
 
     expect(normalized.ir.children).toEqual([source]);
 
     const actual = compileToScene(input, {
-      adapters: [adapter],
       compile: { themeDefinitions: [coreStyle] },
     });
     const direct = compileToScene(
       { type: 'scene', version: 1, children: [source] },
       {
-        compile: prepareProcessingInput(
-          { children: [embed] },
-          { adapters: [adapter], compile: { themeDefinitions: [coreStyle] } },
-        ).coreOptions,
+        compile: {
+          ...resolveCoreProviderDependencies({ contributions: [contribution] }),
+          themeDefinitions: [coreStyle],
+        },
       },
     );
 

@@ -1,9 +1,9 @@
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot, PlotsLoweringOptions } from '@retikz/plot';
-import { PLOT_NAMESPACE } from '@retikz/plot';
 import type { InputEmbed } from '@retikz/vanilla';
 import { embed } from '@retikz/vanilla';
 
+import { plotInputEmbedAdapter } from '../adapter';
 import type { InputPlot } from '../normalize/plot';
 import { normalizePlot } from '../normalize/plot';
 import type { InputPlotEmbed, PlotSource } from './types';
@@ -23,7 +23,7 @@ export const embedPlot = (
 ): InputEmbed<InputPlotEmbed> => {
   const id = source.input === undefined ? source.spec.id : source.input.id;
   return embed({
-    kind: PLOT_NAMESPACE,
+    adapter: plotInputEmbedAdapter,
     ...(id === undefined ? {} : { id }),
     props: {
       ...source,

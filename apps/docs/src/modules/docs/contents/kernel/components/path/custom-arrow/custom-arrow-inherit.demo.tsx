@@ -32,7 +32,7 @@ const bracket = defineArrow({
 });
 
 const Demo: FC = () => (
-  <Layout extensions={{ arrows: [bracket] }}>
+  <Layout compile={{ arrows: [bracket] }}>
     <Draw
       way={[
         [0, 0],

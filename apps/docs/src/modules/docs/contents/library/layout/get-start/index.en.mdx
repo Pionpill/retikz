@@ -13,7 +13,7 @@ Choose the host used by your project and run its example below. Packages use ES 
 | `@retikz/layout-react`   | React DSL for layout containers            | Authoring inside a React `Layout`                  |
 | `@retikz/layout-vanilla` | Plain-spec helpers and adapters            | Authoring in browsers or scripts without React     |
 
-For React authoring, compose `FlexLayout`, `GridLayout`, or `OverlayLayout` inside the `Layout` from `@retikz/react`. For Vanilla, combine the helpers and adapters from `@retikz/layout-vanilla`. When loading persisted JSON, validate complete layout IR with `@retikz/layout` and pass the required Definitions to the Core compiler.
+For React authoring, compose `FlexLayout`, `GridLayout`, or `OverlayLayout` inside the `Layout` from `@retikz/react`. For Vanilla, use the layout factories from `@retikz/layout-vanilla`. When loading persisted JSON, validate complete layout IR with `@retikz/layout` and pass the required Definitions to the Core compiler.
 
 ## React
 
@@ -59,8 +59,8 @@ The root `Layout` outputs SVG by default; this example needs no renderer configu
 <PackageManagerInstall packages="@retikz/layout-vanilla @retikz/vanilla" />
 
 ```ts
-import { flexLayout, flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
-import { node, renderToSvgString, scene } from '@retikz/vanilla';
+import { flexLayout } from '@retikz/layout-vanilla';
+import { compileToScene, node, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -79,11 +79,12 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [flexLayoutInputEmbedAdapter] });
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
-`svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. The helper creates ordinary input; `adapters` lets Vanilla recognize the embed and collect its capability dependencies. Omitting the adapter leaves the embed unresolved.
+`svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. The layout factory binds its adapter to the embed; the scene needs no registration.
 
 Both hosts default to horizontal rows (`direction: 'row'`). `FlexLayoutItem` selects Flex item constraints and holds one drawable child. `minimumSize: 32` sets both minimum width and minimum height. A Node without `shape` defaults to a rectangle.
 
@@ -93,9 +94,8 @@ Both hosts default to horizontal rows (`direction: 'row'`). `FlexLayoutItem` sel
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
 | One definition | `flexLayoutDefinition`, `gridLayoutDefinition`, `overlayLayoutDefinition`                                                | Register one layout composite with Core                   |
 | React          | `FlexLayout`, `GridLayout`, `OverlayLayout` and their respective `FlexLayoutItem`, `GridLayoutItem`, `OverlayLayoutItem` | Build canonical IR and contribute definitions to `Layout` |
-| Vanilla        | `layoutInputEmbedAdapters`                                                                                               | Recognize all three embeds in Scene, mount, or SSR hosts  |
 
-Pass one or more of the three layout Definitions directly in `CompileOptions.composites`. React and Vanilla adapters produce the same Layout IR and contribute the same Definitions; their adapter convenience arrays do not become Core compile presets.
+Pass one or more of the three layout Definitions directly in `CompileOptions.composites`. React and Vanilla adapters produce the same Layout IR and contribute the same Definitions.
 
 ### React
 
@@ -107,7 +107,7 @@ React containers start no local compilation and perform no DOM measurement. They
 
 ### Vanilla
 
-`flexLayout()`, `gridLayout()`, and `overlayLayout()` return `InputEmbed` values. Scene, mount, or SSR hosts need the matching adapter; use `layoutInputEmbedAdapters` for the complete family.
+`flexLayout()`, `gridLayout()`, and `overlayLayout()` return `InputEmbed` values. Each value carries its own adapter.
 
 Each adapter calls the same `createXxxLayout()` factory as direct authoring and contributes the layout Definitions required by its family. Vanilla therefore shares schemas, definitions, solvers, and artifact semantics with direct Core compilation and React.
 

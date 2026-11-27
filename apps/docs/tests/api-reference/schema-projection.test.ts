@@ -122,7 +122,9 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
     const standardEnglish = await createStandardApiReferenceMdx(standardConfig, 'en');
 
     expect(standardEnglish.match(/\| `close\?` \|[^\n]+\| `"open"` \| [^—]/g)).toHaveLength(3);
-    expect(standardEnglish).toMatch(/\| `padding\?` \|[^\n]+\| `0` \| Uniform or side-specific/);
+    expect(standardEnglish).toMatch(
+      /\| `padding\?` \|[^\n]+\| `0` \| Padding between the Surface boundary and its child/,
+    );
     expect(standardEnglish).toMatch(/\| `index\?` \|[^\n]+\| `false` \|/);
     expect(standardEnglish).toMatch(/\| `cellIdMode\?` \|[^\n]+\| `'explicit'` \|/);
     expect(standardEnglish).toContain('{"position":[0,0],"label":false}');
@@ -172,7 +174,7 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
         },
         'zh',
       ),
-    ).rejects.toThrow(/missing sides/);
+    ).rejects.toThrow(/Unpaired PolygonSchema\.sides Schema description/);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

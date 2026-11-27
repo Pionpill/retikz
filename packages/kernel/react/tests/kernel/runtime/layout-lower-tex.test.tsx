@@ -1,8 +1,9 @@
+// @vitest-environment jsdom
 import type { TexLowerer } from '@retikz/core';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout, Node } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 const lowerTex: TexLowerer = () => ({
   paths: [
@@ -29,10 +30,10 @@ const lowerTex: TexLowerer = () => ({
   depth: 2,
 });
 
-describe('<Layout lowerTex>多路径直通', () => {
+describe('<Layout compile={{ lowerTex }}>多路径直通', () => {
   it('把 custom lowerer 的多条路径与 paint 交给同一 Core consumer', () => {
-    const svg = renderToStaticMarkup(
-      <Layout lowerTex={lowerTex}>
+    const svg = mountedMarkup(
+      <Layout compile={{ lowerTex }}>
         <Node position={[0, 0]} text={[{ segments: [{ tex: 'x', fill: 'royalblue' }] }]} />
       </Layout>,
     );

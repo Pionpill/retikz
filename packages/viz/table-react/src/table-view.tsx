@@ -15,12 +15,12 @@ import type { ReactTableRuntime } from './table-runtime';
 import { useTableThemeDefinitions } from './theme-context';
 
 /** standalone Table 运行时交给 Layout 的内部 InputEmbed 组件属性 */
-type TableRuntimeEmbedProps = InputTable<unknown>;
+type TableRuntimeEmbedProps = InputTable;
 
 /** React Layout 遍历时识别的 Table Vanilla InputEmbed 宿主 */
 type TableRuntimeEmbedComponent = FC<TableRuntimeEmbedProps> & {
   isTier2Embeddable: true;
-  inputEmbedAdapter: InputEmbedAdapter<InputTable<unknown>>;
+  inputEmbedAdapter: InputEmbedAdapter<InputTable>;
 };
 
 const TableRuntimeEmbed = (() => null) as unknown as TableRuntimeEmbedComponent;
@@ -36,19 +36,21 @@ const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableComp
 
 /** 共享 standalone Table runtime view，不作为公开组件导出 */
 export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({ runtime }) => {
+  const { table, lowerOptions, composites, onManifest, display, datasetReference, datasetSource, preparedData } =
+    runtime;
   const {
-    table,
-    lowerOptions,
-    composites,
-    onManifest,
-    display,
-    datasetReference,
-    datasetSource,
-    dataBindings,
-    dataTransformExecutor,
-    signal,
-  } = runtime;
-  const { shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions, ...hostProps } = display;
+    nodeDistance,
+    fontSize,
+    lowerTex,
+    shapes,
+    boundaries,
+    clips,
+    arrows,
+    patterns,
+    paths,
+    themeDefinitions,
+    ...hostProps
+  } = display;
   const tableKey = JSON.stringify(table);
   const stableTable = useMemo<InputTableVariant>(() => JSON.parse(tableKey) as InputTableVariant, [tableKey]);
 
@@ -124,16 +126,14 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     ],
   );
 
-  const input = useMemo<InputTable<unknown>>(
+  const input = useMemo<InputTable>(
     () => ({
       table: stableTable,
-      ...(dataBindings === undefined ? { data: stableDatasets } : { dataBindings }),
-      dataTransformExecutor,
-      signal,
+      ...(preparedData === undefined ? { data: stableDatasets } : { preparedData }),
       lowerOptions: stableLowerOptions,
       composites,
     }),
-    [composites, stableDatasets, stableLowerOptions, stableTable, dataBindings, dataTransformExecutor, signal],
+    [composites, stableDatasets, stableLowerOptions, stableTable, preparedData],
   );
   const inputChild = useMemo(() => <TableRuntimeEmbed {...input} />, [input]);
 
@@ -159,10 +159,20 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
 
   return (
     <Layout
-      runtime={{ preparation: 'async', signal }}
       onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
       {...hostProps}
-      extensions={{ shapes, boundaries, clips, arrows, patterns, paths, themeDefinitions }}
+      compile={{
+        nodeDistance,
+        fontSize,
+        lowerTex,
+        shapes,
+        boundaries,
+        clips,
+        arrows,
+        patterns,
+        paths,
+        themeDefinitions,
+      }}
     >
       {inputChild}
     </Layout>

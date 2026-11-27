@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition, IRChild, IRScene, CanonicalScopeInheritance } from '@retikz/core';
-import { resolveScopeInheritance } from '@retikz/core';
+import { selectCompositeInputScope, resolveScopeInheritance } from '@retikz/core';
 import type { PropertyPath } from '@retikz/foundation';
 import { createIdAllocator, isPropertyPathEqual } from '@retikz/foundation';
 
@@ -40,6 +40,11 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
   private readonly context: WeaveCompileContext;
   /** 跨批次事实源与当前候选状态 */
   private readonly state: WeaveCompileState<TComposite>;
+
+  /** 读取此会话持有的稳定声明根 */
+  get root(): WeaveRoot {
+    return this.state.persistent.root;
+  }
 
   /** 内部编译操作只能在活动候选批次中执行 */
   private get batch(): WeaveBatchState {
@@ -93,8 +98,10 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       // 新树尚未对外发布；Runtime 再原子发布整棵树及输出
       batch.transaction.commit();
       batch.transaction.finish();
-      persistent.completed = { root: persistent.root, visited: batch.visited, compilation };
+      persistent.completed = { visited: batch.visited, compilation };
       persistent.addresses = batch.addresses;
+      // 作者树接管声明；后续只在需要完整 Source 配对时才物化子数组
+      persistent.source = { ...batch.source, children: [] };
       this.state.batch = undefined;
       return persistent.completed;
     } catch (error) {
@@ -128,7 +135,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
    * @param forceFull 是否强制计算全部作者条目并禁用旧阶段产物复用，默认 false
    * @returns 编译快照及事务控制；commit 切换状态但保留恢复依据，finish 最终确认，rollback 放弃或恢复
    */
-  update(input: WeaveBatch, forceFull = false): WeavePreparedUpdate<TComposite> {
+  prepareUpdate(input: WeaveBatch, forceFull = false): WeavePreparedUpdate<TComposite> {
     const persistent = this.state.persistent;
     const completed = persistent.completed;
     if (completed === undefined)
@@ -154,23 +161,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         if (changes === undefined) continue;
         batch.indexesChanged ||= changes.indexesChanged;
         const addresses = batch.addresses!;
-
-        /** 结构编辑重组变动容器，普通更新仅替换对应声明；未变的兄弟声明继续共享原输入 */
-        if (changes.structure !== undefined) {
-          const parent = changes.structure.parent;
-          const children = transaction
-            .readState(parent)
-            .children.map(
-              entry => addresses.declaration(batch.source, entry) ?? editor.serializeEntryDeclaration(entry),
-            );
-          batch.source =
-            parent.type === 'root'
-              ? { ...batch.source, children }
-              : addresses.replaceDeclaration(batch.source, parent, transaction, children);
-        } else {
-          for (const entry of changes.changedEntries)
-            batch.source = addresses.replaceDeclaration(batch.source, entry, transaction);
-        }
 
         /** 名称或结构变化时刷新派生索引；路径移动也标记失效，避免复用旧声明位置相关的产物 */
         if (changes.indexesChanged)
@@ -229,7 +219,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       let prepared = { ...completed, visited: 0 };
       if (modified || forceFull) {
         const compilation = this.execute();
-        prepared = { root: persistent.root, visited: batch.visited, compilation };
+        prepared = { visited: batch.visited, compilation };
       }
 
       /** commit 后仍可恢复；只有发布成功后的 finish 才保存本批输入、索引和结果并释放候选 */
@@ -240,7 +230,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         finish: () => {
           transaction.finish();
           persistent.completed = prepared;
-          persistent.source = batch.source;
           persistent.addresses = batch.addresses;
           closed = true;
           tracker.pruneRemovedBindings();
@@ -271,8 +260,12 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
     const batch = this.batch;
     const { transaction, editor, tracker } = batch;
     const root = this.state.persistent.root;
-    let entries = batch.addresses?.entries ?? new WeaveLookup<string, WeaveEntry>();
-    let paths = batch.addresses?.paths ?? new Map<WeaveEntry, PropertyPath>();
+    const runtime = createCompileRuntime(
+      batch.source,
+      batch.updating ? this.context.output : this.options,
+      this.context.execution,
+      this.context.shared,
+    );
     const keyOf = (path: PropertyPath) => JSON.stringify(path);
 
     /** 建立作者条目、继承上下文与名称索引，不展开 Composite 生成树，也不执行图元计算 */
@@ -283,7 +276,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       style: CanonicalScopeInheritance,
       inheritedIds: Map<string, WeaveEntry>,
     ): void => {
-      const parentState = transaction.editState(parent);
       const ids =
         parent.type === 'root' || transaction.readState(parent).origin.own.localNamespace
           ? new WeaveLookup<string, WeaveEntry>()
@@ -291,30 +283,25 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       if (parent.type === 'root') transaction.editState(parent).ids = ids;
       else if (transaction.readState(parent).origin.own.localNamespace) transaction.editState(parent).ids = ids;
       for (const [index, child] of children.entries()) {
-        const path = createCompileChildPath(prefix, index);
-        const entry = batch.updating ? parentState.children[index] : editor.createEntry(child, parent, style);
-        if (!batch.updating) tracker.registerEntryBinding(entry);
-        entries.set(keyOf(path), entry);
-        paths.set(entry, path);
-        if (batch.updating && !isPropertyPathEqual(batch.previousEntryIrPaths.get(entry) ?? [], path))
-          tracker.invalidateEntry(entry);
-        if (!batch.updating) {
-          const state = transaction.editState(entry);
-          state.origin = { ...state.origin, context: style };
-        }
-
+        const entry = editor.createEntry(child, parent, style);
+        tracker.registerEntryBinding(entry);
+        if (entry.type === 'composite' && this.options.compositeInputs)
+          transaction.editState(entry).bindings = selectCompositeInputScope(
+            runtime.context.compositeInputs,
+            createCompileChildPath(prefix, index),
+          ).bindings;
         if (!('namespace' in child) && child.id !== undefined) ids.set(child.id, entry);
         if (!('namespace' in child) && child.type === 'node') for (const id of child.aliasIds ?? []) ids.set(id, entry);
-        if (entry.type === 'scope' && !('namespace' in child) && child.type === 'scope')
+        if (entry.type === 'scope' && !('namespace' in child) && child.type === 'scope') {
+          const path = createCompileChildPath(prefix, index);
           visit(
             child.children,
             entry,
             path,
-            batch.updating
-              ? transaction.readState(entry).origin.context
-              : resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
+            resolveScopeInheritance(child, this.context.shared.registries.themeRegistry, style, path),
             ids,
           );
+        }
       }
     };
 
@@ -327,11 +314,9 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
         resolveScopeInheritance(batch.source, this.context.shared.registries.themeRegistry),
         new Map(),
       );
-    if (batch.addresses === undefined) {
-      batch.addresses = new WeaveAddressIndex(root, transaction);
-      entries = batch.addresses.entries;
-      paths = batch.addresses.paths;
-    }
+    // ⚡首帧建树只建立声明；最终地址索引统一生成路径，不再逐条复制临时索引
+    batch.addresses ??= new WeaveAddressIndex(root, transaction);
+    const { entries, paths } = batch.addresses;
 
     /** 将读取路径归属到最近的作者条目；别名和 Composite 生成内容不另建条目身份 */
     const findProducer = (path: PropertyPath): WeaveEntry | undefined => {
@@ -344,7 +329,6 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
 
     /** 按作者身份去重实际计算计数，避免同一条目的多个阶段重复增加 visited */
     const counted = new Set<WeaveEntry>();
-    const runtime = createCompileRuntime(batch.source, this.options, this.context.execution, this.context.shared);
 
     /** 分别保存缓存和条目读取事实，再重建实际依赖；仅更新输出诊断时显式沿用旧读取数组 */
     const recordComputed: WeaveExecutionContext['recordComputed'] = (entry, metadata, reused, referenceReads) => {
@@ -405,41 +389,40 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
       );
     };
 
-    /** 初始选中条目中可直接保留的清洁输出贡献 */
-    const retained = new Map<string, WeaveContribution>();
+    /** ⚡调度期间作者身份稳定，直接按条目寻址而不序列化声明路径 */
+    const retained = new Map<WeaveEntry, WeaveContribution>();
     /** 待计算或待验证的声明，进入此集合不代表其全部阶段都需要重算 */
-    const pending = new Map<string, WeaveUpdateRequest>();
+    const pending = new Map<WeaveEntry, WeaveUpdateRequest>();
 
     /** 首轮及 full 选择全部作者条目，auto 仅选择已登记变化 */
-    const requested = !batch.updating || batch.forceFull ? paths.keys() : tracker.requests;
+    const requested = !batch.updating || batch.forceFull ? paths.keys() : tracker.requestedEntries;
     for (const entry of requested) {
-      const path = keyOf(paths.get(entry)!);
       const state = transaction.readState(entry);
       const affected =
         batch.forceFull || tracker.isEntryAffected(entry) || state.pendingInputs.some(input => input.changes.size > 0);
+      const contribution = 'contribution' in state ? state.contribution : undefined;
       const request: WeaveUpdateRequest = {
-        entry,
         check:
-          !batch.forceFull && tracker.canCheckEntry(entry) && state.contribution?.diagnostics.length === 0
-            ? state.contribution
+          !batch.forceFull && tracker.canCheckEntry(entry) && contribution?.diagnostics.length === 0
+            ? contribution
             : undefined,
         inputs: state.pendingInputs,
         consume: () => {
           transaction.editState(entry).pendingInputs = [];
         },
       };
-      const contribution = state.contribution;
 
       /** Scope 需要等待子布局再确认包络；其他元素可保留清洁贡献或交由调度器进一步核对 */
       if (entry.type === 'scope') {
-        pending.set(path, request);
+        pending.set(entry, request);
       } else if (!affected && contribution !== undefined && contribution.diagnostics.length === 0)
-        retained.set(path, contribution);
-      else pending.set(path, request);
+        retained.set(entry, contribution);
+      else pending.set(entry, request);
     }
 
     /** 调度器通过这些能力读取候选状态并回写结果，不在此切换已提交状态槽 */
     const context = {
+      indexesChanged: batch.indexesChanged,
       source: batch.source,
       runtime,
       recordComputed,
@@ -478,7 +461,7 @@ export class WeaveManager<TComposite extends AnyCompositeDefinition = AnyComposi
 
     /** 挂载或声明索引变化后补齐 Scope 对子布局的聚合依赖，仅属性更新时沿用既有结构依赖 */
     if (!batch.updating || batch.indexesChanged)
-      for (const entry of batch.updating ? tracker.requests : entries.values()) {
+      for (const entry of batch.updating ? tracker.requestedEntries : entries.values()) {
         if (entry.type === 'scope') tracker.updateScopeLayoutDependencies(entry);
       }
     return compilation;

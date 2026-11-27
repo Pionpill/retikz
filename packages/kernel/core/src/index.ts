@@ -1,7 +1,7 @@
 export * from './compile';
 export * from './contract';
 export * from './error';
-export * from './parse';
+export * from './animation-presets';
 export {
   ellipseShape,
   polygon,
@@ -20,10 +20,10 @@ export {
 export {
   DEFAULT_RESOLVED_THEME,
   bindComposite,
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   guardProviderOutput,
-  isCompositeContractError,
+  isContractViolationError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   mergeArrowDefaults,
@@ -109,6 +109,7 @@ export {
   BoundarySchema,
   BoxSizeSchema,
   BoxSpacingSchema,
+  BoxSpacingValueSchema,
   BuiltinArrowShape,
   BuiltinBoundary,
   BuiltinMarkShape,
@@ -293,7 +294,7 @@ export type {
   IRNode,
   IRNodeDefault,
   IRNodeLabel,
-  IRNodeLabelBoundaryPosition,
+  IRNodeLabelSidePosition,
   IRNodeLabelDefault,
   IRNodeLayout,
   IRNodeStroke,

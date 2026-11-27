@@ -32,7 +32,7 @@ export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
     canonicalValues: { radius: 3, position: 0.5, scale: 2, color: '#2563eb' },
-    relatedApis: ['MarkDefinition.emit', 'Draw.marks', 'Layout.extensions.marks'],
+    relatedApis: ['MarkDefinition.emit', 'Draw.marks', 'Layout.compile.marks'],
   }) satisfies PreviewControlContract;
 
 /** 默认预览契约 */

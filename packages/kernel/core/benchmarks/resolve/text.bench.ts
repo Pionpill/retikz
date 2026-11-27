@@ -25,7 +25,6 @@ for (const count of [32, 1_024, 16_384]) {
           verify: block => {
             const result = block.lines[0];
             expect(result.plainText).toBe(source);
-            expect(result.hasMath).toBe(false);
             expect(result.segments).toEqual([{ text: source, font: { size: 20, family: 'serif' } }]);
           },
         };
@@ -63,7 +62,6 @@ for (const count of [8, 128, 1_024]) {
           verify: block => {
             const result = block.lines[0];
             expect(result.plainText).toBe('a'.repeat(count));
-            expect(result.hasMath).toBe(true);
             expect(result.mixed).toBe(true);
             expect(result.segments).toHaveLength(count * 2);
             expect(result.segments[0]).toMatchObject({ text: 'a', font: { size: 20, family: 'serif' } });

@@ -8,75 +8,34 @@ import type {
   InputEmbedAuthoringSite,
   InputEmbedContext,
   InputEmbedContribution,
+  InputPath,
+  InputStep,
 } from '../element';
 import { normalizeNode, normalizePath } from '../element';
-import type { ReusedEmbedIdentity, SceneNormalizeContext } from './context';
-import {
-  childSourcePath,
-  embedSlotSourcePath,
-  inputEmbedIdentityOf,
-  isInputEmbed,
-  isInputPath,
-  isInputScope,
-  nestedIdentityFrame,
-  readIdentity,
-  scopeContextOf,
-} from './context';
-import type { InputAuthoringSite, InputChild } from './types';
+import type { SceneNormalizeContext } from './context';
+import { childSourcePath, embedSlotSourcePath, inputEmbedIdentityOf, scopeContextOf } from './context';
+import type { InputScene, InputAuthoringSite, InputChild } from './types';
 
-/** adapter 输出身份校验需要的额外上下文 */
-type AdapterOutputContext = SceneNormalizeContext & {
-  embedId: string;
-};
+/** 只有作者侧 target 简写需要转换，纯 Core 步骤保持原样 */
+const hasTargetShorthand = (step: InputStep): boolean =>
+  ('to' in step && typeof step.to === 'string') ||
+  (step.kind === 'rectangle' && typeof step.from === 'string') ||
+  (step.kind === 'arc' && typeof step.center === 'string') ||
+  (step.kind === 'smooth' && step.points.some(point => typeof point === 'string'));
 
-/** 注册公开 identity，同一命名空间的后定义覆盖此前定位 */
-const registerIdentity = (id: string | undefined, parentId: string, ctx: SceneNormalizeContext): void => {
-  if (id === undefined) return;
-
-  const key = ctx.identityFrame.length === 0 ? id : `${ctx.identityFrame}/${id}`;
-  ctx.identityIndex.set(key, [...ctx.path, id]);
-  ctx.parentIndex.set(key, parentId);
-};
-
-/** 判断 adapter 产物是否为普通 Core Scope */
-const isCoreScope = (child: IRChild): child is IRScope => child.type === 'scope' && !('namespace' in child);
-
-/** 递归确认 adapter 产物不抢占其他公开 identity */
-const validateAdapterOutputIdentities = (
-  child: IRChild,
-  ctx: AdapterOutputContext,
-  hasReusedEmbedIdentity = false,
-): boolean => {
-  const identity = readIdentity(child);
-  const reusesEmbedIdentity = identity === ctx.embedId && !hasReusedEmbedIdentity;
-  if (identity !== undefined && !reusesEmbedIdentity) {
-    registerIdentity(identity, ctx.parentId, ctx);
-  }
-
-  const nextHasReusedEmbedIdentity = hasReusedEmbedIdentity || reusesEmbedIdentity;
-  if (!isCoreScope(child)) return nextHasReusedEmbedIdentity;
-
-  const parentId = identity ?? ctx.parentId;
-  const path = identity === undefined || reusesEmbedIdentity ? ctx.path : [...ctx.path, identity];
-  const nestedContext = child.localNamespace ? { ...ctx, identityFrame: nestedIdentityFrame(ctx, identity) } : ctx;
-  let reusedEmbedIdentity = nextHasReusedEmbedIdentity;
-
-  for (const scopeChild of child.children) {
-    reusedEmbedIdentity = validateAdapterOutputIdentities(
-      scopeChild,
-      { ...nestedContext, parentId, path },
-      reusedEmbedIdentity,
-    );
-  }
-
-  return reusedEmbedIdentity;
-};
+/** 判断一个 child 是否为需经 Vanilla 处理的作者侧路径 */
+const isInputPath = (child: InputChild): child is InputPath =>
+  !('namespace' in child) &&
+  child.type === 'path' &&
+  ('authoring' in child ||
+    'way' in child ||
+    typeof child.arrow === 'string' ||
+    child.children?.some(hasTargetShorthand) === true);
 
 /** 将嵌入 slot 的 Input child 在当前 Scene traversal 中归一化 */
-export const normalizeEmbeddedChildren = (
-  children: ReadonlyArray<InputChild>,
+const normalizeEmbeddedChildren = (
+  children: InputScene['children'],
   context: SceneNormalizeContext,
-  reusedEmbedIdentity: ReusedEmbedIdentity,
 ): EmbedChildrenNormalizationResult => {
   const contributions: Array<CoreProviderContribution> = [];
   const runtimeInputs: Array<CompositeInputBinding> = [];
@@ -86,7 +45,6 @@ export const normalizeEmbeddedChildren = (
     contributions,
     runtimeInputs,
     authoringSites,
-    reusedEmbedIdentity,
   };
   const normalizedChildren = children.map((child, index) =>
     normalizeChild(child, {
@@ -100,197 +58,130 @@ export const normalizeEmbeddedChildren = (
   for (const site of authoringSites) {
     if (site.kind === 'scene') continue;
 
-    sites.push(
-      Object.freeze({
-        kind: site.kind,
-        type: site.type,
-        authoring: site.authoring,
-      }),
-    );
+    sites.push({
+      kind: site.kind,
+      type: site.type,
+      authoring: site.authoring,
+    });
   }
 
-  return Object.freeze({
-    children: Object.freeze(normalizedChildren),
-    ...(runtimeInputs.length === 0 ? {} : { runtimeInputs: Object.freeze(runtimeInputs) }),
-    providerDependencies: Object.freeze({
-      roots: Object.freeze(contributions.flatMap(contribution => contribution.roots)),
-      providers: Object.freeze(contributions.flatMap(contribution => contribution.providers)),
-    }),
-    authoringSites: Object.freeze(sites),
-  });
+  return {
+    children: normalizedChildren,
+    ...(runtimeInputs.length === 0 ? {} : { runtimeInputs }),
+    providerDependencies: {
+      roots: contributions.flatMap(contribution => contribution.roots),
+      providers: contributions.flatMap(contribution => contribution.providers),
+    },
+    authoringSites: sites,
+  };
 };
 
 /** 将一个 InputEmbed 下沉为 Core child 并收集 dependency contribution */
 const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: SceneNormalizeContext): IRChild => {
-  const adapter = ctx.adapters?.find(entry => entry.kind === input.kind);
-  if (adapter === undefined) {
-    throw new RetikzVanillaError(
-      RetikzVanillaErrorCode.Normalize,
-      `normalizeScene: embed "${embedId}" uses kind "${input.kind}" but no adapter was provided`,
-    );
-  }
-
-  const reusedEmbedIdentity: ReusedEmbedIdentity = { id: embedId, used: false };
-  let slotIndex = 0;
-  const context: InputEmbedContext = {
-    id: embedId,
-    kind: input.kind,
-    layerId: ctx.layerId,
-    identityPath: [...ctx.path, embedId],
-    ...(ctx.embedThemeContext === undefined
-      ? {}
-      : {
-          theme: ctx.embedThemeContext.theme,
-          ...(ctx.embedThemeContext.themeDefinitions === undefined
-            ? {}
-            : { themeDefinitions: ctx.embedThemeContext.themeDefinitions }),
-        }),
-    normalizeChildren: children =>
-      normalizeEmbeddedChildren(
-        children,
-        {
-          ...ctx,
-          parentId: embedId,
-          path: [...ctx.path, embedId],
-          sourcePath: embedSlotSourcePath(ctx.sourcePath, slotIndex++),
-        },
-        reusedEmbedIdentity,
-      ),
-  };
+  const adapter = input.adapter;
   let contribution: InputEmbedContribution;
   try {
+    const identityPath = [...ctx.path, embedId];
+    let slotIndex = 0;
+    const context: InputEmbedContext = {
+      id: embedId,
+      kind: input.adapter.kind,
+      identityPath,
+      normalizeChildren: children =>
+        normalizeEmbeddedChildren(children, {
+          ...ctx,
+          path: identityPath,
+          sourcePath: embedSlotSourcePath(ctx.sourcePath, slotIndex++),
+        }),
+    };
     contribution = adapter.lower(input.props as never, context);
   } catch (cause) {
     if (cause instanceof RetikzError) throw cause;
     throw new RetikzVanillaError(
       RetikzVanillaErrorCode.Normalize,
-      `normalizeScene: adapter "${input.kind}" failed to lower embed "${embedId}" at ${ctx.sourcePath}`,
+      `normalizeScene: adapter "${input.adapter.kind}" failed to lower embed "${embedId}" at ${ctx.sourcePath}`,
       { cause },
     );
   }
 
   for (const binding of contribution.runtimeInputs ?? [])
-    ctx.runtimeInputs.push(
-      Object.freeze({ path: Object.freeze([...ctx.runtimePath, ...binding.path]), input: binding.input }),
-    );
+    ctx.runtimeInputs.push({ path: [...ctx.runtimePath, ...binding.path], input: binding.input });
 
   ctx.contributions.push(contribution.providerDependencies);
-  validateAdapterOutputIdentities(contribution.node, {
-    ...ctx,
-    embedId,
-    parentId: embedId,
-    path: [...ctx.path, embedId],
-  });
 
-  ctx.authoringSites.push(
-    Object.freeze({
+  if (input.authoring !== undefined)
+    ctx.authoringSites.push({
       kind: 'embeddable',
       sourcePath: ctx.sourcePath,
-      ...('namespace' in contribution.node ? {} : {}),
-      type: input.kind,
+      type: input.adapter.kind,
       authoring: input.authoring,
-    }),
-  );
+    });
 
   contribution.authoringSites?.forEach(site =>
-    ctx.authoringSites.push(
-      Object.freeze({
-        ...site,
-        sourcePath: ctx.sourcePath,
-      }),
-    ),
+    ctx.authoringSites.push({
+      ...site,
+      sourcePath: ctx.sourcePath,
+    }),
   );
 
   return contribution.node;
 };
 
-/** 归一化一个 authored child，并同步维护 metadata */
+/** 归一化一个 authored child，并收集作者信息 */
 export const normalizeChild = (input: InputChild, ctx: SceneNormalizeContext): IRChild => {
-  if (isInputEmbed(input)) {
-    const embedId = inputEmbedIdentityOf(input, ctx);
-    const reusedEmbedIdentity = ctx.reusedEmbedIdentity;
-    if (reusedEmbedIdentity !== undefined && reusedEmbedIdentity.id === embedId && !reusedEmbedIdentity.used) {
-      reusedEmbedIdentity.used = true;
-    } else {
-      registerIdentity(embedId, ctx.parentId, ctx);
-    }
+  /** 记录内置子项显式提供的作者来源 */
+  const recordAuthoringSite = (kind: 'path' | 'scope' | 'node' | 'coordinate', authoring: unknown): void => {
+    if (authoring === undefined) return;
+    ctx.authoringSites.push({ kind, type: kind, sourcePath: `${ctx.sourcePath}.${kind}`, authoring });
+  };
 
-    return normalizeEmbed(input, embedId, ctx);
-  }
+  /** 带命名空间的复合节点已经是 Core IR，不按内置图元的 type 分派 */
+  if ('namespace' in input) return input;
 
-  const identity = readIdentity(input);
-  const reusedEmbedIdentity = ctx.reusedEmbedIdentity;
-  if (
-    identity !== undefined &&
-    reusedEmbedIdentity !== undefined &&
-    reusedEmbedIdentity.id === identity &&
-    !reusedEmbedIdentity.used
-  ) {
-    reusedEmbedIdentity.used = true;
-  } else {
-    registerIdentity(identity, ctx.parentId, ctx);
-  }
+  /** 嵌入项按作者位置确定身份，调用绑定的 adapter 下沉 */
+  if (input.type === 'embed') return normalizeEmbed(input, inputEmbedIdentityOf(input, ctx), ctx);
 
+  /** 含作者简写或来源信息的路径需要归一化，纯 IR 路径可直接保留 */
   if (isInputPath(input)) {
     const path = normalizePath(input);
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'path',
-        sourcePath: `${ctx.sourcePath}.path`,
-        type: 'path',
-        authoring: input.authoring,
-      }),
-    );
+    recordAuthoringSite('path', input.authoring);
 
     return path;
   }
 
-  if (isInputScope(input)) {
-    const { authoring, children, ...scope } = input;
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'scope',
-        sourcePath: `${ctx.sourcePath}.scope`,
-        type: 'scope',
-        authoring,
-      }),
-    );
-    const nestedContext = scopeContextOf(input, identity, ctx);
-
-    return {
-      ...scope,
-      children: children.map((child, index) =>
-        normalizeChild(child, {
-          ...nestedContext,
-          sourcePath: childSourcePath(nestedContext, index),
-          runtimePath: [...ctx.runtimePath, 'children', index],
-        }),
-      ),
-    };
+  /** 单次遍历作用域；仅当子项或作者字段发生转换时重建容器 */
+  if (input.type === 'scope') {
+    const nestedContext = scopeContextOf(input, ctx);
+    if ('authoring' in input) recordAuthoringSite('scope', input.authoring);
+    let changed: Array<IRChild> | undefined;
+    for (const [index, child] of input.children.entries()) {
+      const normalized = normalizeChild(child, {
+        ...nestedContext,
+        sourcePath: childSourcePath(nestedContext, index),
+        runtimePath: [...ctx.runtimePath, 'children', index],
+      });
+      // 此前的子项均原样返回，已经是 IR
+      if (!changed && normalized !== child) changed = input.children.slice(0, index) as Array<IRChild>;
+      changed?.push(normalized);
+    }
+    // 未替换的 children 已逐项归一；只在作用域本身带作者字段时剔除它
+    if ('authoring' in input) {
+      const { authoring: _authoring, ...scope } = input;
+      return changed ? { ...scope, children: changed } : (scope as IRScope);
+    }
+    return changed ? { ...input, children: changed } : (input as IRScope);
   }
 
-  if (!('namespace' in input) && input.type === 'node') {
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'node',
-        type: 'node',
-        sourcePath: `${ctx.sourcePath}.node`,
-        authoring: 'authoring' in input ? input.authoring : undefined,
-      }),
-    );
+  /** 节点的作者来源单独记录，绘图字段交给节点归一化逻辑 */
+  if (input.type === 'node') {
+    recordAuthoringSite('node', 'authoring' in input ? input.authoring : undefined);
     return normalizeNode(input);
   }
 
-  if (!('namespace' in input) && input.type === 'coordinate') {
+  /** 坐标无需转换绘图字段，只分离不进入 IR 的作者来源 */
+  if (input.type === 'coordinate' && 'authoring' in input) {
     const { authoring, ...coordinate } = input;
-    ctx.authoringSites.push(
-      Object.freeze({
-        kind: 'coordinate',
-        type: 'coordinate',
-        sourcePath: `${ctx.sourcePath}.coordinate`,
-        authoring,
-      }),
-    );
+    recordAuthoringSite('coordinate', authoring);
 
     return coordinate;
   }

@@ -26,7 +26,7 @@ const DrawCompilation: FC<DrawCompilationProps> = props => {
             {
               id: 'normalize',
               role: 'activity',
-              text: [{ text: i18n.normalize }, { text: 'normalizePath', fill: 'gray', font: { size: 12 } }],
+              text: [{ text: i18n.normalize }, { text: 'parseWay / Step', fill: 'gray', font: { size: 12 } }],
             },
             {
               id: 'geometry',

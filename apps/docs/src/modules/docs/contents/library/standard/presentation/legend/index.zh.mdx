@@ -75,8 +75,8 @@ export const Example = () => <Layout ir={ir} composites={[legendDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { legend, legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import { scene, node, renderToSvgString } from '@retikz/vanilla';
+import { legend } from '@retikz/standard-vanilla/presentation';
+import { compileToScene, scene, node, renderToSvg } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -90,7 +90,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [legendInputEmbedAdapter] });
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -100,7 +101,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { legendDefinition } from '@retikz/standard/presentation';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -122,7 +123,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [legendDefinition] } });
+const compileResult = compileToScene(ir, { compile: { composites: [legendDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -218,8 +220,8 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
     {
       label: '严格 marker 与 slot 转换',
       path: 'packages/library/standard-react/src/presentation/legend/convert-children.ts',
-      startLine: 48,
-      endLine: 233,
+      startLine: 46,
+      endLine: 224,
     },
     {
       label: 'Legend Definition 输出边界',
@@ -243,7 +245,7 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
       label: 'items 换行、slot 与产物',
       path: 'packages/library/standard/src/presentation/legend/pipeline.ts',
       startLine: 446,
-      endLine: 644,
+      endLine: 639,
     },
     {
       label: '类型化产物 schema',

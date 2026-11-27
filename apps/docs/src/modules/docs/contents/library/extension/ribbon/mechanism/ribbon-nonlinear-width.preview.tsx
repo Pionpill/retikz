@@ -32,7 +32,7 @@ export const renderRibbonNonlinearWidthPreview = (values: RibbonNonlinearWidthPr
       height={190}
       viewBox={{ x: -55, y: -80, width: 470, height: 190 }}
       style={{ maxWidth: '100%', height: 'auto' }}
-      extensions={{ paths: [ribbonPathDefinition] }}
+      compile={{ paths: [ribbonPathDefinition] }}
     >
       <Path
         kind="ribbon"

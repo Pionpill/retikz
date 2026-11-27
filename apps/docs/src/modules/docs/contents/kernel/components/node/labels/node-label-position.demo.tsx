@@ -9,7 +9,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   NodeLabelPositionPreview({
     positionMode: values.positionMode,
     positionAngle: values.positionAngle,
-    boundary: values.boundary,
+    side: values.side,
     fraction: values.fraction,
     direction: values.direction,
   }),

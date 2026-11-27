@@ -5,11 +5,11 @@ description: Provide drawing input and configure framing, defaults, and renderin
 
 `<Layout>` is the top-level React drawing entry. Place Node, Path, or other drawing components inside it. Framing is automatic by default, so ordinary figures need no explicit size or viewBox. See [Quick start](/kernel/components/get-start) for setup.
 
-## Connect async components
+An explicit `animate={true}` or `animate={false}` overrides the nearest `AnimationModeProvider`. Omit `animate` to inherit the provider. With no provider, or in `system` mode, playback follows the system reduced-motion preference.
 
-Layout defaults to `runtime.preparation: 'sync'`. For components using Promises or external computation, set `runtime={{ preparation: 'async', signal }}` on the outermost Layout. One host prepares the entire author tree and publishes atomically, while executors and handles remain runtime objects. Cancellation, unmount and stale requests do not publish; a failed current request preserves the previous frame. Standalone Plot, Chart and Table clients select async preparation automatically.
+## Using data from asynchronous sources
 
-React server rendering remains synchronous. Use [Vanilla processing](/kernel/packages/vanilla/overview#async-authoring-preparation) or domain renderAsync entry points for async SSR. See [Data external computation](/viz/data/transform/extensions) for modes and a working example.
+Await the data outside the drawing component, then pass the ready children to Layout. Standalone and embedded components take the same input; Layout needs no special option. For SSR, await the data before rendering synchronously. See [domain data computation](/viz/data/transform/computation).
 
 ## Integration options
 
@@ -95,7 +95,7 @@ Build a scene with `@retikz/vanilla`, then mount it into an existing `diagram` c
 
 ```ts
 import { scene, node, path } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -106,7 +106,7 @@ const input = scene({
   ],
 });
 
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 Call `view.dispose()` before removing the container to release mounted resources.
@@ -118,7 +118,7 @@ Pass IR directly to `mount`, without React or rebuilding primitives through Vani
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,
@@ -165,9 +165,9 @@ Use `viewBox` only for fixed framing or clipping. Ordinary component demos keep 
 
 Whole-figure defaults are defined by a root [Scope](/kernel/components/scope/usage) wrapping all primitives, available in React, Vanilla and IR. Layout provides the `rootScope` shorthand for JSX: it creates this Scope and passes through `defaults`. In Vanilla, use `scope(...)`; in IR, declare `type: 'scope'` in the scene's `children` and wrap all primitives in it.
 
-| Property    | Type                           | Description                                                                |
-| ----------- | ------------------------------ | -------------------------------------------------------------------------- |
-| `rootScope` | `Pick<InputScope, 'defaults'>` | Figure-wide visual cascade, four default channels and inheritance barriers |
+| Property    | Type              | Description                                                                |
+| ----------- | ----------------- | -------------------------------------------------------------------------- |
+| `rootScope` | `ScopeStyleProps` | Figure-wide visual cascade, four default channels and inheritance barriers |
 
 The three Nodes and three Paths (declared with Draw) have no local styles. Change the stroke and opacity in `rootScope.defaults.style` to update every primitive; fill and padding in `rootScope.defaults.node` affect only the nodes. The blue color, stroke width and padding are chosen for this demo, not library defaults.
 
@@ -180,8 +180,8 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
 ## Additional notes
 
 - **Rendering backend**: SVG is the default output. Set `renderer="canvas"` to switch to Canvas. See [Animation](/kernel/visual/animation/usage) for playback and static snapshots.
-- **Input precedence**: When React receives both `ir` and `children`, `ir` takes precedence.
-- **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Layout does not apply `rootScope` and warns in development when it contains effective settings.
+- **Choose one input**: Supply either `ir` or JSX `children`, never both or neither. Use `<Layout>{null}</Layout>` for an empty JSX scene.
+- **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Only the JSX children branch accepts `rootScope`.
 - **Style scope**: `Layout.style` sets host CSS; use `rootScope.defaults.style` for primitive styles.
 
 ## Related props
@@ -192,7 +192,7 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
       name: 'ir',
       kind: 'property',
       type: 'IRScene',
-      description: 'Pass persisted Source IR directly. When it is provided with `children`, it takes precedence.',
+      description: 'Pass persisted Source IR directly. Do not also supply `children`.',
     },
     {
       name: 'viewBox',
@@ -205,7 +205,7 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
     {
       name: 'rootScope',
       kind: 'property',
-      type: "Pick<InputScope, 'defaults'>",
+      type: 'ScopeStyleProps',
       description:
         'The implicit root Scope for JSX children. Use it to set figure-wide cascading styles and primitive defaults.',
     },
@@ -228,7 +228,6 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
       description: 'Configure themes, inject capabilities, read compiled results, and control updates',
       url: '/kernel/components/layout/extend',
     },
-    { title: 'Inspect', description: 'Add inspection overlays to a drawing', url: '/kernel/packages/inspect' },
     { title: 'Layout package', description: 'Arrange drawing content automatically', url: '/library/layout' },
     { title: 'API reference', description: 'Look up all Layout props', url: '/kernel/components/layout/reference' },
   ]}

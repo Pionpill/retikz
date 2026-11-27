@@ -50,6 +50,8 @@ export type ScopeVisitHost = {
 export type ScopeExecutionOptions = Pick<SubtreeCompileOptions, 'captureScopeTargets' | 'compositeDepth'> & {
   /** 生成 Scope 的出现位置，普通作者 Scope 省略 */
   generatedOccurrence?: CompileOccurrenceLocator;
+  /** 经过预检的输出事实，不包含本轮句柄 */
+  blockStage?: { input: ReadonlyArray<unknown>; layouts: ReadonlyArray<object> };
   /** 当前 Scope 的编译溯源归属 */
   semanticOwner?: CompileOwnerKey;
   /** 替代普通后代遍历，用于提交已预检的组件输出句柄 */
@@ -70,6 +72,8 @@ export type ScopeExecutionSteps = {
   readonly compiled: CompiledScope;
   /** Core 的放置准备结果 */
   preparation: ReturnType<typeof prepareScopePlacement>;
+  /** 普通匿名 Scope 不查询自身几何时使用的内部空产物 */
+  unusedEnvelope?: CompiledScope['layout']['envelope'];
   /** 在已准备的继承与局部变换下构建子布局 */
   children: () => void;
   /** 子级继承前已确定的自身配置 */

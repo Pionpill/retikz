@@ -83,7 +83,7 @@ describe('Array / Map 文档使用者', () => {
 
     expect(output.code).not.toMatch(/Cannot generate|Failed to generate/);
     expect(output.svg).toContain('<svg');
-    expect(output.code).toMatch(/(?:Array|Map)InputEmbedAdapter/);
+    expect(output.code).not.toMatch(/(?:Array|Map)InputEmbedAdapter/);
   });
 
   it('保留复制源中编写的单元格并保留顶级结构', () => {
@@ -92,7 +92,7 @@ describe('Array / Map 文档使用者', () => {
 
     expect(code).toContain("content: 'B1'");
     expect(code).toContain('items:');
-    expect(code).toContain('arrayInputEmbedAdapter');
+    expect(code).not.toContain('arrayInputEmbedAdapter');
     expect(code).not.toContain('__CELLS__');
     expect(code).not.toContain('__CELL_CONTENT__');
     expect(code).not.toContain('overlayLayout');
@@ -120,7 +120,7 @@ it('保留复制的 Vanilla 源中的 Array 内容宽度', () => {
   });
 
   expect(code).toContain("width: 'content'");
-  expect(code).toContain('arrayInputEmbedAdapter');
+  expect(code).not.toContain('arrayInputEmbedAdapter');
 });
 
 it('在复制的代码和运行时预览中保留紧凑的 JSON 数据', () => {
@@ -229,9 +229,9 @@ describe('Array 容器标签控件', () => {
   });
 
   it('沿顶部边界移动渲染的标签并对齐其视觉框', () => {
-    const left = renderWithValues({ positionMode: 'boundary', boundary: 'top', fraction: 0, align: 'start' });
-    const right = renderWithValues({ positionMode: 'boundary', boundary: 'top', fraction: 1, align: 'start' });
-    const centered = renderWithValues({ positionMode: 'boundary', boundary: 'top', fraction: 0, align: 'middle' });
+    const left = renderWithValues({ positionMode: 'boundary', side: 'top', fraction: 0, align: 'start' });
+    const right = renderWithValues({ positionMode: 'boundary', side: 'top', fraction: 1, align: 'start' });
+    const centered = renderWithValues({ positionMode: 'boundary', side: 'top', fraction: 0, align: 'middle' });
 
     expect(left).toContain('values');
     expect(right).toContain('values');

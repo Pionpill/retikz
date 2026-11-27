@@ -82,7 +82,7 @@ export const renderRibbonLabelSupportPreview = (values: RibbonLabelSupportPrevie
       height={180}
       viewBox={{ x: -220, y: -90, width: 440, height: 180 }}
       style={{ maxWidth: '100%', height: 'auto' }}
-      extensions={{ paths: [ribbonPathDefinition] }}
+      compile={{ paths: [ribbonPathDefinition] }}
     >
       <Path
         kind="ribbon"

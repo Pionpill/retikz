@@ -1,5 +1,5 @@
 import type { InputScene } from '@retikz/vanilla';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
 
@@ -44,6 +44,7 @@ const input: InputScene = {
   ],
 };
 
-export const svg = renderToSvgString(input, {
+const compileResult = compileToScene(input, {
   compile: { clips: [roundedRectClip], measureText: browserMeasurer },
 });
+export const svg = renderToSvg(compileResult.scene);

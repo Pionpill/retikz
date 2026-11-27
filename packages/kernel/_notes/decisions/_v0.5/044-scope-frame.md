@@ -83,7 +83,7 @@ type SceneHitTestFragment = {
 
 Scope 派生外框固定输出 `hitTest: false`，Scope 内容保持原有命中行为。此字段属于 Scene 消费契约，不在 `frame`、Node、Path 或 Scope authoring 中新增可配置的交互选项。
 
-SVG 将禁用命中映射为 `pointer-events="none"`，Canvas 点测排除对应图元或子树；静态输出与 retained 更新均保留相同语义。运行时分配标识不能覆盖该限制，禁用命中的装饰也不能触发祖先的指针事件或悬停动画。
+SVG 将禁用命中映射为 `pointer-events="none"`，Canvas 点测排除对应图元或子树；静态输出与 session 更新均保留相同语义。运行时分配标识不能覆盖该限制，禁用命中的装饰也不能触发祖先的指针事件或悬停动画。
 
 ## 行为、失败语义与兼容性
 

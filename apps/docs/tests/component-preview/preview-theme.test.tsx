@@ -324,7 +324,7 @@ describe('ComponentPreview 全局主题', () => {
 
     expect(output.svg).toContain('<svg');
     expect(output.code).toContain('createGraphProviders');
-    expect(output.code).toContain('normalizeScene(source, { adapters }).ir');
+    expect(output.code).toContain('normalizeScene(source).ir');
     expect(output.code).not.toMatch(/entity\([^)]*graphThemeDefinitions/s);
   });
 });

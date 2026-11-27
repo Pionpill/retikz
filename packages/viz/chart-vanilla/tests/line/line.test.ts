@@ -1,9 +1,9 @@
 import { LineChartSchema } from '@retikz/chart/line';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { lineChart, lineChartInputEmbedAdapter, lineMark, normalizeLineChart } from '../../src/line';
-import { scatterChart, scatterChartInputEmbedAdapter } from '../../src/point';
+import { lineChart, lineMark, normalizeLineChart } from '../../src/line';
+import { scatterChart } from '../../src/point';
 
 const rows = [
   { x: 0, y: 1, s: 'A' },
@@ -20,15 +20,14 @@ describe('Line Vanilla 输入闭环', () => {
       marks: [lineMark({ override: true, properties: { path: { strokeWidth: 3 } } })],
     };
     const input = lineChart({ data: rows, ...recipe });
-    const actual = normalizeScene(scene({ children: [input] }), { adapters: [lineChartInputEmbedAdapter] }).ir
-      .children[0];
+    const actual = normalizeScene(scene({ children: [input] })).ir.children[0];
     const expected = normalizeLineChart({ data: { reference: 'chart.data' }, ...recipe });
     expect(actual).toEqual(expected);
     expect(LineChartSchema.parse(actual)).toEqual(LineChartSchema.parse(expected));
   });
 
   it('Line 和 Point provider 在同一场景独立编译并生成 SVG', () => {
-    const svg = renderToSvgString(
+    const compileResult = compileToScene(
       scene({
         children: [
           lineChart({
@@ -47,8 +46,8 @@ describe('Line Vanilla 输入闭环', () => {
           }),
         ],
       }),
-      { adapters: [lineChartInputEmbedAdapter, scatterChartInputEmbedAdapter] },
     );
+    const svg = renderToSvg(compileResult.scene);
     expect(svg).toContain('<svg');
     expect(svg).toContain('trend');
     expect(svg).toContain('observations');

@@ -10,10 +10,10 @@
 | -------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 几何与文字     | 完善锚点、单轴连接、标签间距、对比色、TeX 与固定宽度                   | [001](./001-node-anchor-position.md)、[002](./002-scope-anchor-and-transform-pivot.md)、[003](./003-single-axis-path-connection.md)、[004](./004-node-text-auto-contrast.md)、[005](./005-node-label-box-spacing.md)、[006](./006-tex-math-syntax-compatibility.md)、[038](./038-node-fixed-width.md) |
 | 布局与组合     | 支持上下文布局、完整 Scope 输出及 Composite 领域产物                   | [007](./007-layout-aware-composite.md)、[009](./009-contextual-composite-layout.md)、[017](./017-layout-proposal-probe-contract.md)、[020](./020-layout-aware-scope-output.md)、[077](./077-compile-output-contract.md)                                                                               |
-| 增量运行时     | 完成 Reconciler 编译树、依赖响应与同步增量计算闭环                     | [011](./011-runtime-identity-source-registry.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)                                                                |
-| 基础契约与入口 | 建立 Foundation、统一 authoring 与能力依赖接入                         | [019](./019-core-atomic-contracts.md)、[023](./023-foundation-package.md)、[026](./026-foundation-schema-primitives.md)、[027](./027-composite-dependency-provider-graph.md)、[029](./029-vanilla-authoring-normalization.md)                                                                         |
+| 增量运行时     | 完成 Reconciler 编译树、依赖响应与同步增量计算闭环                     | [011](./011-runtime-identity-source-registry.md)、[012](./012-computation-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-renderer.md)、[016](./016-runtime-execution-policy.md)                                                                         |
+| 基础契约与入口 | 建立 Foundation、统一 authoring 与能力依赖接入                         | [019](./019-core-atomic-contracts.md)、[023](./023-foundation-package.md)、[026](./026-foundation-schema-primitives.md)、[027](./027-composite-dependency-provider-graph.md)、[029](./029-vanilla-authoring-normalization.md)、[088](./088-embed-adapter-binding.md)                                  |
 | 颜色与 Source  | 统一颜色解析、Theme 来源、Source 分组与 schema 边界                    | [024](./024-lightweight-theme-resolution.md)、[032](./032-contextual-color-resolution.md)、[035](./035-json-undefined-field-contracts.md)、[036](./036-source-ir-semantic-grouping.md)、[037](./037-theme-source-fragments.md)、[071](./071-macro-visual-property-resolution.md)                      |
-| 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠与 Inspect                             | [021](./021-extensible-inspector-content.md)、[031](./031-single-clip-definition.md)、[073](./073-clip-params-envelope.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[039](./039-builtin-inspection.md)                                           |
+| 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠，退役通用 Inspect                     | [031](./031-single-clip-definition.md)、[073](./073-clip-params-envelope.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[090](./090-remove-inspect.md)                                                                                             |
 | Scope 外框     | 在保持内容包络、锚点与布局不变的前提下添加背景装饰                     | [044](./044-scope-frame.md)                                                                                                                                                                                                                                                                           |
 | 候选方向       | Headless Interaction、协作并发、渐进物化与生成会话；不作为本版本必交项 | [040](./040-cooperative-concurrent-runtime.md)、[041](./041-progressive-materialization.md)、[042](./042-generation-session.md)                                                                                                                                                                       |
 
@@ -63,8 +63,11 @@
 
 规划内容：
 
+- [ ] 适配 React Layout 的增量更新：将局部场景变化转换为变更批次，交给现有 Reconciler 处理，避免每次都替换完整场景。
+- Scope 矩形包络极值复用：[088](./088-scope-contribution-aggregation.md)。保持完整输出事务与圆形包络语义。
 - 建立 identity、事务、增量编译和 Scene patch 的共同底座。
-- 明确执行策略与 retained renderer 的协作边界。
+- 明确执行策略与 renderer 的协作边界。
+- [ ] 评估由 Reconciler 基于现有事务提供宿主无关的编译生命周期钩子，供 Vanilla 等宿主复用：同一候选只准备一次，准备产物直接交给提交方。区分底层编译提交与上层最终采用；Vanilla 仅在最终采用后通知领域扩展，取消或回滚不通知。
 - 本版本完成 Reconciler 的同步完整与增量编译能力：Core 保持唯一绘图语义及原子阶段，Reconciler 管理执行、缓存与依赖失效、candidate 隔离、结果生命周期和单目标原子提交。
 - 包边界确定为 Reconciler 单向依赖 Core、Foundation 与实际使用的 Math，Core 不反向依赖 Reconciler。Core 保留 IR、绘图语义与原子阶段产物；完整驱动、遍历和跨次缓存归 Reconciler。
 - Reconciler 管理编译树、依赖失效、缓存复用、会话 revision 与单目标提交；Render 根据已提交的编译来源和版本生成渲染身份、拓扑、运行时快照与 Scene Patch。
@@ -82,7 +85,7 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 | 4. 结构与 Scope           | 支持插入、删除、重排、Scope 上下文、名称解析与布局边界                                                                                                        | 正确处理前向引用、未命中后新增、同名遮蔽与跨 Scope 引用；Scope 可作组织边界，但不强制整组重算                                                                                                                                                                      |
 | 5. 完整产物与扩展         | 纳入资源、文本度量、Composite artifacts、诊断与正常编译扩展                                                                                                   | 全部可观察产物保持同 revision 一致；不跨次复用 compile-local token；内置和自定义能力共用契约，无法安全细分的边界明确重算                                                                                                                                           |
 | 6. 上层接入契约           | 将 Vanilla、React、SSR 与领域独立完整编译接入现有协调器，保留底层权威批次能力                                                                                 | 现有完整编译消费者统一入口并保持原有功能；Vanilla 新批次 authoring、身份映射和领域增量优化独立设计                                                                                                                                                                 |
-| 7. 性能与版本收口         | 验证静态与 retained 首次计算、局部更新、完整替换、内存与失败恢复；同步文档并收敛旧路径                                                                        | 局部计算成本主要随变化及真实依赖范围增长；明确剩余全量成本，保证与完整编译可观察等价，不承诺 retained 首次计算快于 static                                                                                                                                          |
+| 7. 性能与版本收口         | 验证静态与 session 首次计算、局部更新、完整替换、内存与失败恢复；同步文档并收敛旧路径                                                                         | 局部计算成本主要随变化及真实依赖范围增长；明确剩余全量成本，保证与完整编译可观察等价，不承诺 session 首次计算快于 static                                                                                                                                           |
 
 第二阶段通过 [060](./060-core-element-compilation.md) 明确 Core 的逐元素编译状态、可独立调度入口、可持有环境、依赖读取和输出组装契约，全量与增量编译复用同一计算语义；通过 [061](./061-weave-core-integration.md) 确定 Weave 构建、环境与绑定持有、单元素调用及输出准备的接入边界；通过 [062](./062-weave-node-state-isolation.md) 建立稳定节点双状态并适配首次编译，通过 [063](./063-weave-incremental-update.md) 定义批次更新、分阶段依赖调度与事务提交；依赖粒度和局部 Render 更新继续独立细化。
 
@@ -94,9 +97,11 @@ Reconciler 按以下能力依赖顺序推进；各阶段共同构成本版本目
 
 Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域包提供 Definition 和原子阶段；Weave 保存可安全复用的实际产物，不另建简化编译模型：[080](./080-unified-reconciler-compilation.md)。
 
+Composite 可自行管理 pipeline 状态，Kernel 保留实例提交和现有局部输出语义：[089](./089-incremental-composite-contract.md)。
+
 第二阶段对接 Core 时建立 Scope 定位能力：增量模式下所有 Scope 均具备同一 Weave 树 内唯一的 id，未提供时自动分配，并在对应 Scope 生命周期内保持稳定；WeaveRoot 维护 Scope id 注册表，root 提供同等定位入口。自动 id 属于 Weave 运行时信息，不回写用户 IR，不额外触发包络计算，也不受子元素局部命名空间影响。为后续水合与 API 更新保留“所属 Scope id + 直接 children 索引”的元素定位关联；索引只对对应结构版本有效，新旧 Scope 的匹配及结构变化后的地址有效性须在接入时明确。上层可直接定位并更新 Scope，由 Weave 传播上下文，无需上层逐元素提交修改；水合交互与 Plot 实际接入仍按各自后续范围推进。
 
-后续待办：接通 Weave 元素地址、渲染快照与水合回调。SVG / Canvas 使用统一的事件目标契约，携带所属容器 scopeId 与直接 children 下标，并关联对应快照版本；同一声明元素生成的多个绘制图元映射到同一个元素地址，由 Reconciler 定位节点，不对外暴露可变 WeaveNode。接入时明确完整重建、删除与重排后的地址失效规则，防止旧事件误更新新树；该能力随后续水合接入处理，不纳入当前基础编译实现。
+后续待办：依据 Reconciler 的实际元素定位机制，重新设计 React 与 Vanilla 的图元事件注册和分发，使未声明公开 id 的图元也能绑定事件。接通 Weave 元素地址、渲染快照与水合回调。SVG / Canvas 使用统一的事件目标契约，携带所属容器 scopeId 与直接 children 下标，并关联对应快照版本；同一声明元素生成的多个绘制图元映射到同一个元素地址，由 Reconciler 定位节点，不对外暴露可变 WeaveNode。接入时明确完整重建、删除与重排后的地址失效规则，防止旧事件误更新新树；该能力随后续水合接入处理，不纳入当前基础编译实现。
 
 采用单一 Weave 节点体系承载输入、Core 只读编译产物与关联状态；声明层级、结果归属和计算依赖是不同逻辑关系，不预设维护独立同构的输入树与编译树。Scope 上下文沿声明结构传递，跨元素计算依赖支持后续失效传播与调度。现有增量能力的包归属迁移与 Core 静态编译边界见 [055](./055-reconciler-extraction.md)；Weave 基础结构与状态语义先行确定：[058](./058-weave-foundation.md)；批次增删改与更新计算契约见 [059](./059-weave-batch-operations.md)；编译接入与依赖响应继续分阶段明确。
 
@@ -120,7 +125,7 @@ Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域�
 - 收敛动画属性与关键帧值契约，补齐填充／描边透明度和虚线偏移动画，统一 SVG／Canvas 求值边界：[074](./074-animation-property-contract.md)。
 - 箭头与 Pattern 内容统一使用基础场景图元，定义侧封装归能力 owner，补齐资源与运行时消费：[070](./070-marker-scene-primitives.md)。
 - Composite 统一使用 compile，布局能力按需调用，移除独立展开通道：[052](./052-unified-composite-compilation.md)。
-- 支持共享异步作者准备与实例运行时输入，保持同步编译和原子发布：[047](./047-async-authoring-preparation.md)、[048](./048-composite-runtime-input.md)。
+- 支持就绪实例输入的同步编译和原子发布：[048](./048-composite-runtime-input.md)。
 
 预期效果：
 
@@ -160,8 +165,8 @@ Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域�
 - 分离端点箭头与沿线标记，支持普通图元标记和箭头外观复用，统一弧长定位：[075](./075-path-arrows-and-marks.md)。
 - 标签与标记支持参数、弧长两种定位模式，独立选择圆角前后几何，并复用高频位置更新所需的几何度量：[083](./083-path-position-modes.md)。
 - 优化标签断线的编译开销：按实际断线需求选择处理路径，无需断线时跳过专用计算，有断线需求时才进入完整截断链路；保持标签定位、箭头与最终绘制结果一致。
-- Inspect 从普通编译结果生成独立辅助绘图，按真实图元与领域产物限定能力，保持主图编译和提交独立：[078](./078-inspect-compiled-output.md)。
-- [ ] Inspect 重新设计与 Layout 检查支持：保留当前结果消费架构，单独设计可恢复的观测能力及 Layout 对 Inspect 的支持；只消费 compile / pipeline 已有产物，不为 Inspect 扩充主体契约或影响主体功能。
+- 结果消费式 Inspect 的既有设计：[078](./078-inspect-compiled-output.md)。
+- [x] 退役通用 Inspect 与单图只读辅助层；保留领域编译产物和具名 Scene 图层，不为布局展示新增主体契约：[090](./090-remove-inspect.md)。
 
 预期效果：
 
@@ -177,7 +182,7 @@ Composite 与布局试算进入同一 Reconciler 执行链路，Core 与领域�
 规划内容：
 
 - 保留 Headless Interaction、Concurrent、渐进物化与生成会话候选。
-- 编译输出收敛为 Scene 与 Composite artifacts，删除 Core 观测、节点公共产物与空间句柄：[077](./077-compile-output-contract.md)。Inspect 的结果消费方案见 [078](./078-inspect-compiled-output.md)。
+- 编译输出收敛为 Scene 与 Composite artifacts，删除 Core 观测、节点公共产物与空间句柄：[077](./077-compile-output-contract.md)。普通编译结果不随 Inspect 退役而删除，见 [090](./090-remove-inspect.md)。
 - 候选不作为必交项；设计接受、实现授权与实际交付分别判断。
 
 预期效果：

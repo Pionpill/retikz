@@ -113,29 +113,8 @@ describe('Layout 文档演示', () => {
     expect(source).not.toContain('"key":');
   });
 
-  it.each([['flexLayout', FlexPlaygroundCanonical]])(
-    '将仅运行时的 %s 检查保留在规范的 IR 和 Vanilla 输出之外',
-    (kind, Component) => {
-      const preview = buildPreviewIR(Component);
-      const vanilla = buildVanillaPreview(preview);
-
-      expect(preview).not.toHaveProperty('inspectionRoots');
-      expect(preview).not.toHaveProperty('inspect');
-      expect(vanilla.code).toContain(`${kind}(`);
-      expect(vanilla.code).not.toMatch(/\binspect\b/);
-      expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-    },
-  );
-
-  it.each([
-    ['zh', NestedZhCanonical],
-    ['en', NestedEnCanonical],
-  ])('将嵌套的 %s 演示选择保留在生成的 Vanilla 输出之外', (_language, Component) => {
-    const preview = buildPreviewIR(Component);
-    const vanilla = buildVanillaPreview(preview);
-
-    expect(preview).not.toHaveProperty('inspect');
-    expect(vanilla.code).not.toMatch(/\binspect\b/);
-    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
+  it('从 Flex 示例生成 Vanilla 布局调用', () => {
+    const preview = buildPreviewIR(FlexPlaygroundCanonical);
+    expect(buildVanillaPreview(preview).code).toContain('flexLayout(');
   });
 });

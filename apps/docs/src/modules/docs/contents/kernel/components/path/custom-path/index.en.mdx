@@ -23,7 +23,7 @@ The `primitives` and `boundsPoints` returned by `compile` accept `Iterable`, inc
 
 A custom Path extends **how the whole path is emitted**. IR stores only an open `kind` and JSON-safe `kindOptions`. After the host injects a `PathDefinition`, core resolves it from the shared registry and lets it produce Scene primitives.
 
-The `highlight` kind below reuses Core stroke emission and emits a wide underlay and a thin centerline from one path. Its definition, `<Layout extensions={{ paths }}>` injection, and usage live in one runnable example.
+The `highlight` kind below reuses Core stroke emission and emits a wide underlay and a thin centerline from one path. Its definition, `<Layout compile={{ paths }}>` injection, and usage live in one runnable example.
 
 <ComponentPreview files="custom-path-highlight" size="xs" />
 
@@ -73,11 +73,9 @@ const highlight = definePath<HighlightPath>({
 
 `name` is the registry key; it is not inferred from an internal Zod schema literal. `schema` is the complete source subject schema: Core's open `PathSchema` accepts shared host fields first, then the selected definition parses `kind`, `kindOptions`, and any cross-field constraints during resolution. The definition and compile function are runtime capability and never enter IR.
 
-For inspection output, use the public `ownerOutput` contract with an independent Inspector; see [Inspect](/kernel/packages/inspect).
-
 ## Register and use
 
-React injects definitions through `<Layout extensions={{ paths }}>`; direct core calls use `CompileOptions.paths`. A Path references only the registered name and instance options.
+React injects definitions through `<Layout compile={{ paths }}>`; direct core calls use `CompileOptions.paths`. A Path references only the registered name and instance options.
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -85,7 +83,7 @@ React injects definitions through `<Layout extensions={{ paths }}>`; direct core
 ```tsx
 import { Layout, Path, Step } from '@retikz/react';
 
-<Layout extensions={{ paths: [highlight] }}>
+<Layout compile={{ paths: [highlight] }}>
   <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
     <Step kind="move" to={[0, 0]} />
     <Step kind="line" to={[120, 0]} />
@@ -100,7 +98,7 @@ Vanilla uses the same definition through the `compile` option of `mount`. Prepar
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -114,7 +112,7 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input, {
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { paths: [highlight] },
 });
 // Dispose when the host is removed.
@@ -135,9 +133,6 @@ Output must not carry `resources` or `clipRef`. Resource references may only pas
 | Path references an unknown kind                 | Compile lists available names and `options.paths`         |
 | The selected definition schema rejects the Path | Error includes kind name and the relevant IR path         |
 | Provider returns `null`                         | The Path produces no primitives                           |
-| Selected non-null result omits owner output     | Core observation fails loudly                             |
-| Owner output or Inspector subject fails schema  | The corresponding validation stage fails loudly           |
-| Inspector returns an invalid Core child         | Error includes owner, occurrence, and output index        |
 | `boundsPoints` misses actual output bounds      | Auto layout and Path-level rotate/scale become inaccurate |
 
 A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG elements, Canvas instances, ReactNode values, or functions, and it cannot require renderers to understand the custom `kind`.
@@ -151,17 +146,17 @@ These are the members most often used to define, inject, and reference a custom 
     {
       name: 'definePath',
       kind: 'function',
-      type: '<TPath, TOwnerOutput>(definition: PathDefinition<TPath, TOwnerOutput>) => PathDefinition<TPath, TOwnerOutput>',
+      type: '<TPath>(definition: PathDefinition<TPath>) => PathDefinition<TPath>',
       description: 'Create a registrable whole-Path provider and validate its name and basic schema contract.',
     },
     {
       name: 'PathDefinition',
       kind: 'type',
-      type: 'PathDefinition<TPath, TOwnerOutput>',
+      type: 'PathDefinition<TPath>',
       description: 'Declare the kind name, complete Path schema, and compilation function that emits Scene primitives.',
     },
     {
-      name: 'Layout.extensions.paths',
+      name: 'Layout.compile.paths',
       kind: 'property',
       type: 'ReadonlyArray<AnyPathDefinition>',
       description: 'Inject Path definitions into a React Layout.',

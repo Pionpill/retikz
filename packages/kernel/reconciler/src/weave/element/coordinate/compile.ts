@@ -5,7 +5,7 @@ import { compareProperties } from '@retikz/foundation';
 import type { CompileRuntime, SubtreeCompileContext } from '../../../compile';
 import { createTreePositionContext } from '../../../compile';
 import { createWeaveObservation, matchWeaveReferences, restoreWeaveResources } from '../../shared';
-import type { WeaveCoordinateState } from '../../shared';
+import type { WeaveStages, WeaveCoordinateState } from '../../shared';
 import { compareCanonicalCoordinates } from './compare';
 
 /** 按输入、编译上下文与引用依赖复用或重新计算坐标产物 */
@@ -13,7 +13,7 @@ export const executeWeaveCoordinate = (
   runtime: CompileRuntime,
   child: IRCoordinate,
   context: SubtreeCompileContext,
-  previous?: WeaveCoordinateState,
+  previous?: WeaveStages<WeaveCoordinateState>,
 ) => {
   // 仅记录各阶段实际消费的输入通道
   const resolveInputs = { child, nodeDistance: runtime.context.layout.nodeDistance };

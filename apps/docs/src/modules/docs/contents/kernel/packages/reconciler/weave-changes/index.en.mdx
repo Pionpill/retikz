@@ -1,0 +1,70 @@
+---
+title: Incremental / Change Tracking
+description: Follow a batch edit through candidate addresses, change tracking and rollback
+---
+
+The [state model](/kernel/packages/reconciler/weave-state) gives each IR element a stable entry. Change tracking starts with those entries: each operation edits the candidate tree so the next operation can find its target. Only after the last edit does Weave pass the affected entries to the scheduler.
+
+## Editing the candidate tree
+
+Start with the incremental session mounted in the [package overview](/kernel/packages/reconciler). Its root children are A, B and the path connecting them. This <ApiSourceLink label="WeaveBatch" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={427}>`WeaveBatch`</ApiSourceLink> inserts X before B, then moves the newly inserted node:
+
+```ts
+const scopeId = session.getScopeId();
+const next = session.update({
+  operations: [
+    {
+      kind: 'insert',
+      parentId: scopeId,
+      index: 1,
+      elements: [{ type: 'node', id: 'X', position: [90, 0] }],
+    },
+    {
+      kind: 'update',
+      target: { kind: 'child', scopeId, index: 1 },
+      input: { type: 'node', id: 'X', position: [90, 60] },
+    },
+  ],
+});
+```
+
+| After operation | Root children in index order | Node at index 1 |
+| --------------- | ---------------------------- | --------------- |
+| Before the edit | A, B, path                   | B               |
+| Insert X        | A, X, B, path                | X at `[90, 0]`  |
+| Update index 1  | A, X, B, path                | X at `[90, 60]` |
+
+An update or removal can address its `target` in three ways:
+
+| Address by  | Example                                | Lookup rule                                                                                                              |
+| ----------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Child index | `{ kind: 'child', scopeId, index: 1 }` | Select the second direct child in the current candidate container. After insertion this is X; B moves to index 2.        |
+| Element ID  | `{ kind: 'id', scopeId, id: 'B' }`     | Search the specified container’s name index, then its ancestors if needed. This still finds B in the example.            |
+| Scope ID    | `{ kind: 'scope', scopeId }`           | Select the Scope itself. The root cannot be updated or removed, but its ID can serve as the `parentId` for an insertion. |
+
+Each step calls <ApiSourceLink label="applyOperation" path="packages/kernel/reconciler/src/weave/state/editor.ts" startLine={50}>`applyOperation`</ApiSourceLink> to edit declarations. An `insert` places elements at the given index; a `remove` deletes the target, including its subtree for a Scope. An `update` replaces the **entire own input** of an element of the same kind. That is why the second operation supplies X’s ID again: omitted fields are not merged back in. Updating a Scope’s own input preserves its children. Both edits lead to one batch compilation; X’s intermediate position does not produce a separate session snapshot.
+
+## Address and name indexes
+
+The insertion leaves B’s declaration untouched but changes its address in the IR. The <ApiSourceLink label="WeaveAddressIndex" path="packages/kernel/reconciler/src/weave/state/address.ts" startLine={11}>`WeaveAddressIndex`</ApiSourceLink> maps entries to their current paths and paths back to entries. Weave refreshes the affected siblings and subtrees starting at the insertion index. B keeps its identity, but its old address no longer identifies it. Moving X in the second step does not require rebuilding the address index.
+
+<ComponentPreview files="address-index" size="md" hideCode type="illustration" />
+
+Read down for `paths` (entry → IR path) and up for `entries` (serialized path → entry). The blue B is the same entry in both snapshots: after insertion its path is `children[2]`, while looking up its old address `children[1]` returns X.
+
+Changing an ID, a node alias or a Scope’s local namespace can change **which entry a name resolves to**. The index must reflect each edit: if X is renamed to Y, the next operation can target Y. Compilation, however, uses the final tree. If Y is renamed again to Z in the same batch, Weave compares the final visible bindings with the original ones. The temporary name Y alone does not cause every reader of Y to recompile.
+
+## Initial affected entries
+
+During editing, the <ApiSourceLink label="WeaveTracker" path="packages/kernel/reconciler/src/weave/state/tracker.ts" startLine={8}>`WeaveTracker`</ApiSourceLink> distinguishes two kinds of work:
+
+- **Direct changes:** entries that were inserted, received new input or changed declaration paths need attention. Inserting and then moving X registers the same entry only once. Removing an entry detaches its read relationships and takes it out of the pending selection.
+- **Reads to check:** after a name index change, Weave checks entries that looked up the affected names, including unsuccessful lookups. A difference in binding identity or declaration path between the original and final lookup selects that reader for validation.
+
+This selection is the starting point for incremental scheduling. Inserting X changes B’s declaration path; moving B can change a path endpoint. Those are different changes. The tracker does not walk every indirect dependency during editing. The scheduler checks what each consumer actually read.
+
+## Confirmation and rollback
+
+The edits, indexes and computation belong to one candidate batch. Suppose the second operation uses index 9 by mistake. The target does not exist, so preparation fails and the insertion of X is discarded too. The next batch still starts with A, B and the path.
+
+On success, the <ApiSourceLink label="WeaveTransaction" path="packages/kernel/reconciler/src/weave/state/transaction.ts" startLine={37}>`WeaveTransaction`</ApiSourceLink> checks the entries in `commit` and makes their candidate states current. It still holds their previous references, so `rollback` can restore them even after the switch. Only after `finish` confirms the batch do its indexes and compilation snapshot become the baseline for the next update. These three methods belong to the internal agreement between Weave and the session; the public example calls only `session.update`.

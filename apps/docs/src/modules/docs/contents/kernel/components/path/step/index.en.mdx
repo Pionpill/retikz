@@ -55,7 +55,7 @@ export default () => <Layout ir={ir} />;
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -67,7 +67,7 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>
@@ -75,7 +75,7 @@ const view = mount(document.getElementById('diagram')!, input);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,
@@ -263,12 +263,6 @@ The five-pointed star below has no node `boundary`. The panel starts on the circ
 />
 
 ## Path-level capabilities
-
-### Control-point inspection
-
-Pass an ordinary compilation result to the path inspector in `@retikz/inspect` to display final Bézier control points and handles; `labels` adds command indices. Auxiliary content is compiled and presented independently. See [`@retikz/inspect`](/kernel/packages/inspect) for setup.
-
-<ComponentPreview files="path-inspector" size="sm" />
 
 ### Whole-path transform
 

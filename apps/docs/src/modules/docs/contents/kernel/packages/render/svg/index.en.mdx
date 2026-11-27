@@ -13,7 +13,7 @@ The preview below uses the same shared IR as the [Canvas page](/kernel/packages/
 
 SVG string output defaults to the dimensions of Scene.layout. Usually omit output width / height; when one numeric axis is provided, the other follows the content aspect ratio.
 
-Document builders and string output in `@retikz/render/svg` accept `defaultFontFamily`, writing it to the root SVG's `font-family`. An explicit text font family takes precedence. This option affects display without recalculating the Scene; Vanilla uses the same option for both compilation measurements and host display.
+Document builders and string output in `@retikz/render/svg` accept `defaultFontFamily`, writing it to the root SVG's `font-family`. An explicit text font family takes precedence. This option affects display without recalculating the Scene.
 
 ## How to use it
 
@@ -29,30 +29,31 @@ import { Layout, Node } from '@retikz/react';
 </Layout>;
 ```
 
-**Vanilla (browser)** — `mountSvg` mounts the figure as DOM; the returned view exposes `root` (the `<svg>`) and `dispose`:
+**Vanilla (browser)** — `mountSceneView` mounts the figure as DOM; the returned view exposes `root` (the `<svg>`) and `dispose`:
 
 ```ts
-import { mountSvg } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
-const view = mountSvg(container, ir);
-// view.root is the <svg>; view.update(next) uses the selected static or retained processing; view.dispose() unmounts
+const view = mountSceneView(container, ir);
+// view.root is the <svg>; view.replace(next) replaces the complete scene; view.dispose() unmounts
 ```
 
-**Vanilla (SSR / build-time)** — `renderToSvgString` returns an SVG string and runs in Node, estimating text dimensions when Canvas is unavailable:
+**Vanilla (SSR / build-time)** — `renderToSvg` returns an SVG string and runs in Node, with text dimensions estimated at compile time when Canvas is unavailable:
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
-const svg = renderToSvgString(ir); // '<svg ...>...</svg>', drop it into HTML
+const compileResult = compileToScene(ir);
+const svg = renderToSvg(compileResult.scene); // '<svg ...>...</svg>', drop it into HTML
 ```
 
 The three entries have different input contracts:
 
-| Entry               | Accepted input                           | Output     |
-| ------------------- | ---------------------------------------- | ---------- |
-| React `<Layout>`    | JSX `children`<br />or `IRScene`         | SVG DOM    |
-| Vanilla `mountSvg`  | `Scene` / `IRScene`<br />or `InputScene` | SVG DOM    |
-| `renderToSvgString` | `Scene` / `IRScene`<br />or `InputScene` | SVG string |
+| Entry                    | Accepted input                   | Output     |
+| ------------------------ | -------------------------------- | ---------- |
+| React `<Layout>`         | JSX `children`<br />or `IRScene` | SVG DOM    |
+| Vanilla `mountSceneView` | `IRScene`                        | SVG DOM    |
+| `renderToSvg`            | `Scene`                          | SVG string |
 
 ## Adding interaction to an SVG figure
 

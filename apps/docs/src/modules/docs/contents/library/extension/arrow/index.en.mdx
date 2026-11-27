@@ -7,7 +7,7 @@ These arrow Definitions add six optional geometries to path endpoints. After cho
 
 ## Using this topic
 
-Import Definitions such as `diamondArrowDefinition` on demand from `@retikz/extension`, or use `extensionArrowDefinitions` for the full family. Imports do not register endpoints globally. React uses `Layout.extensions.arrows`; Vanilla uses `compile.arrows`.
+Import Definitions such as `diamondArrowDefinition` on demand from `@retikz/extension`, or use `extensionArrowDefinitions` for the full family. Imports do not register endpoints globally. React uses `Layout.compile.arrows`; Vanilla uses `compile.arrows`.
 
 <ComponentPreview files="entry" size="xs" hideCode />
 
@@ -19,7 +19,7 @@ import { diamondArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
 
 export const Example = () => (
-  <Layout extensions={{ arrows: [diamondArrowDefinition] }}>
+  <Layout compile={{ arrows: [diamondArrowDefinition] }}>
     <Draw
       way={[
         [0, 0],
@@ -54,7 +54,7 @@ const ir: IRScene = {
     },
   ],
 };
-export const Example = () => <Layout ir={ir} extensions={{ arrows: [diamondArrowDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ arrows: [diamondArrowDefinition] }} />;
 ```
 
 </DocTab>
@@ -62,7 +62,7 @@ export const Example = () => <Layout ir={ir} extensions={{ arrows: [diamondArrow
 
 ```ts
 import { diamondArrowDefinition } from '@retikz/extension';
-import { path, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, path, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -75,7 +75,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { compile: { arrows: [diamondArrowDefinition] } });
+const compileResult = compileToScene(input, { compile: { arrows: [diamondArrowDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -85,7 +86,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { diamondArrowDefinition } from '@retikz/extension';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -102,7 +103,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, { compile: { arrows: [diamondArrowDefinition] } });
+const compileResult = compileToScene(ir, { compile: { arrows: [diamondArrowDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -124,7 +126,7 @@ console.log(svg);
 
 #### diamondArrowDefinition / openDiamondArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
+Pass these Definitions to `Layout.compile.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                   | `shape`       | Default length × width |
 | ---------------------------- | ------------- | ---------------------- |
@@ -157,7 +159,7 @@ Change color, scale, and hollow stroke width to compare their paint.
 
 #### kiteArrowDefinition / openKiteArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
+Pass these Definitions to `Layout.compile.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                | `shape`    | Default length × width |
 | ------------------------- | ---------- | ---------------------- |
@@ -190,7 +192,7 @@ Change length and width to see both filled and hollow contours stretch.
 
 #### squareArrowDefinition / openSquareArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
+Pass these Definitions to `Layout.compile.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                  | `shape`      | Default length × width |
 | --------------------------- | ------------ | ---------------------- |
@@ -223,7 +225,7 @@ Adjust length, width, and hollow stroke to compare the two square endpoints.
 
 #### straightBarbArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
+Pass these Definitions to `Layout.compile.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                    | `shape`        | Default length × width |
 | ----------------------------- | -------------- | ---------------------- |
@@ -255,7 +257,7 @@ Change length, width, and stroke width to inspect the open barb and its path con
 
 #### barArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
+Pass these Definitions to `Layout.compile.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition           | `shape` | Default length × width |
 | -------------------- | ------- | ---------------------- |
@@ -291,7 +293,7 @@ Length sets the span along the path, width sets the bar span, and line width aff
 
 #### crowFootArrowDefinition
 
-Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
+Pass these Definitions to `Layout.compile.arrows` or `compile.arrows` and select an endpoint with `arrow.end.shape`:
 
 | Definition                | `shape`    | Default length × width |
 | ------------------------- | ---------- | ---------------------- |

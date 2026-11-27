@@ -62,8 +62,8 @@ The root `Layout` outputs SVG by default; this example needs no renderer configu
 Import grid and its adapter from the Standard subpath, then use Vanilla scene and rendering functions to produce the output.
 
 ```ts
-import { grid, gridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { grid } from '@retikz/standard-vanilla/presentation';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -73,11 +73,12 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [gridInputEmbedAdapter] });
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
-`svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. `gridInputEmbedAdapter` allows `grid(...)` to be used as a child of `scene`; keep the `adapters` option.
+`svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. The grid factory binds its own adapter.
 
 </DocStep>
 </DocSteps>

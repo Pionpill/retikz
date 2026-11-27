@@ -196,7 +196,7 @@ describe('walker — 顶级条目+对象+可选+约束', () => {
     expect(r.kind).toBe('object');
 
     if (r.kind === 'object') {
-      expect(r.description).toMatch(/Coordinate placeholder/);
+      expect(r.description).toBe(CoordinateSchema.description);
 
       const names = r.fields.map(f => f.name);
 
@@ -253,7 +253,7 @@ describe('walker — 顶级条目+对象+可选+约束', () => {
 
     const idField = r.fields.find(f => f.name === 'id')!;
 
-    expect(idField.description).toMatch(/Required unique id/);
+    expect(idField.description).toBe(CoordinateSchema.shape.id.description);
   });
 
   it('内联扩展匿名嵌套对象', () => {

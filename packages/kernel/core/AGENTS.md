@@ -30,7 +30,7 @@ contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契�
 providers/   内置 definition、BUILTIN_*、registry resolver
 resolve/     Source IR 与当前 context 的默认、优先级、lookup 和值形态确定化，输出 Canonical / Resolution
 compile/     原子 layout、lowering、emit 与共享阶段产物；不持有树遍历或工作区生命周期
-parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
+animation-presets.ts  从配置创建或组合 IR 动画轨道
 ```
 
 改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-structure` 加载对应层级 references。

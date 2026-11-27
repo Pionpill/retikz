@@ -7,7 +7,7 @@ keywords: 'progressive materialization、渐进物化'
 
 - 状态：Proposed（未排期）
 - 决策日期：2026-07-26
-- 关联：[ADR-040](./040-cooperative-concurrent-runtime.md) · [alpha.2 Scene Patch ADR](./014-scene-patch-retained-renderer.md)
+- 关联：[ADR-040](./040-cooperative-concurrent-runtime.md) · [alpha.2 Scene Patch ADR](./014-scene-patch-renderer.md)
 
 ## 背景
 
@@ -17,7 +17,7 @@ Concurrent prepare 可以缩短单次阻塞，却不决定完整结果何时可�
 
 ## 决策：完整 Scene，独立 Materialization State
 
-`@retikz/render` 在 alpha.2 `RetainedRenderer` 上增加原子与渐进两种 materialization 策略。默认是 `atomic`；`progressive` 必须由调用方显式选择；`auto` 只根据公开 capability 与阈值选择，并记录最终决策。
+`@retikz/render` 在 alpha.2 `Renderer` 上增加原子与渐进两种 materialization 策略。默认是 `atomic`；`progressive` 必须由调用方显式选择；`auto` 只根据公开 capability 与阈值选择，并记录最终决策。
 
 ```ts
 type MaterializationStrategy = 'atomic' | 'progressive' | 'auto';
@@ -50,19 +50,19 @@ Renderer 从完整 next Scene、Scene Patch 与后端 capability 派生 `Present
 
 每个 batch 以同一 materialization transaction 同时切换可见对象、geometry、hit-test、event target 和 presentation index；未物化 identity 不可命中。Batch apply 失败、被更新 supersede 或 renderer dispose 时，candidate 不得留下半更新 index / resource；renderer 回到最近 complete anchor，随后可从最新完整 Scene 重新 materialize。
 
-原子策略使用后端 shadow / staging state 准备完整 view，再一次切换 live view。渐进策略允许 semantic revision 已提交而 view 仍显示旧 complete anchor 或新 revision 的部分 candidate；这一差异必须通过 `MaterializationSnapshot` 可观察。SSR、字符串导出、截图和无 retained session 的入口强制 atomic。
+原子策略使用后端 shadow / staging state 准备完整 view，再一次切换 live view。渐进策略允许 semantic revision 已提交而 view 仍显示旧 complete anchor 或新 revision 的部分 candidate；这一差异必须通过 `MaterializationSnapshot` 可观察。SSR、字符串导出、截图和无 session 的入口强制 atomic。
 
 Renderer capability：
 
 ```ts
-type ProgressiveRetainedRendererCapability = Readonly<{
-  patch: RetainedRendererCapability;
+type ProgressiveRendererCapability = Readonly<{
+  patch: RendererCapability;
   materialization: 'atomic' | 'progressive';
   rollback: 'replace' | 'journal' | 'shadow';
 }>;
 ```
 
-后续 milestone 若接受本 ADR，将以破坏性变更把 alpha.2 `RetainedRenderer.capability: RetainedRendererCapability` 替换为 `capability: ProgressiveRetainedRendererCapability`；其中 `patch` 复用原 const object value。旧 scalar field 删除，不保留并行同名 value/type、别名或桥接
+后续 milestone 若接受本 ADR，将以破坏性变更把 alpha.2 `Renderer.capability: RendererCapability` 替换为 `capability: ProgressiveRendererCapability`；其中 `patch` 复用原 const object value。旧 scalar field 删除，不保留并行同名 value/type、别名或桥接
 
 请求 progressive 但 renderer / Scene 边界不支持时，默认回退 atomic 并报告原因；`requireProgressive: true` 时在改变 live view 前 fail-loud。`auto` 的阈值由 host policy 注入，不能按 renderer 类型写死，也不能改变输出语义。
 
@@ -84,8 +84,8 @@ type ProgressiveRetainedRendererCapability = Readonly<{
 - document、contribution 或 Scene 的部分 semantic commit。
 - LLM draft batch、generation checkpoint 或模型 token。
 - pointer / keyboard / focus / selection / drag / zoom behavior 与持久 intent。
-- 跨页面 retained cache、WebGL streaming、远端 renderer 或视频编码。
+- 跨页面 session cache、WebGL streaming、远端 renderer 或视频编码。
 
 ---
 
-MaterializationSnapshot 与 PresentationBatch 都是运行时派生契约，不写入 IR 或 Scene。渐进物化复用 alpha.2 的完整 Scene、Scene Patch、retained renderer、命中索引和 rollback 边界
+MaterializationSnapshot 与 PresentationBatch 都是运行时派生契约，不写入 IR 或 Scene。渐进物化复用 alpha.2 的完整 Scene、Scene Patch、renderer、命中索引和 rollback 边界

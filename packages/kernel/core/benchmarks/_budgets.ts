@@ -481,7 +481,7 @@ export const resolveCoreBudget = (scenario: BenchmarkScenario): BenchmarkBudget 
               warningMs: count <= 100 ? 1 : 4,
               errorMs: count <= 100 ? 4 : 16.6,
               rationale:
-                'Composite一次Source快照捕获或绑定配对检查；假设一次更新100/1000项Source，分别分配1/4ms目标与4/16.6ms错误线，后续编译另计。捕获含复制冻结，配对检查含结构比较；不包含作者运行时数据准备',
+                'Composite一次绑定路径校验或Source配对检查；假设一次更新100/1000项Source，分别分配1/4ms目标与4/16.6ms错误线，后续编译另计。绑定借用Source与路径，配对检查含结构比较；不包含作者运行时数据准备',
             };
         break;
       default:

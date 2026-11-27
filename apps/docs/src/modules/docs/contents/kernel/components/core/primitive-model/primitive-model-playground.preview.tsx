@@ -68,7 +68,7 @@ export const PrimitiveModelPlaygroundPreview = (values: PrimitiveModelPlayground
   return (
     <Layout
       viewBox={{ x: -175, y: -145, width: 350, height: 290 }}
-      extensions={{ shapes: [primitiveModelBoundaryGuideShape, sectorShapeDefinition, starShapeDefinition] }}
+      compile={{ shapes: [primitiveModelBoundaryGuideShape, sectorShapeDefinition, starShapeDefinition] }}
     >
       <Draw
         way={[[0, 0], sourcePosition]}

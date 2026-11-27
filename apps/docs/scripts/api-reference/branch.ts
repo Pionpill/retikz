@@ -76,7 +76,6 @@ export const branchApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'InputBranchNode',
       'InputBranch',
       'branchDiagramInputEmbedAdapter',
-      'createBranchDiagramVanillaAdapters',
       'branchDiagramEmbedKind',
       'branchDiagramDefinitionOptionsOf',
     ],

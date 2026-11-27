@@ -138,35 +138,35 @@ The executor’s `prepare(inputDescriptor, resolution, options)` checks support 
 
 <DocStep title="Inject the executor and select external execution">
 
-`dataTransformExecutor` injects the executor, `dataExecution` selects its registered entry, and `transform` still declares built-in `sort` parameters. Explicit `external` mode requires this provider to execute the sort.
+Await Table’s data computation before handing the result to the component.
 
 ```tsx
-import { DetailColumn, DetailTable } from '@retikz/table-react';
-import type { FC } from 'react';
+import { prepareTableData } from '@retikz/table';
+import { Table } from '@retikz/table-react';
+import { detailTable } from '@retikz/table-vanilla';
 
+const spec = detailTable({
+  dataRef: 'records',
+  columns: [
+    { id: 'item', field: 'item' },
+    { id: 'value', field: 'value' },
+  ],
+  dataExecution: { mode: 'external', external: 'promise-engine' },
+  transform: [{ operation: { kind: 'sort', params: { field: 'value', order: 'ascending' } } }],
+});
 const rows = [
   { item: 'A', value: 30 },
   { item: 'B', value: 10 },
   { item: 'C', value: 20 },
   { item: 'D', value: 20 },
 ];
-
-export const SortedTable: FC = () => (
-  <DetailTable
-    id="sorted-records"
-    dataRef="records"
-    data={rows}
-    dataTransformExecutor={executor}
-    dataExecution={{ mode: 'external', external: 'promise-engine' }}
-    transform={[{ operation: { kind: 'sort', params: { field: 'value', order: 'ascending' } } }]}
-  >
-    <DetailColumn id="item" field="item" header={{ kind: 'value', value: 'item' }} />
-    <DetailColumn id="value" field="value" header={{ kind: 'value', value: 'value' }} />
-  </DetailTable>
-);
+const task = await prepareTableData(spec, {
+  dataBindings: { records: { kind: 'rows', rows } },
+  dataTransformExecutor: executor,
+});
+const preparedData = await task.execute();
+const table = <Table spec={spec} preparedData={preparedData} />;
 ```
-
-The Table host above automatically prepares, binds and executes the request; the component does not call the provider manually. After preparation succeeds, `ready.bind(actualInput)` binds actual input to the fixed plan. Input must match the preparation descriptor, and binding does not select implementations again. The bound instance’s `execute()` then calls each stage’s `implementation.execute(input)` in order, passing each result to the next stage. Each bound instance can execute once: the first call consumes its execution right, including when it fails or is cancelled.
 
 </DocStep>
 
@@ -215,22 +215,9 @@ Cancellation requests reach the external implementation through `signal`. The ad
 
 ## Hosts and bindings
 
-In React clients, standalone Plot, Chart and Table components automatically prepare data asynchronously through the shared runtime. When placing them inside a Layout, set `runtime={{ preparation: 'async' }}` on that Layout:
+Standalone components and Layout children both take ready input. For a frame with several charts, await the external computations and then submit all children together. The application decides whether to discard a stale request. For SSR, `renderPlotAsync`, `renderChartAsync` and `renderTableAsync` each await their own domain computation.
 
-```tsx
-<Layout runtime={{ preparation: 'async' }}>
-  <Plot data={rows} dataTransformExecutor={executor}>
-    <PlotTransform operation={{ kind: 'sort', params: { field: 'x', order: 'ascending' } }} />
-    <PointMark x="x" y="y" />
-  </Plot>
-</Layout>
-```
-
-Layout preflights all inputs it manages before computation, then commits the results together as one update. If the current request fails, the existing view remains. Results from expired requests or unmounted components no longer update the view.
-
-For Vanilla, use `renderPlotAsync`, `renderChartAsync` or `renderTableAsync`. You can also use `compileToSceneAsync` with the corresponding adapter. Synchronous entries and synchronous React SSR support only local synchronous computation. For SSR that needs external computation or awaits a Promise, use an asynchronous Vanilla entry.
-
-You can pass raw data directly or use `dataBindings` to supply inputs by data reference name. These options are mutually exclusive. Bindings accept three forms:
+Domain preparation functions and async SSR accept these input forms by reference name in `dataBindings`:
 
 | Binding  | Required input and handling                                                                                                        |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |

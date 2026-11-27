@@ -69,7 +69,7 @@ const Demo: FC<AiRoadmapProps> = props => {
   const i18n = aiRoadmapI18n[lang];
 
   return (
-    <Layout nodeDistance={41}>
+    <Layout compile={{ nodeDistance: 41 }}>
       <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
         {i18n.title}
       </RoadmapNode>

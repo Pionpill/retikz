@@ -1,12 +1,13 @@
 import * as DiagramFlow from '@retikz/diagram/flow';
-import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-import { createProcessingController, compileToScene } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
+import { SceneRuntime, compileToScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import * as FlowVanilla from '../src/flow';
 
 it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
   const source = (visible: boolean) => ({
+    type: 'scene' as const,
     children: [
       FlowVanilla.flowDiagram({
         entities: [{ id: 'item', text: 'Item' }],
@@ -26,22 +27,20 @@ it('在保留模式更新期间删除并恢复 Group 标题和标签', () => {
       }),
     ],
   });
-  const controller = createProcessingController(source(true), {
-    adapters: FlowVanilla.createFlowDiagramVanillaAdapters(),
-  });
+  const controller = SceneRuntime.fromInput(source(true));
 
   try {
-    const initial = controller.read();
-    controller.update(source(false));
-    const hidden = controller.read();
+    const initial = controller.current.compilation.result;
+    controller.replace(source(false));
+    const hidden = controller.current.compilation.result;
 
     expect(JSON.stringify(hidden.scene)).not.toContain('Description');
     expect(JSON.stringify(hidden.scene)).not.toContain('Boundary');
     expect(JSON.stringify(hidden.scene)).toContain('Item');
 
-    controller.update(source(true));
+    controller.replace(source(true));
 
-    expect(controller.read().scene).toEqual(initial.scene);
+    expect(controller.current.compilation.result.scene).toEqual(initial.scene);
   } finally {
     controller.dispose();
   }
@@ -81,17 +80,16 @@ const functionExport = <TFunction extends (...arguments_: never) => unknown>(nam
   return typeof candidate === 'function' ? candidate : undefined;
 };
 
-const adapterExport = (): SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>> | undefined => {
+const adapterExport = (): InputEmbedAdapter<Readonly<Record<string, unknown>>> | undefined => {
   const value: unknown = FlowVanilla;
   if (typeof value !== 'object' || value === null || !('flowDiagramInputEmbedAdapter' in value)) return undefined;
-  return value.flowDiagramInputEmbedAdapter as SynchronousInputEmbedAdapter<Readonly<Record<string, unknown>>>;
+  return value.flowDiagramInputEmbedAdapter as InputEmbedAdapter<Readonly<Record<string, unknown>>>;
 };
 
 const context: InputEmbedContext = {
   id: 'flow-embed',
   kind: 'diagram.flow',
-  layerId: 'layer',
-  identityPath: ['layer', 'flow-embed'],
+  identityPath: ['flow-embed'],
 };
 
 const sourceInput = {
@@ -138,6 +136,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
   it.each(['-|', '|-'] as const)('通过公共 Vanilla 适配器编译 %s 路由', kind => {
     const result = compileToScene(
       {
+        type: 'scene',
         children: [
           FlowVanilla.flowDiagram({
             entities: [
@@ -149,7 +148,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
           }),
         ],
       },
-      { adapters: FlowVanilla.createFlowDiagramVanillaAdapters(), compile: { measureText } },
+      { compile: { measureText } },
     );
 
     expect(artifactValueOf(result)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
@@ -158,7 +157,6 @@ describe('@retikz/diagram-vanilla/flow', () => {
   it('从显式子路径导出完整的 Flow 编写表面', () => {
     expect(functionExport('normalizeFlowDiagram')).toBeDefined();
     expect(functionExport('flowDiagram')).toBeDefined();
-    expect(functionExport('createFlowDiagramVanillaAdapters')).toBeDefined();
     expect(adapterExport()).toBeDefined();
   });
 
@@ -253,8 +251,8 @@ describe('@retikz/diagram-vanilla/flow', () => {
     if (flowDiagram === undefined || adapter === undefined) return;
 
     const vanillaResult = compileToScene(
-      { children: [flowDiagram(sourceInput)] },
-      { adapters: [adapter], compile: { padding: 0, measureText } },
+      { type: 'scene', children: [flowDiagram(sourceInput)] },
+      { compile: { padding: 0, measureText } },
     );
 
     expect(artifactValueOf(vanillaResult)).toMatchObject({

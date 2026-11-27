@@ -93,7 +93,7 @@ export const positionCases: Array<NodeEvalCase> = [
   },
   {
     id: 'NC008',
-    task: '以已布局节点 A 的中心为基点，向右 12、向上 5 个用户单位放置节点；保留基点和偏移表达。',
+    task: '以已布局节点 A 为基点，从其中心向右偏移 12、向上偏移 5 个用户单位放置新节点。保留对 A 的引用和这段位移，不使用锚点对齐。',
     expected: {
       type: 'node',
       position: {
@@ -350,7 +350,7 @@ export const positionCases: Array<NodeEvalCase> = [
   },
   {
     id: 'NC023',
-    task: 'A 已布局。将当前节点下边从左到右四分之一处对齐到 A 的左侧锚点，使用边界比例表达。',
+    task: 'A 已布局。在当前节点的下边，用从左到右的比例指定四分之一处的点。将该点对齐到 A 上名为 left 的锚点。',
     expected: {
       type: 'node',
       position: {

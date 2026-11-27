@@ -1,5 +1,14 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  声明附着于节点的标签: 'Declares a label attached to the node',
+  'Node 标签的内容和外观': 'Node label content and appearance',
+  标签正文: 'Label content',
+  '声明一个带位置、文本、形状和样式的可引用节点': 'Declares a referenceable node with position, text, shape, and style',
+  绘图节点: 'Drawing node',
+  '创建节点时传给 node 的选项': 'Options accepted by node',
+  '创建命名坐标时传给 coordinate 的选项': 'Options accepted by coordinate',
+  '节点文字或带样式的 Text 子元素，可混排 NodeLabel；无正文时可省略':
+    'Node text or styled Text children, optionally mixed with NodeLabel elements. Omit for a node without body text',
   形状包围内容所需的未旋转外接盒几何: 'Unrotated bounding-box geometry required for a shape to enclose its content',
   '根据包含 padding 的内容半轴和 params，计算完整形状的未旋转外接盒半轴及中心偏移':
     'Compute the unrotated bounding-box half-axes and center offset of the complete shape from the content half-axes including padding and the shape parameters',
@@ -36,8 +45,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '指向同一节点几何的额外 id；要求主 id，别名非空白且不重复':
     'Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases',
   '命名坐标点的 React 输入，不绘制可见内容': 'React input for a named coordinate with no visible content',
-  '可选编译驱动解释的运行时载荷，不进入 Core IR':
-    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
+  '归一化时保留的作者元数据，不进入 Core IR': 'Authoring metadata retained during normalization; excluded from Core IR',
   '坐标点 id；路径端点和节点定位通过它引用此位置':
     'Coordinate ID used by path endpoints and node positioning to reference this position',
   '坐标点位置；不支持 Node 专属的自身锚点对齐': 'Coordinate position; does not support Node-only self-anchor alignment',
@@ -50,8 +58,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '连线接触的边界；省略时沿用视觉形状，也可选择已注册的连接面或形状，不改变节点外观':
     'Connection boundary; follows the visual shape when omitted, or selects a registered boundary or shape without changing appearance',
   'children 内容：文本': 'Text supplied as children',
-  '与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。\n字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染':
-    'Choose children or `text`; `text` takes precedence. Supports embedded `\\n`, template literals, string arrays, and styled `<Text>` lines. Strings may contain `$...$` inline or `$$...$$` display formulas, parsed when `<Layout lowerTex>` is supplied and rendered literally otherwise',
+  '与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。\n字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout compile={{ lowerTex }}>` 时解析；未注入则字面渲染':
+    'Choose children or `text`; `text` takes precedence. Supports embedded `\\n`, template literals, string arrays, and styled `<Text>` lines. Strings may contain `$...$` inline or `$$...$$` display formulas, parsed when `<Layout compile={{ lowerTex }}>` is supplied and rendered literally otherwise',
   "圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}`":
     "Corner radius in user units; affects only `rectangle`. Prefer shape parameters: `shape={{ type: 'rectangle', params: { cornerRadius } }}`",
   '节点 id；路径端点和其他节点通过它引用本节点':
@@ -81,8 +89,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '绕节点中心旋转的角度，单位为度；正值顺时针': 'Rotation around the node center in degrees; positive is clockwise',
   '均匀或分轴缩放；影响节点尺寸、字号、间距和路径附着点':
     'Uniform or per-axis scaling of node size, font size, spacing, and path attachment points',
-  '视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.extensions.shapes 注册':
-    'Visual shape: use a name when no parameters are required, or `{ type, params }` for parameterized shapes; register optional shapes through Layout.extensions.shapes',
+  '视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.compile.shapes 注册':
+    'Visual shape: use a name when no parameters are required, or `{ type, params }` for parameterized shapes; register optional shapes through Layout.compile.shapes',
   '实例视觉覆盖，逐字段覆盖继承默认值': 'Instance visual overrides, applied field by field over inherited defaults',
   '显式 text，优先级高于 children': 'Explicit text, taking precedence over children',
   '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ segments: [{ text }, { tex }] }`（每 segment 可单独着色）':
@@ -95,16 +103,11 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '行级字体覆盖；缺省字段继承 Node 的 `font` 块级值':
     'Per-line font overrides; missing fields inherit the Node block font',
   '行级透明度 0~1；不填走 Node 块级默认': 'Per-line opacity from 0 to 1; inherits the Node block default when omitted',
-  '命名坐标点——TikZ `\\coordinate (id) at (x, y);` 同义':
-    'Coordinate placeholder, equivalent to TikZ `\\coordinate (id) at (x, y);`',
+  命名坐标点: 'Named coordinate',
   '命名一个可引用的点，供后续 path 与其它 node 的 `at.of` 使用；自身不渲染、不参与 viewBox 扩展':
     'Names a referenceable point for paths and other node positions; emits no visible output and does not enlarge the viewBox',
-  'Node 声明一个可引用的节点': 'Node declares a referenceable node',
-  '声明一个带位置、文本、形状和样式的可引用节点；组件自身不渲染 DOM，最终由 `<Layout>` 输出到\n  SVG 或 Canvas':
-    'Declares a referenceable node with position, text, shape, and style. The component itself creates no DOM; `<Layout>` renders it to SVG or Canvas',
-  'Text 是 Node 内的"行级"标记组件——本身不渲染': 'Text is a line marker inside Node and does not render independently',
-  '声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行':
-    'Declares one text line, combined with strings in JSX order; overrides apply only to this line',
+  节点文本行: 'Node text line',
+  '在节点内声明一行文字，可单独设置行样式': 'Declares a line of node text with optional line-specific styling',
   作者侧命名坐标输入: 'Authoring input for a named coordinate',
   作者侧节点输入: 'Node authoring input',
   作者侧节点标签: 'Node label authoring input',

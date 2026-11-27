@@ -11,13 +11,13 @@ describe('Scope 三层复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [scope] };
     const session = new WeaveManager(source);
     const mounted = session.mount();
-    const entry = readWeaveCurrent(mounted.root).children[0];
+    const entry = readWeaveCurrent(session.root).children[0];
     if (entry.type !== 'scope') throw new Error('Expected scope');
     const previous = readWeaveCurrent(entry);
     expect(previous.resolve?.value).toBeDefined();
     expect(previous.compile?.value).toBeDefined();
     const moved: IRNode = { ...node, position: [50, 20] };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [{ kind: 'update', target: { kind: 'id', scopeId: entry.scopeId, id: 'body' }, input: moved }],
     });
     expect(update.compilation.result).toEqual(
@@ -45,15 +45,15 @@ describe('Scope 三层复用', () => {
     };
     const session = new WeaveManager(source);
     const mounted = session.mount();
-    const child = readWeaveCurrent(mounted.root).children[1];
+    const child = readWeaveCurrent(session.root).children[1];
     if (child.type !== 'scope') throw new Error('Expected scope');
     const previous = readWeaveCurrent(child).compile?.value;
     const explicit: IRScope = { ...scope, transforms: [{ kind: 'offset-translate', of: 'origin', offset: [0, 0] }] };
-    const equivalent = session.update({
+    const equivalent = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'box' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'box' },
           input: explicit,
         },
       ],
@@ -63,11 +63,11 @@ describe('Scope 三层复用', () => {
     equivalent.finish();
     expect(readWeaveCurrent(child).compile?.value).toBe(previous);
     const moved: IRCoordinate = { type: 'coordinate', id: 'origin', position: [40, 50] };
-    const changed = session.update({
+    const changed = session.prepareUpdate({
       operations: [
         {
           kind: 'update',
-          target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'origin' },
+          target: { kind: 'id', scopeId: session.root.scopeId, id: 'origin' },
           input: moved,
         },
       ],

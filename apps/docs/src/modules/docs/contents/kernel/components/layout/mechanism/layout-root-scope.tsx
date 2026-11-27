@@ -1,4 +1,4 @@
-import { Layout, Node, Scope, wrapRootScope } from '@retikz/react';
+import { Layout, Node, Scope } from '@retikz/react';
 import type { ScopeProps } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -33,12 +33,12 @@ const LayoutRootScope: FC<LayoutRootScopeProps> = props => {
   );
 
   return (
-    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout rootScope={{ defaults }} style={{ maxWidth: '100%', height: 'auto' }}>
       {[0, 1].map(index => (
-        <Scope key={index} position={[index * 220, 0]}>
+        <Scope key={index} defaults={index === 0 ? undefined : { reset: true }} position={[index * 220, 0]}>
           <LogicFigureFrame border={{ stroke: 'gray' }}>
             <LogicFigureFrameTitle>{index === 0 ? i18n.implicit : i18n.explicit}</LogicFigureFrameTitle>
-            {index === 0 ? wrapRootScope(children, { defaults }) : <Scope defaults={defaults}>{children}</Scope>}
+            {index === 0 ? children : <Scope defaults={defaults}>{children}</Scope>}
           </LogicFigureFrame>
           <Node position={[76, 104]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 13 } }}>
             {i18n.inherited}

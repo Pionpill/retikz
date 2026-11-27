@@ -6,7 +6,7 @@ import type {
   CompositeReplayWrapper,
   IRChild,
 } from '@retikz/core';
-import { cloneAndFreezeJson, createCompositeContractError, guardProviderOutput } from '@retikz/core';
+import { createContractViolationError, guardProviderOutput } from '@retikz/core';
 
 import type {
   CompileRuntime,
@@ -17,36 +17,22 @@ import type {
 
 const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
 
-/** 脱离普通 callback child，并只校验主链 dispatch 所需的顶层判别结构 */
-const snapshotCompositeCallbackChild = (owner: string, value: unknown, location: string): IRChild => {
-  const snapshot = cloneAndFreezeJson(value, `${owner} ${location}`);
-  if (snapshot === null || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
-    throw createCompositeContractError(
-      `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
-    );
+/** 借用普通 IR 子项，仅检查顶层判别字段，以拒绝未在当前会话登记的伪造句柄 */
+export const readCompositeChild = (owner: string, value: unknown, location: string): IRChild => {
+  if (value !== null && typeof value === 'object' && 'type' in value && typeof value.type === 'string') {
+    if (
+      builtinChildTypes.has(value.type) ||
+      ('namespace' in value &&
+        typeof value.namespace === 'string' &&
+        value.namespace.length > 0 &&
+        value.type.length > 0)
+    )
+      return value as IRChild;
   }
-
-  const child = snapshot as Record<string, unknown>;
-  const type = child.type;
-  const isBuiltin = typeof type === 'string' && builtinChildTypes.has(type);
-  const isComposite =
-    typeof child.namespace === 'string' && child.namespace.length > 0 && typeof type === 'string' && type.length > 0;
-  if (!isBuiltin && !isComposite) {
-    throw createCompositeContractError(
-      `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
-    );
-  }
-
-  return snapshot as IRChild;
+  throw createContractViolationError(
+    `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
+  );
 };
-
-/** 脱离 callback compile result 中的普通 output child */
-export const snapshotCompositeOutputChild = (owner: string, value: unknown, index: number): IRChild =>
-  snapshotCompositeCallbackChild(owner, value, `output child at index ${index}`);
-
-/** 脱离 callback 交给 layoutChild 的候选 child */
-export const snapshotCompositeLayoutChild = (owner: string, value: unknown, index: number): IRChild =>
-  snapshotCompositeCallbackChild(owner, value, `layoutChild input at probe ${index}`);
 
 /** 复制回放外壳，隔离 callback 后续修改 */
 const cloneReplayWrapper = (wrapper: CompositeReplayWrapper | undefined): CompositeReplayWrapper | undefined => {
@@ -67,16 +53,16 @@ export const createCompositeReplayChild = (
 ): CompositeCompileChild =>
   guardProviderOutput(owner.label, () => {
     if (result === null || typeof result !== 'object') {
-      throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
+      throw createContractViolationError(`${owner.label} received an invalid or forged layout result.`);
     }
 
     const layoutResult = session.layoutResults.get(result);
     if (layoutResult === undefined) {
-      throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
+      throw createContractViolationError(`${owner.label} received an invalid or forged layout result.`);
     }
 
     if (layoutResult.owner !== owner) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} received a layout result that does not belong to this composite callback.`,
       );
     }
@@ -98,34 +84,18 @@ export const createCompositeScopeChild = (
   session: CompositeCompileState,
   owner: CompositeCompileOwner,
   props: CompositeCompileScopeProps,
-  children: unknown,
+  children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>,
 ): CompositeCompileChild =>
   guardProviderOutput(owner.label, () => {
-    if (!Array.isArray(children)) {
-      throw createCompositeContractError(`${owner.label} received invalid context Scope children.`);
+    for (const [index, child] of children.entries()) {
+      const entry = session.outputChildren.get(child);
+      if (entry === undefined) readCompositeChild(owner.label, child, `output child at index ${index}`);
+      else if (entry.owner !== owner)
+        throw createContractViolationError(
+          `${owner.label} received an output child that does not belong to this composite callback.`,
+        );
     }
-
-    const clonedChildren = Array.from(children, (child: unknown, index) => {
-      if (child !== null && typeof child === 'object') {
-        const entry = session.outputChildren.get(child);
-        if (entry !== undefined) {
-          if (entry.owner !== owner) {
-            throw createCompositeContractError(
-              `${owner.label} received an output child that does not belong to this composite callback.`,
-            );
-          }
-
-          return child as CompositeCompileChild | CompositeBoundChild;
-        }
-      }
-
-      return snapshotCompositeOutputChild(owner.label, child, index);
-    });
-    const child: CompositeRuntimeOutputChild = {
-      kind: 'scope',
-      props: structuredClone(props),
-      children: clonedChildren,
-    };
+    const child: CompositeRuntimeOutputChild = { kind: 'scope', props, children };
     const handle = Object.freeze({}) as CompositeCompileChild;
     session.outputChildren.set(handle, { owner, child, used: false });
 
@@ -138,7 +108,7 @@ export const createCompositeBoundChild = (
   owner: CompositeCompileOwner,
   scope: CompositeInputScope,
 ): CompositeBoundChild => {
-  const child = snapshotCompositeLayoutChild(owner.label, scope.source, 0);
+  const child = readCompositeChild(owner.label, scope.source, 'bound child');
   const handle = Object.freeze({}) as CompositeBoundChild;
   session.outputChildren.set(handle, { owner, child: { kind: 'bound', child, runtimeInputs: scope }, used: false });
 

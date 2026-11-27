@@ -253,13 +253,18 @@ export const parseWayWithTargets = <TTarget, TControl, TAxisTarget>(
       if (pendingLabel !== undefined) fail(`cycle step cannot carry a label (label operator at index ${index - 1})`);
       output.push({ type: 'step', kind: 'cycle' });
     } else if (operation === 'via' || operation === 'curve' || operation === 'cubic' || operation === 'bend') {
-      const operationName =
-        operation === 'via'
-          ? `via operator '${typeof item === 'string' ? item : (item as WayFoldOp).via}'`
-          : 'curve operator';
-      if (index + 1 >= way.length) fail(`${operationName} at end of way must be followed by a target`);
-      if (operator(way[index + 1]) !== undefined)
-        fail(`${operationName} must be followed by a target, got operator/keyword`);
+      const atEnd = index + 1 >= way.length;
+      if (atEnd || operator(way[index + 1]) !== undefined) {
+        const name =
+          operation === 'via'
+            ? `via operator '${typeof item === 'string' ? item : (item as WayFoldOp).via}'`
+            : `${operation} operator`;
+        fail(
+          atEnd
+            ? `${name} at end of way must be followed by a target`
+            : `${name} must be followed by a target, got operator/keyword`,
+        );
+      }
       const to = target(way[++index]);
       if (operation === 'via') {
         if (typeof item === 'string') {

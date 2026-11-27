@@ -5,7 +5,7 @@ export const NodeLabelPositionControlId = {
   PositionMode: 'positionMode',
   Direction: 'direction',
   PositionAngle: 'positionAngle',
-  Boundary: 'boundary',
+  Side: 'side',
   Fraction: 'fraction',
 } as const;
 
@@ -58,7 +58,7 @@ export const nodeLabelPositionControls = definePreviewControls({
         },
         {
           kind: 'select',
-          id: NodeLabelPositionControlId.Boundary,
+          id: NodeLabelPositionControlId.Side,
           label: '边界',
           defaultValue: 'top',
           visibleWhen: visibleWhen.Boundary,
@@ -90,7 +90,7 @@ export const previewControlContract = {
     positionMode: 'direction',
     direction: 'right',
     positionAngle: 30,
-    boundary: 'top',
+    side: 'top',
     fraction: 0.5,
   },
   relatedApis: ['Node.label'],

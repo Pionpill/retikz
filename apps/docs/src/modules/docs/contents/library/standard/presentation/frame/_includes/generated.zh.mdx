@@ -2,7 +2,7 @@
 
 **组件声明**
 
-#### <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={144}>Frame</ApiSourceLink> / <ApiSourceLink label={"FrameProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={14}>FrameProps</ApiSourceLink>
+#### <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={142}>Frame</ApiSourceLink> / <ApiSourceLink label={"FrameProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={14}>FrameProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -36,25 +36,143 @@ export type FrameProps = Omit<InputFrameConfig, 'children' | 'title' | 'descript
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={152}>FrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={20}>FrameTitleProps</ApiSourceLink>
+#### <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={150}>FrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={25}>FrameTitleProps</ApiSourceLink>
+
+**公共属性**
+
+<ApiTable>
+
+| 成员            | 类型                                                                                             | 默认值 | 说明                                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —      | 同一节点的额外引用 id；要求主 id，别名非空白、互不重复且不同于主 id，不生成额外图元                              |
+| `animations?`   | `FrameTitleProps["animations"]`                                                                  | —      | 元素动画轨道，透传至输出图元，不参与布局且不跨 Scope 继承                                                        |
+| `authoring?`    | `unknown`                                                                                        | —      | 归一化时保留的作者元数据，不进入 Core IR                                                                         |
+| `boundary?`     | `FrameTitleProps["boundary"]`                                                                    | —      | 连线使用的连接面；可由单个路径端点覆盖，不改变节点外观                                                           |
+| `cornerRadius?` | `number`                                                                                         | —      | 仅 rectangle 使用的顶层圆角半径，单位为用户单位                                                                  |
+| `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
+| `label?`        | `FrameTitleProps["label"]`                                                                       | —      | 附着于节点的一个或多个标签                                                                                       |
+| `layout?`       | `FrameTitleProps["layout"]`                                                                      | —      | —                                                                                                                |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至输出图元的 JSON 元数据，不参与编译计算                                                                     |
+| `rotate?`       | `number`                                                                                         | —      | 绕节点中心的旋转角度，正值顺时针                                                                                 |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 缩放节点，同时影响路径在节点上的附着位置                                                                         |
+| `shape?`        | `FrameTitleProps["shape"]`                                                                       | —      | 视觉形状名称或带参数引用；省略时继承 Scope.defaults.node.shape，无继承值时使用 rectangle，未注册名称在编译时失败 |
+| `style?`        | `FrameTitleProps["style"]`                                                                       | —      | 逐字段覆盖继承默认值的节点视觉配置                                                                               |
+| `zIndex?`       | `number`                                                                                         | —      | 同层元素栈序，大者在上，同值保持声明顺序                                                                         |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="属性 · 正文属性">
+
+<ApiTable>
+
+| 成员        | 类型                                          | 默认值 | 说明 |
+| ----------- | --------------------------------------------- | ------ | ---- |
+| `children?` | `ReactElement \| ReadonlyArray<ReactElement>` | —      | —    |
+| `text`      | `NonNullable<NodeOptions['text']>`            | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · JSX 子元素">
+
+<ApiTable>
+
+| 成员        | 类型        | 默认值 | 说明                                                             |
+| ----------- | ----------- | ------ | ---------------------------------------------------------------- |
+| `children?` | `ReactNode` | —      | 节点文字或带样式的 Text 子元素，可混排 NodeLabel；无正文时可省略 |
+| `text?`     | `never`     | —      | —                                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const FrameTitle: FC<FrameTitleProps>;
 
-export type FrameTitleProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameTitleProps = FrameHeaderProps<NodeProps>;
 ```
 
-#### <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={163}>FrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={23}>FrameDescriptionProps</ApiSourceLink>
+</DocTab>
+
+</DocTabs>
+
+#### <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={161}>FrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={28}>FrameDescriptionProps</ApiSourceLink>
+
+**公共属性**
+
+<ApiTable>
+
+| 成员            | 类型                                                                                             | 默认值 | 说明                                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —      | 同一节点的额外引用 id；要求主 id，别名非空白、互不重复且不同于主 id，不生成额外图元                              |
+| `animations?`   | `FrameDescriptionProps["animations"]`                                                            | —      | 元素动画轨道，透传至输出图元，不参与布局且不跨 Scope 继承                                                        |
+| `authoring?`    | `unknown`                                                                                        | —      | 归一化时保留的作者元数据，不进入 Core IR                                                                         |
+| `boundary?`     | `FrameDescriptionProps["boundary"]`                                                              | —      | 连线使用的连接面；可由单个路径端点覆盖，不改变节点外观                                                           |
+| `cornerRadius?` | `number`                                                                                         | —      | 仅 rectangle 使用的顶层圆角半径，单位为用户单位                                                                  |
+| `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
+| `label?`        | `FrameDescriptionProps["label"]`                                                                 | —      | 附着于节点的一个或多个标签                                                                                       |
+| `layout?`       | `FrameDescriptionProps["layout"]`                                                                | —      | —                                                                                                                |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至输出图元的 JSON 元数据，不参与编译计算                                                                     |
+| `rotate?`       | `number`                                                                                         | —      | 绕节点中心的旋转角度，正值顺时针                                                                                 |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 缩放节点，同时影响路径在节点上的附着位置                                                                         |
+| `shape?`        | `FrameDescriptionProps["shape"]`                                                                 | —      | 视觉形状名称或带参数引用；省略时继承 Scope.defaults.node.shape，无继承值时使用 rectangle，未注册名称在编译时失败 |
+| `style?`        | `FrameDescriptionProps["style"]`                                                                 | —      | 逐字段覆盖继承默认值的节点视觉配置                                                                               |
+| `zIndex?`       | `number`                                                                                         | —      | 同层元素栈序，大者在上，同值保持声明顺序                                                                         |
+
+</ApiTable>
+
+公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="属性 · 正文属性">
+
+<ApiTable>
+
+| 成员        | 类型                                          | 默认值 | 说明 |
+| ----------- | --------------------------------------------- | ------ | ---- |
+| `children?` | `ReactElement \| ReadonlyArray<ReactElement>` | —      | —    |
+| `text`      | `NonNullable<NodeOptions['text']>`            | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · JSX 子元素">
+
+<ApiTable>
+
+| 成员        | 类型        | 默认值 | 说明                                                             |
+| ----------- | ----------- | ------ | ---------------------------------------------------------------- |
+| `children?` | `ReactNode` | —      | 节点文字或带样式的 Text 子元素，可混排 NodeLabel；无正文时可省略 |
+| `text?`     | `never`     | —      | —                                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const FrameDescription: FC<FrameDescriptionProps>;
 
-export type FrameDescriptionProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameDescriptionProps = FrameHeaderProps<NodeProps>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 **直接调用**
 
-#### <ApiSourceLink label={"InputFrame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={33}>InputFrame</ApiSourceLink>
+#### <ApiSourceLink label={"InputFrame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={28}>InputFrame</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -88,15 +206,15 @@ export type InputFrame = Omit<InputFrameConfig, 'id' | 'children'> & {
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={54}>frameInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"frameInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={49}>frameInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const frameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame>;
+export declare const frameInputEmbedAdapter: InputEmbedAdapter<InputFrame>;
 ```
 
 **执行与辅助契约**
 
-#### <ApiSourceLink label={"frame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={135}>frame</ApiSourceLink>
+#### <ApiSourceLink label={"frame"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={130}>frame</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -123,7 +241,7 @@ export declare const frame: (input: InputFrame) => InputEmbed<InputFrame>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={51}>frameDescription</ApiSourceLink>
+#### <ApiSourceLink label={"frameDescription"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={46}>frameDescription</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -150,7 +268,7 @@ export declare const frameDescription: (input: InputFrameDescription) => IRFrame
 
 </DocTabs>
 
-#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={48}>frameTitle</ApiSourceLink>
+#### <ApiSourceLink label={"frameTitle"} path={"packages/library/standard-vanilla/src/presentation/frame.ts"} startLine={43}>frameTitle</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -177,7 +295,7 @@ export declare const frameTitle: (input: InputFrameTitle) => IRFrameTitle;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputFrameDescription"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={16}>InputFrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={21}>FrameDescriptionSchema</ApiSourceLink>
+#### <ApiSourceLink label={"InputFrameDescription"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={16}>InputFrameDescription</ApiSourceLink> / <ApiSourceLink label={"FrameDescriptionSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={27}>FrameDescriptionSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -192,7 +310,7 @@ export declare const frameTitle: (input: InputFrameTitle) => IRFrameTitle;
 | `cornerRadius?` | `number`                                                                                         | —      | 矩形节点的圆角半径                       |
 | `id?`           | `string`                                                                                         | —      | 标题或说明节点的可选引用身份             |
 | `label?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["label"]>`                                         | —      | 附着于节点边界的标签                     |
-| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —      | 节点尺寸、间距与文字排布                 |
+| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —      | —                                        |
 | `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至 Scene 的 JSON 元数据              |
 | `rotate?`       | `number`                                                                                         | —      | 绕节点中心旋转的角度，正值在视觉上顺时针 |
 | `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 节点的均匀或分轴缩放                     |
@@ -227,7 +345,7 @@ export type InputFrameDescription = ZodInfer<typeof FrameDescriptionSchema>;
 export type InputFrameConfig = Omit<IRFrame, 'namespace' | 'type'>;
 ```
 
-#### <ApiSourceLink label={"InputFrameTitle"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={10}>InputFrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={16}>FrameTitleSchema</ApiSourceLink>
+#### <ApiSourceLink label={"InputFrameTitle"} path={"packages/library/standard/src/presentation/frame/types.ts"} startLine={10}>InputFrameTitle</ApiSourceLink> / <ApiSourceLink label={"FrameTitleSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={22}>FrameTitleSchema</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -242,7 +360,7 @@ export type InputFrameConfig = Omit<IRFrame, 'namespace' | 'type'>;
 | `cornerRadius?` | `number`                                                                                         | —      | 矩形节点的圆角半径                       |
 | `id?`           | `string`                                                                                         | —      | 标题或说明节点的可选引用身份             |
 | `label?`        | `ZodInfer<typeof FrameTitleSchema.shape["label"]>`                                               | —      | 附着于节点边界的标签                     |
-| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —      | 节点尺寸、间距与文字排布                 |
+| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —      | —                                        |
 | `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至 Scene 的 JSON 元数据              |
 | `rotate?`       | `number`                                                                                         | —      | 绕节点中心旋转的角度，正值在视觉上顺时针 |
 | `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 节点的均匀或分轴缩放                     |
@@ -332,11 +450,11 @@ export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'c
 
 </DocTabs>
 
-#### <ApiSourceLink label={"FrameSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={94}>FrameSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FrameSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={96}>FrameSchema</ApiSourceLink>
 
 <ZodSchema name="FrameSchema" />
 
-#### <ApiSourceLink label={"FrameBorderSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={28}>FrameBorderSchema</ApiSourceLink>
+#### <ApiSourceLink label={"FrameBorderSchema"} path={"packages/library/standard/src/presentation/frame/schema.ts"} startLine={32}>FrameBorderSchema</ApiSourceLink>
 
 <ZodSchema name="FrameBorderSchema" />
 

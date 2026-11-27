@@ -1,0 +1,65 @@
+---
+title: 执行 / Composite 求值
+description: 理解复合组件如何请求尺寸贡献、隔离试排子树，并将选中的结果写入父帧
+---
+
+[元素组装](/kernel/packages/reconciler/compile-elements)介绍了节点和路径怎样生成图元。复合组件（Composite）可以用一个高层声明表达一组子项：组件定义负责把声明展开成输出，Reconciler 负责找到这个定义、执行回调，并把输出接回当前子树。只有当组件需要依据子项尺寸决定排布时，才用到后文的测量与试排。
+
+## 整体流程
+
+例如，一个标注组件可以直接返回一条引线和一个文字节点。它不用先测量文字，也不用回放子树：这两个普通 IR 子项会按返回顺序进入已有的路径和节点编译分支。这个例子走的是 Composite 的通用执行路径：
+
+1. **查找定义**：子树遍历遇到复合声明时交给 <ApiSourceLink label="compileComposite" path="packages/kernel/reconciler/src/compile/execution/composite/compile.ts" startLine={285}>`compileComposite`</ApiSourceLink>。Reconciler 用声明的 `namespace` 和 `type` 在注册表中绑定定义，按定义的 schema 解析输入。普通编译遇到未注册组件会记录警告并跳过该项。
+2. **执行回调**：Reconciler 将解析后的输入和本次求值上下文交给定义的 `compile` 回调。完整求值需要返回输出子项；如果调用方只查询某个轴的尺寸，组件可以直接返回该轴的尺寸贡献，到此结束。
+3. **分派输出**：Reconciler 先检查输出句柄的归属与重复使用，再按返回顺序处理子项。普通 IR 继续递归编译；绑定子项携带运行时输入继续编译；生成的 Scope 按作用域规则遍历；回放句柄则提交已选的试排事务。组件还可以提供显式占用边界、对齐线或已声明的领域产物。
+
+下面聚焦第三步中的回放分支：当组件要先知道子项有多大，再决定放在哪里时，它怎样取得候选结果，又怎样让这个结果进入正式输出？
+
+<ComponentAlert
+  type="tip"
+  title="什么是布局提案？"
+  description="提案是父组件交给子项的尺寸条件。父组件可以询问内容自然需要多宽，也可以限定可用宽度，再询问内容需要多高。同一个子项在不同提案下可以给出不同答案。"
+/>
+
+## 测量提案
+
+一次测量有两个独立的问题：**在什么条件下排版**，以及**要读哪个方向的尺寸**。`proposal.x` 和 `proposal.y` 分别给出宽、高的条件；`measureChild` 的最后一个参数指定返回宽度（`'x'`）、高度（`'y'`）或两者（`'both'`）。
+
+每个轴都使用 <ApiSourceLink label="LayoutAxisProposal" path="packages/kernel/core/src/contract/composite/layout.ts" startLine={79}>`LayoutAxisProposal`</ApiSourceLink>。它有三种 `kind`；其中 `intrinsic` 再用 `mode` 区分两种问法。以宽度为例：
+
+| 单轴提案                                 | 父布局问什么                              | 如何理解结果                                                                                       |
+| ---------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `{ kind: 'intrinsic', mode: 'minimum' }` | 按内容自身的排版规则，最少需要多宽？      | 允许换行的标签可以通过换行缩窄，但仍要容纳不可拆分的内容和内边距。这个值是内容的最小宽度贡献。     |
+| `{ kind: 'intrinsic', mode: 'natural' }` | 父层不指定宽度时，内容自然会占多宽？      | 标签按自身配置排版；例如显式设置的最大文本宽度仍然有效。自然宽度可以大于最小宽度，也可以与它相等。 |
+| `{ kind: 'range', min: 0, max: 120 }`    | 在给定区间内，应留多宽的布局槽位？        | 内容只需 80 时可以留 80，无须填满 120。省略 `max` 表示只有下限。                                   |
+| `{ kind: 'exact', value: 120 }`          | 已分配宽 120 的槽位，子项在其中怎样排版？ | 槽位宽度确定为 120；实际画出的图形仍由子项决定。                                                   |
+
+下面的提案固定宽度、查询自然高度。即使只请求高度，宽度也参与求值，因为可用宽度会影响内容换行。
+
+```ts
+const proposal: LayoutProposal = {
+  x: { kind: 'exact', value: 120 },
+  y: { kind: 'intrinsic', mode: 'natural' },
+};
+const probe = context.measureChild(child, proposal, 'y');
+```
+
+## 从测量、试排到回放
+
+从左到右看同一个矩形 A。第一帧的尺寸线标出测得的自然宽度 60；第二帧在局部原点试排 A。第三帧的箭头和虚线轮廓表示计划向右平移 100，此时父帧还没有 A。第四帧的实线矩形才是提交后的 A，中心位于父帧的 (100, 0)。若宽度已知，可以从第二帧开始。
+
+<ComponentPreview files="evaluation-flow" size="md" hideCode type="illustration" />
+
+- **测量**：组件通过 `measureChild` 查询指定轴的尺寸贡献。<ApiSourceLink label="createCompositeMeasurementMethods" path="packages/kernel/reconciler/src/compile/execution/composite/measurement.ts" startLine={196}>`createCompositeMeasurementMethods`</ApiSourceLink> 提供的测量方法按子项、提案、查询轴和执行环境等条件复用本次编译的结果；测量不会向父帧追加图元。
+- **试排**：调用 `layoutChild` 时，<ApiSourceLink label="evaluateCompositeLayout" path="packages/kernel/reconciler/src/compile/execution/composite/probe.ts" startLine={55}>`evaluateCompositeLayout`</ApiSourceLink> 在隔离环境中计算子树。组件可以读取占用边界和对齐信息来决定如何放置子项；Reconciler 通过回放凭证关联本次试排的图元、资源和警告。舍弃试排结果不会改变父帧。
+- **回放**：组件用 `context.replay(result, wrapper)` 创建句柄，可附上放置变换或裁剪。Reconciler 通过 <ApiSourceLink label="preflightCompositeOutputs" path="packages/kernel/reconciler/src/compile/execution/composite/preflight.ts" startLine={14}>`preflightCompositeOutputs`</ApiSourceLink> 检查返回的句柄归属和重复使用，再由 <ApiSourceLink label="commitCompositeReplay" path="packages/kernel/reconciler/src/compile/execution/composite/replay.ts" startLine={32}>`commitCompositeReplay`</ApiSourceLink> 按输出顺序提交图元、资源和布局贡献。具名几何也随放置变换更新，后续连线才能找到最终位置。
+
+## 增量会话中的组件私有状态
+
+更新作者声明的 Composite 时，按所属 Scope 与直接子项下标提交完整声明。可选的相对输入绑定只作用于该声明，省略即解除。生成的子项仍按 Scope 可见性被引用，不是独立的批次更新地址。
+
+同一个编译回调可读取第三个参数 `memo`，并通过布局结果的同名字段返回下一轮可用的数据。定义的 `TMemo` 泛型约束传入和返回的 `memo`，默认 `never` 表示不提供这项数据。首帧没有旧状态；只有同实例、同定义、位置兼容且成功提交的状态可用于后续增量计算。完整替换不继承状态。不要修改旧状态、把它写入 Scene，或保存本轮布局与 replay 句柄。不需要缓存的定义忽略这个参数即可。
+
+## 延伸阅读
+
+[运行状态](/kernel/packages/reconciler/compile-state)介绍测量缓存和试算工作区的生命周期；[作用域与遍历](/kernel/packages/reconciler/compile-traversal)解释父树如何消费布局和几何贡献。

@@ -1,0 +1,178 @@
+---
+title: Compilation Coordination · reconciler
+description: Follow two nodes and a connecting path through initial compilation, a local edit and publication to an output target
+---
+
+<ComponentAlert
+  type="tip"
+  title="Prerequisite"
+  description={
+    <>
+      This series assumes you have read the <a href="/kernel/packages/core">Compilation Core</a> series.
+    </>
+  }
+/>
+
+**Core defines drawing semantics; Reconciler runs the compilation.** Consider a path connecting two nodes. Core provides the rules for computing node boundaries and connection endpoints. Reconciler traverses the drawing declarations, calls Core to resolve the endpoints once the node layouts are available, and assembles the primitives and resources into a Scene for Render to draw.
+
+**When do you need a full compilation?** The first time you open a drawing, there are no previous results to reuse. The compiler needs the complete declaration to produce the first Scene. For a one-off SVG export, that single compilation is enough, so you can turn off incremental mode. Replacing the entire drawing with a new declaration also calls for a full compilation.
+
+**When is incremental compilation useful?** As you drag node B in an editor, its connection endpoints must move with it, while unrelated elements can reuse their previous results.
+
+**Weave is the core of incremental compilation.** During the initial compilation, it caches inputs, resolved values and compiled results by node in the declaration tree. It also tracks two kinds of relationships: which scope contains each element, and which elements depend on results computed by others. For example, a path connected to B reads its boundary. When B moves, Weave updates its geometry, follows that dependency to recompute the path endpoints, and reuses unaffected results from the cache. The application still receives a complete Scene; the rendering backend decides how to redraw it.
+
+## Responsibilities at a glance
+
+| Part                     | Responsibility                                                                                                        | When to read                                               |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Execution (compile)      | Traverse the declaration tree, prepare context, invoke Core stages and assemble primitives and resources into a Scene | To trace an input through its first compilation            |
+| Incremental (weave)      | Retain element results and dependencies, and decide what a batch of edits can reuse                                   | To understand why moving a node affects a path             |
+| Coordination (reconcile) | Manage session revisions and commit computation together with an optional output target                               | To integrate a host or determine which revision is visible |
+
+## From initial compilation to a local edit
+
+The path in this drawing refers to A and B by name. During initial compilation, the nodes’ shapes and layout must be available before the path can place its endpoints on their boundaries.
+
+<ComponentPreview
+  files={[
+    '/kernel/packages/core/compilation/compilation-example',
+    '/kernel/packages/core/compilation/compilation-example.data',
+  ]}
+  size="xs"
+  hideCode
+  type="illustration"
+/>
+
+Imagine moving B upward. Neither name in the path declaration changes, but B’s boundary moves. The incremental session retains the dependency on the node geometry that the path read. It can therefore identify the affected path and recompute its endpoints. The application still receives a complete Scene and can draw it in the same way as the first result.
+
+Finishing the computation and publishing it are separate steps. If an output target is attached, the session asks it to prepare the update and coordinates the commit. The new result becomes current only after the commit succeeds.
+
+## Installation and usage
+
+For everyday drawing and updates, use the [Vanilla API](/kernel/packages/vanilla). You typically only need `SceneReconciler` directly when managing a compilation session yourself or integrating a custom output target. The example below illustrates how a low-level session mounts and updates a drawing.
+
+<PackageManagerInstall packages="@retikz/core @retikz/reconciler" />
+
+This example uses the explicit incremental mode to compile the drawing and then move B. The batch locates B by its root scope ID and node name; `input` supplies its complete updated declaration.
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { ReconcilerMode, SceneReconciler, WeaveOperationKind } from '@retikz/reconciler';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'B', position: [180, 0], text: 'B' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'A' } },
+        { type: 'step', kind: 'line', to: { id: 'B' } },
+      ],
+    },
+  ],
+};
+
+const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
+try {
+  const first = session.mount(ir);
+  const next = session.update({
+    operations: [
+      {
+        kind: WeaveOperationKind.Update,
+        target: { kind: 'id', scopeId: session.getScopeId(), id: 'B' },
+        input: { type: 'node', id: 'B', position: [180, 60], text: 'B' },
+      },
+    ],
+  });
+  console.log(first.revision, next.revision); // 0, 1
+  console.log(next.compilation.result.scene);
+} finally {
+  session.dispose();
+}
+```
+
+The initial mount returns revision 0; moving B returns revision 1. With no output target attached, the caller can read the new Scene directly. For a one-off compilation, use `new SceneReconciler()` to avoid retaining state between compilations. That mode accepts full replacements but does not accept batches of local edits.
+
+## First compilation and subsequent updates
+
+Dragging a node requires repeated updates. These three scenes use rectangles without text inside a single scope. Where paths are present, each connects adjacent nodes. Each edit moves the middle node horizontally by 3 units.
+
+| Scene                  | First Scene, full mode | First Scene, incremental mode | Move one node incrementally |
+| ---------------------- | ---------------------: | ----------------------------: | --------------------------: |
+| 100 nodes, no paths    |                1.25 ms |                       2.66 ms |                     0.35 ms |
+| 100 nodes, 99 paths    |                4.23 ms |                       7.96 ms |                     0.64 ms |
+| 1,000 nodes, 999 paths |               39.27 ms |                      80.79 ms |                     9.36 ms |
+
+Across these scenes, the incremental session took 1.88–2.13 times as long to produce its first Scene. Both modes compile the whole drawing initially; incremental mode also establishes state for later edits. The ratio is not a fixed overhead: the gap was about 1.4 ms for the small scene without paths and 42 ms for the larger connected scene. Moving one node in an existing session was cheaper than recompiling the drawing, but the time for the same edit varied with the scene.
+
+First-scene timings run from session creation until the complete Scene is ready. Edit timings cover one update to an existing session. Neither includes browser startup or SVG or Canvas drawing. The timings were measured on the author's computer.
+
+## Package boundaries and reading order
+
+See [Compilation Core](/kernel/packages/core) for the rules that determine node shapes, coordinates and connection endpoints, and [Render](/kernel/packages/render) for drawing a Scene with SVG or Canvas. Reconciler schedules the computation between them, reuses results and publishes revisions.
+
+When reading the compiler source, start with how a full compilation produces a Scene, then follow how Weave narrows the work on the next update. When integrating an output target, start with coordination: establish when a result becomes visible before tracing how it was computed.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Execution / Compilation Scheduling',
+      description: 'Trace path slots, node geometry registration and scene assembly in a full compilation',
+      url: '/kernel/packages/reconciler/compile-scheduling',
+    },
+    {
+      title: 'Execution / Runtime Context',
+      description:
+        'Trace how the runtime supplies shared configuration, host services, and inputs for the current scene',
+      url: '/kernel/packages/reconciler/compile-runtime',
+    },
+    {
+      title: 'Execution / Runtime State',
+      description:
+        'Follow name lookup, coordinate transforms, workspace resources, and composite probes during traversal',
+      url: '/kernel/packages/reconciler/compile-state',
+    },
+    {
+      title: 'Execution / Scope Traversal',
+      description: 'Follow names, transforms, and output through nested scopes',
+      url: '/kernel/packages/reconciler/compile-traversal',
+    },
+    {
+      title: 'Execution / Element Assembly',
+      description: 'Compare how nodes, coordinates, and paths contribute layout, references, and primitives',
+      url: '/kernel/packages/reconciler/compile-elements',
+    },
+    {
+      title: 'Execution / Composite Evaluation',
+      description: 'From size queries and isolated probes to subtree commitment',
+      url: '/kernel/packages/reconciler/compile-composite',
+    },
+    {
+      title: 'Execution / Output Provenance',
+      description: 'Follow node B into the Scene, drawing resources, domain artifacts, warnings and provenance records',
+      url: '/kernel/packages/reconciler/compile-artifacts',
+    },
+    {
+      title: 'Incremental / State Model',
+      description:
+        'Explore how the author tree, read dependencies and stage records represent incremental compilation state',
+      url: '/kernel/packages/reconciler/weave-state',
+    },
+    {
+      title: 'Incremental / Change Tracking',
+      description: 'Follow a batch edit through candidate addresses, change tracking and rollback',
+      url: '/kernel/packages/reconciler/weave-changes',
+    },
+    {
+      title: 'Incremental / Dependency Scheduling',
+      description:
+        'Follow two paths that read the same node through name binding, stage readiness and change propagation',
+      url: '/kernel/packages/reconciler/weave-scheduling',
+    },
+  ]}
+/>

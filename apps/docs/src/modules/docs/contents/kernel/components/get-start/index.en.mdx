@@ -43,29 +43,23 @@ createRoot(document.getElementById('diagram')!).render(
 Put this in your TypeScript entry. The package root provides drawing constructors; the /dom entry mounts SVG in the browser.
 
 ```ts
-import { layer, node, path, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { node, path, scene } from '@retikz/vanilla';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
-  id: 'first-diagram',
-  layers: [
-    layer({
-      id: 'main',
-      children: [
-        node({ id: 'a', position: [0, 0], text: 'A' }),
-        node({ id: 'b', position: [100, 0], text: 'B' }),
-        node({ id: 'c', position: [200, 0], text: 'C' }),
-        path({ id: 'ab', way: ['a', 'b'], arrow: { end: {} } }),
-        path({ id: 'bc', way: ['b', 'c'], arrow: { end: {} } }),
-      ],
-    }),
+  children: [
+    node({ id: 'a', position: [0, 0], text: 'A' }),
+    node({ id: 'b', position: [100, 0], text: 'B' }),
+    node({ id: 'c', position: [200, 0], text: 'C' }),
+    path({ id: 'ab', way: ['a', 'b'], arrow: { end: {} } }),
+    path({ id: 'bc', way: ['b', 'c'], arrow: { end: {} } }),
   ],
 });
 
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
-`scene` describes the drawing, and `layer` groups its `node` / `path` objects. Each node position places that node. `marks` adds markers to a path: `pos: 1` means the endpoint, and `kind: 'arrow'` selects an arrow.
+`scene` describes the drawing. Each node position places that node. `marks` adds markers to a path: `pos: 1` means the endpoint, and `kind: 'arrow'` selects an arrow.
 
 Call `view.dispose()` before removing the container to release the mounted view.
 

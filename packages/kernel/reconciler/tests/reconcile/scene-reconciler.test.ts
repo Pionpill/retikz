@@ -1,14 +1,14 @@
 import type { IRScene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { SceneReconciler } from '../../src/reconcile';
+import { ReconcilerMode, SceneReconciler } from '../../src/reconcile';
 import { compileTestResult } from '../helpers/compilation';
 
 const scene: IRScene = { type: 'scene', version: 1, children: [{ type: 'node', id: 'a', position: [0, 0] }] };
 
 describe('独立编译会话', () => {
   it('嵌套 Scope 的查询标识支持三种定位和插入，移动后保持稳定', () => {
-    const session = new SceneReconciler();
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
     const source: IRScene = {
       type: 'scene',
       version: 1,
@@ -70,7 +70,7 @@ describe('独立编译会话', () => {
   });
 
   it('作用域查询拒绝无效路径、其它会话结果及不可用会话', () => {
-    const session = new SceneReconciler();
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
     expect(() => session.getScopeId()).toThrow('not mounted');
     const initial = session.mount(scene);
     for (const path of [[0], [5], [-1], [0.5]]) expect(() => session.getScopeId(path)).toThrow('authored Scope');
@@ -80,7 +80,7 @@ describe('独立编译会话', () => {
     other.dispose();
     session.dispose();
     expect(() => session.getScopeId()).toThrow('disposed');
-    const full = new SceneReconciler({}, { incremental: false });
+    const full = new SceneReconciler();
     full.mount(scene);
     expect(() => full.getScopeId()).toThrow('Non-incremental');
     full.dispose();
@@ -91,6 +91,7 @@ describe('独立编译会话', () => {
     const session = new SceneReconciler(
       {},
       {
+        mode: ReconcilerMode.Incremental,
         target: {
           prepare: () => {
             if (reject) expect(() => session.getScopeId()).toThrow('preparing');
@@ -118,7 +119,7 @@ describe('独立编译会话', () => {
   });
 
   it('不接入渲染端也能连续提交基础元素批次', () => {
-    const session = new SceneReconciler();
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
     const initial = session.mount(scene);
     const scopeId = session.getScopeId([], initial);
     const first = session.update({
@@ -141,7 +142,7 @@ describe('独立编译会话', () => {
   });
 
   it('无效批次不推进结果且后续合法批次仍可提交', () => {
-    const session = new SceneReconciler();
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
     const initial = session.mount(scene);
     expect(() =>
       session.update({
@@ -158,6 +159,7 @@ describe('独立编译会话', () => {
     const session = new SceneReconciler(
       {},
       {
+        mode: ReconcilerMode.Incremental,
         target: {
           prepare: candidate => {
             const before = visible;
@@ -197,7 +199,7 @@ describe('独立编译会话', () => {
   });
 
   it('配置更新复用编译结果，销毁与过期更新有明确边界', () => {
-    const session = new SceneReconciler();
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
     const initial = session.mount(scene);
     const configured = session.updateTarget();
     expect(configured.compilation).toBe(initial.compilation);
@@ -211,7 +213,7 @@ describe('独立编译会话', () => {
     const counts: Array<number> = [];
     for (const updateStrategy of ['auto', 'full'] as const) {
       const trace = vi.fn();
-      const session = new SceneReconciler({}, { updateStrategy, trace });
+      const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental, updateStrategy, trace });
       const initial = session.mount(input);
       const result = session.update({
         operations: [

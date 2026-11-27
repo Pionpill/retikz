@@ -1,6 +1,7 @@
 import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
 import { createFlowDiagramProviderContribution } from '@retikz/diagram/flow';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { flowDiagramEmbedKind } from './constants';
 import type { InputFlowDiagram } from './normalize';
@@ -41,7 +42,7 @@ const inputOf = (props: FlowDiagramInputEmbedProps): InputFlowDiagram => {
 };
 
 /** Flow Diagram Source root 的 InputEmbed adapter */
-export const flowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiagramInputEmbedProps> = {
+export const flowDiagramInputEmbedAdapter: InputEmbedAdapter<FlowDiagramInputEmbedProps> = {
   kind: flowDiagramEmbedKind,
   lower: props => ({
     node: normalizeFlowDiagram(inputOf(props)),
@@ -54,9 +55,9 @@ export const flowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiag
  * @param input Flow 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider
  * @returns 保留 input 对象引用的 embed 节点，不在此处执行布局
  */
-export const flowDiagram = (input: FlowDiagramInputEmbedProps): InputEmbed<FlowDiagramInputEmbedProps> => ({
-  type: 'embed',
-  kind: flowDiagramEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const flowDiagram = (input: FlowDiagramInputEmbedProps): InputEmbed<FlowDiagramInputEmbedProps> =>
+  embed({
+    adapter: flowDiagramInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

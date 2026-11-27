@@ -238,7 +238,7 @@ spacing boundary、box outline 与 family structure 共享同一共线归一化�
 
 ## 依赖现有元素
 
-- ADR-012 的 `CompositeDefinition.inspector`、InspectionPlane、final occurrence 排序与 static / retained frame
+- ADR-012 的 `CompositeDefinition.inspector`、InspectionPlane、final occurrence 排序与 static / session frame
 - Core `BaseLayoutInspectOptions` 的 sparse merge 与 canonical resolve
 - Standard typed Layout artifact、`marginBounds` / `slotBounds`、container `allocationBounds` / `contentBounds`
 - Flex `resolveFlexSpaceDistribution()` 与 Grid final track geometry

@@ -172,7 +172,7 @@ const initialAppearanceOf = (
   return cascadeTableCellAppearance(
     style.appearance,
     style.trace,
-    { borders: structuredClone(cell.layout.borders) as IRTableCellAppearance['borders'] },
+    { borders: cell.layout.borders as IRTableCellAppearance['borders'] },
     STRUCTURE_SOURCE,
   );
 };
@@ -184,8 +184,8 @@ const initialPlanOf = (cell: SemanticTableCell, options: TableCellPlansResolveOp
     return {
       kind: TableCellPayloadKind.Content,
       ...(cell.id === undefined ? {} : { cellId: cell.id }),
-      appearance: structuredClone(initial.appearance),
-      trace: { appearance: structuredClone(initial.trace), matchedRuleIndices: [] },
+      appearance: initial.appearance,
+      trace: { appearance: initial.trace, matchedRuleIndices: [] },
     };
   }
 
@@ -194,11 +194,11 @@ const initialPlanOf = (cell: SemanticTableCell, options: TableCellPlansResolveOp
     ...(cell.id === undefined ? {} : { cellId: cell.id }),
     formatter: structuredClone(cell.payload.formatter ?? { name: BuiltinTableCellFormatter.Identity }),
     presentation: structuredClone(cell.payload.presentation ?? { name: BuiltinTableCellPresentation.Text }),
-    appearance: structuredClone(initial.appearance),
+    appearance: initial.appearance,
     trace: {
       formatter: cell.payload.formatter === undefined ? DEFAULT_SOURCE : STRUCTURE_SOURCE,
       presentation: cell.payload.presentation === undefined ? DEFAULT_SOURCE : STRUCTURE_SOURCE,
-      appearance: structuredClone(initial.trace),
+      appearance: initial.trace,
       matchedRuleIndices: [],
     },
   };
@@ -217,7 +217,7 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
           : { fillOpacity: plan.appearance.background.fillOpacity }),
       },
     };
-    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/background/fill': source };
+    plan.trace.appearance = { ...plan.trace.appearance, '/background/fill': source };
   } else {
     plan.appearance = {
       ...plan.appearance,
@@ -229,7 +229,7 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
         },
       },
     };
-    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/defaults/style/color': source };
+    plan.trace.appearance = { ...plan.trace.appearance, '/content/defaults/style/color': source };
   }
 
   plan.trace.encodingIds ??= [];
@@ -266,8 +266,8 @@ const applyRule = (plan: MutablePlan, rule: IRTableCellRule, ruleIndex: number, 
 
   if (rule.appearance !== undefined) {
     const cascaded = cascadeTableCellAppearance(plan.appearance, plan.trace.appearance, rule.appearance, source);
-    plan.appearance = structuredClone(cascaded.appearance);
-    plan.trace.appearance = structuredClone(cascaded.trace);
+    plan.appearance = cascaded.appearance;
+    plan.trace.appearance = cascaded.trace;
   }
 };
 

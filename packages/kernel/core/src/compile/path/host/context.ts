@@ -2,6 +2,7 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import type { CompiledPathAppearance, PathDefinitionCompileContext } from '../../../contract';
 import { visitSceneContent } from '../../../contract';
+import type { StrokePathResolution } from '../../../resolve';
 import { guardProviderOutput, resolvePath as resolvePathValue, resolveStrokePathProviders } from '../../../resolve';
 import type { IRPathBase, IRStep } from '../../../schemas';
 import type { RegisterPaint } from '../../resource';
@@ -11,6 +12,10 @@ import type { CompiledStrokePath } from '../stroke';
 import { bindPathTargets } from '../target';
 import { pathTargetViewOf } from '../target';
 import type { BoundPathResolution, PathCompileContext, PathEmitOutput, PreparedPathCompilation } from '../types';
+
+/** 判断路径是否已经绑定标准描边的装饰定义 */
+const hasStrokeBindings = (path: BoundPathResolution): path is BoundPathResolution & StrokePathResolution =>
+  path.stroke !== undefined;
 
 /** ⚡只复制宿主已生成的 JSON 描边数据，保留共享引用与 undefined，避免通用结构化克隆开销 */
 const cloneStrokeOutput = (output: PathEmitOutput): PathEmitOutput => {
@@ -44,6 +49,7 @@ export const createPathDefinitionContext = (
   resolution: BoundPathResolution,
   context: PathCompileContext,
   allowedResourceIds: Set<string>,
+  reuseStrokeOutput: boolean,
   prepared?: PreparedPathCompilation['stroke'],
 ) => {
   let compiledStroke: CompiledStrokePath | undefined;
@@ -104,21 +110,20 @@ export const createPathDefinitionContext = (
   /** ⚡同次标准描边只准备一次 provider 和目标视图，派生路径仍独立解析 */
   const compileStroke = (nextPath?: IRPathBase): CompiledStrokePath => {
     const sourceResolution = nextPath === undefined ? resolution : resolutionOf(nextPath);
-    const strokeResolution =
-      sourceResolution.stroke === undefined
-        ? resolveStrokePathProviders(sourceResolution, {
-            rootFontSize,
-            gatingOn: lowerTex !== undefined,
-            warn: targetWarn,
-            mode: theme.mode,
-            pathRegistry: registries.pathRegistry,
-            arrowRegistry: registries.arrowRegistry,
-            markRegistry: registries.markRegistry,
-            patternRegistry: registries.patternRegistry,
-            round,
-            irPath,
-          })
-        : { ...sourceResolution, ...sourceResolution.stroke };
+    const strokeResolution = hasStrokeBindings(sourceResolution)
+      ? sourceResolution
+      : resolveStrokePathProviders(sourceResolution, {
+          rootFontSize,
+          gatingOn: lowerTex !== undefined,
+          warn: targetWarn,
+          mode: theme.mode,
+          pathRegistry: registries.pathRegistry,
+          arrowRegistry: registries.arrowRegistry,
+          markRegistry: registries.markRegistry,
+          patternRegistry: registries.patternRegistry,
+          round,
+          irPath,
+        });
     const emittedTargetView =
       sourceResolution === resolution
         ? targetView
@@ -131,7 +136,7 @@ export const createPathDefinitionContext = (
   };
 
   const emitStroke = (nextPath?: IRPathBase) => {
-    // ⚡缓存命中先于 provider 解析和视图构建；返回值仍逐次隔离
+    // ⚡缓存命中先于 provider 解析和视图构建
     const emitted = nextPath === undefined ? (compiledStroke ??= compileStroke()) : compileStroke(nextPath);
     const output = emitted.emit.overall;
     if (output === null) return null;
@@ -143,7 +148,8 @@ export const createPathDefinitionContext = (
         if (typeof paint === 'object' && paint.kind === 'resourceRef') allowedResourceIds.add(paint.id);
       }
     });
-    return cloneStrokeOutput(output);
+    // ⚡内置描边只转交宿主结果；自定义 Definition 每次调用仍得到独立副本
+    return reuseStrokeOutput ? output : cloneStrokeOutput(output);
   };
 
   const materializePath = (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => {

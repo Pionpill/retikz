@@ -38,7 +38,7 @@ export type SurfaceProps = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 
 **直接调用**
 
-#### <ApiSourceLink label={"InputSurface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={22}>InputSurface</ApiSourceLink>
+#### <ApiSourceLink label={"InputSurface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={18}>InputSurface</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -70,22 +70,21 @@ export type InputSurface = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 
 </DocTabs>
 
-#### <ApiSourceLink label={"InputSurfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={19}>InputSurfaceChild</ApiSourceLink>
+#### <ApiSourceLink label={"InputSurfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={15}>InputSurfaceChild</ApiSourceLink>
 
 ```ts
 export type InputSurfaceChild = InputChild;
 ```
 
-#### <ApiSourceLink label={"surfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={64}>surfaceInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceInputEmbedAdapter"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={60}>surfaceInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>>;
+export declare const surfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface>;
 ```
 
 **执行与辅助契约**
 
-#### <ApiSourceLink label={"surface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={89}>surface</ApiSourceLink>
+#### <ApiSourceLink label={"surface"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={80}>surface</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -112,7 +111,7 @@ export declare const surface: (input: InputSurface) => InputEmbed<InputSurface>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"surfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={30}>surfaceChild</ApiSourceLink>
+#### <ApiSourceLink label={"surfaceChild"} path={"packages/library/standard-vanilla/src/presentation/surface.ts"} startLine={26}>surfaceChild</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -162,7 +161,7 @@ export declare const surfaceChild: (child: InputSurfaceChild) => InputSurfaceChi
 | `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —           | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                |
 | `namespace`       | `"standard"`                                                                                                                                                                                                       | —           | Standard 复合组件命名空间                                                                     |
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | `"visible"` | 内容溢出保持可见或裁剪                                                                        |
-| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 均匀或分侧的非负内边距                                                                        |
+| `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Surface 边界与子图形之间的内边距                                                              |
 | `position?`       | `IRScopePosition`                                                                                                                                                                                                  | —           | 父坐标系原点位置或最终锚点对齐，省略时为原点                                                  |
 | `theme?`          | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                           | —           | 当前子树的稀疏 Theme 覆盖；name 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
 | `transforms?`     | `IRSurface['transforms']`                                                                                                                                                                                          | —           | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析          |
@@ -220,7 +219,7 @@ export type IRSurface = Omit<ZodInput<typeof SurfaceSchema>, keyof IRScopeProps 
   Pick<ZodInfer<typeof SurfaceSchema>, 'child'>;
 ```
 
-#### <ApiSourceLink label={"SurfaceSchema"} path={"packages/library/standard/src/presentation/surface/schema.ts"} startLine={36}>SurfaceSchema</ApiSourceLink>
+#### <ApiSourceLink label={"SurfaceSchema"} path={"packages/library/standard/src/presentation/surface/schema.ts"} startLine={32}>SurfaceSchema</ApiSourceLink>
 
 <ZodSchema name="SurfaceSchema" />
 

@@ -20,7 +20,7 @@ import { crossShapeDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
 
 export const Example: FC = () => (
-  <Layout extensions={{ shapes: [crossShapeDefinition] }}>
+  <Layout compile={{ shapes: [crossShapeDefinition] }}>
     <Node position={[0, 0]} shape="cross" fill="#38bdf8" layout={{ minimumSize: { width: 80, height: 80 } }} />
   </Layout>
 );
@@ -45,9 +45,9 @@ This code returns a complete SVG string that can be saved to a file or displayed
 
 ```ts
 import { crossShapeDefinition } from '@retikz/extension';
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
-const svg = renderToSvgString(
+const compileResult = compileToScene(
   scene({
     children: [
       {
@@ -61,6 +61,7 @@ const svg = renderToSvgString(
   }),
   { compile: { shapes: [crossShapeDefinition] } },
 );
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -69,7 +70,7 @@ console.log(svg);
 
 Both entries produce a blue cross. `shape: 'cross'` selects the shape, while `crossShapeDefinition` supplies its drawing rules; use them together.
 
-You can load multiple Definitions by capability in one drawing: React uses `Layout.extensions`, while Vanilla uses `compile`. To enable a complete official family, use `extensionShapeDefinitions`, `extensionArrowDefinitions`, or `extensionClipDefinitions` as described on the respective capability pages.
+You can load multiple Definitions by capability in one drawing: React uses `Layout.compile`, while Vanilla uses `compile`. To enable a complete official family, use `extensionShapeDefinitions`, `extensionArrowDefinitions`, or `extensionClipDefinitions` as described on the respective capability pages.
 
 ## Further reading
 

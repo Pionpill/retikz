@@ -1,5 +1,10 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '按指定键浅选属性，跳过 undefined，保留 null 和其他值':
+    'Picks the listed properties into a shallow copy, skipping undefined but retaining null and other values',
+  待读取的源对象: 'Source object to read',
+  要读取的属性键: 'Property keys to read',
+  仅包含选中且有定义的属性的新对象: 'A new object containing only selected properties with defined values',
   '从候选属性中恰好选择一个，其余属性不能同时提供': 'Requires exactly one candidate property and excludes the others',
   候选属性集合: 'Candidate properties',
   属性比较允许展开的容器深度: 'Maximum container depth for property comparison',

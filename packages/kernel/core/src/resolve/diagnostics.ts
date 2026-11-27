@@ -3,7 +3,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 
 const layoutProbeRecoverableErrors = new WeakSet<object>();
 
-const compositeContractErrors = new WeakSet<object>();
+const contractViolationErrors = new WeakSet<object>();
 
 const additionalFatalProbeErrors = new WeakSet<object>();
 
@@ -45,14 +45,14 @@ export const createLayoutProbeRecoverableError = (
 };
 
 /** 创建扩展契约违规错误；布局试算遇到此错误时必须中止 */
-export const createCompositeContractError = (message: string, options?: ErrorOptions): RetikzCoreError => {
+export const createContractViolationError = (message: string, options?: ErrorOptions): RetikzCoreError => {
   const error = new RetikzCoreError({
     code: RetikzCoreErrorCode.ContractViolation,
     message,
     details: Object.freeze({}),
     cause: options?.cause,
   });
-  compositeContractErrors.add(error);
+  contractViolationErrors.add(error);
 
   return error;
 };
@@ -62,8 +62,8 @@ export const isLayoutProbeRecoverableError = (error: unknown): error is LayoutPr
   error !== null && typeof error === 'object' && layoutProbeRecoverableErrors.has(error);
 
 /** 按登记的对象身份识别扩展契约错误，不读取错误对象的属性 */
-export const isCompositeContractError = (error: unknown): error is RetikzCoreError =>
-  error !== null && typeof error === 'object' && compositeContractErrors.has(error);
+export const isContractViolationError = (error: unknown): error is RetikzCoreError =>
+  error !== null && typeof error === 'object' && contractViolationErrors.has(error);
 
 /** 登记必须中止布局试算的错误，禁止将其视为可放弃的候选失败 */
 export const registerFatalProbeError = (error: object): void => {
@@ -74,7 +74,7 @@ export const registerFatalProbeError = (error: object): void => {
 export const isFatalProbeError = (error: unknown): error is Error =>
   error !== null &&
   typeof error === 'object' &&
-  (compositeContractErrors.has(error) || additionalFatalProbeErrors.has(error));
+  (contractViolationErrors.has(error) || additionalFatalProbeErrors.has(error));
 
 /** 检查原型链是否包含 Error.prototype；原型读取失败或出现循环时返回 false */
 const isOrdinaryError = (value: unknown): value is Error => {

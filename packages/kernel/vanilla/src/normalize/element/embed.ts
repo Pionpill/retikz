@@ -1,13 +1,6 @@
-import type {
-  CanonicalTheme,
-  CompositeInputBinding,
-  CoreProviderContribution,
-  IRChild,
-  IRTheme,
-  ThemeDefinition,
-} from '@retikz/core';
+import type { CompositeInputBinding, CoreProviderContribution, IRChild } from '@retikz/core';
 
-import type { InputChild } from '../scene';
+import type { InputScene } from '../scene';
 
 /** 嵌入贡献内部按声明顺序收集的运行时作者来源 */
 export type InputEmbedAuthoringSite = Readonly<{
@@ -31,45 +24,43 @@ export type EmbedChildrenNormalizationResult = Readonly<{
   authoringSites: ReadonlyArray<InputEmbedAuthoringSite>;
 }>;
 
-/** InputEmbed 所在位置已生效的 Core Theme 上下文 */
-export type InputEmbedThemeContext = Readonly<{
-  /** Scene / Scope 链解析后的有效 Theme */
-  theme: CanonicalTheme;
-  /** 调用方提供的 Core Theme definitions */
-  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
-}>;
-
-/** processing 注入给 InputScene normalizer 的 Scope Theme 解析器 */
-export type InputEmbedThemeContextResolver = Readonly<{
-  /** Scene 根的有效 Theme 上下文 */
-  root: InputEmbedThemeContext;
-  /** 为嵌套 Scope 解析下一级有效 Theme 上下文 */
-  resolveScope: (
-    parent: InputEmbedThemeContext,
-    theme: IRTheme | undefined,
-    sourcePath: string,
-  ) => InputEmbedThemeContext;
-}>;
-
 /**
  * 作者侧 Tier 2 嵌入输入
  * @template TProps 交给领域 adapter 的已类型化属性，默认使用字符串键记录
  */
-export type InputEmbed<TProps = Record<string, unknown>> = {
-  /** 标识需要交给领域 adapter 处理的嵌入声明 */
+export type InputEmbed<TProps = Record<string, unknown>> = Readonly<{
   type: 'embed';
-  /** 匹配 Vanilla adapter 的稳定键 */
-  kind: string;
-  /** 可选的公开更新与诊断身份，省略时由 normalizeScene 生成运行时身份 */
+  adapter: AnyInputEmbedAdapter;
   id?: string;
-  /** 交给领域 adapter 的已类型化属性 */
   props: TProps;
-  /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
-};
+}> &
+  BoundEmbed;
 
-/** 擦除领域属性泛型后的嵌入输入 */
+/** 私有名义类型：对象展开或手写字段不能重新配对已验证的实现与 props */
+declare class BoundEmbed {
+  private readonly boundEmbed: void;
+}
+
+/** 已在构造边界完成配对的异构嵌入输入 */
 export type AnyInputEmbed = InputEmbed<unknown>;
+
+/** 绑定当前作者位置的 adapter 与 props，不执行领域逻辑 */
+export const embed = <TProps>(
+  config: Readonly<{
+    adapter: InputEmbedAdapter<NoInfer<TProps>>;
+    props: TProps;
+    id?: string;
+    authoring?: unknown;
+  }>,
+): InputEmbed<TProps> => {
+  const node: Pick<InputEmbed<TProps>, 'type' | 'id' | 'authoring' | 'adapter' | 'props'> = {
+    ...config,
+    type: 'embed',
+  };
+  // 名义标记只在类型层封闭构造入口
+  return Object.freeze(node) as InputEmbed<TProps>;
+};
 
 /** Tier 2 adapter 的下沉位置上下文 */
 export type InputEmbedContext = {
@@ -77,16 +68,10 @@ export type InputEmbedContext = {
   id: string;
   /** 当前嵌入节点类型 */
   kind: string;
-  /** 所在分层 id */
-  layerId: string;
-  /** 从分层到当前节点的身份路径 */
+  /** 场景内从具名祖先到当前嵌入节点的身份路径 */
   identityPath: Array<string>;
-  /** processing 已准备的有效 Theme */
-  theme?: CanonicalTheme;
-  /** processing 传递的 Core Theme definitions */
-  themeDefinitions?: ReadonlyArray<ThemeDefinition>;
   /** 在当前根 Scene traversal 中归一化嵌入 slot 的已类型化 authoring 子项 */
-  normalizeChildren?: (children: ReadonlyArray<InputChild>) => EmbedChildrenNormalizationResult;
+  normalizeChildren?: (children: InputScene['children']) => EmbedChildrenNormalizationResult;
 };
 
 /** Tier 2 adapter 对 Source IR 与 Composite resolver 的贡献 */
@@ -101,60 +86,13 @@ export type InputEmbedContribution = {
   authoringSites?: ReadonlyArray<InputEmbedAuthoringSite>;
 };
 
-/** Tier 2 作者输入到 Core contribution 的适配器 */
-export type InputEmbedPreparation = Readonly<{
-  /** 单次执行，完成领域计算并产生同步贡献 */
-  execute: () => InputEmbedContribution | Promise<InputEmbedContribution>;
-}>;
-
-/** 嵌套作者输入的独立执行权 */
-export type InputEmbedChildrenPreparation = Readonly<{
-  /** 按作者顺序消费已准备的子项 */
-  execute: () => EmbedChildrenNormalizationResult | Promise<EmbedChildrenNormalizationResult>;
-}>;
-
-/** 共享 processing 提供的作者位置、主题与失效信号 */
-export type InputEmbedPreparationContext = Readonly<Omit<InputEmbedContext, 'normalizeChildren'>> &
-  Readonly<{
-    /** 当前请求取消或被替代时终止 */
-    signal: AbortSignal;
-    /** 只在准备期间登记作者子项，不在执行时发现新依赖 */
-    prepareChildren: (children: ReadonlyArray<InputChild>) => Promise<InputEmbedChildrenPreparation>;
-  }>;
-
-/**
- * 同步入口只接受具有明确 lower 能力的 adapter
- * @template TProps lower 与可选 prepare 共同接受的领域属性类型
- */
-export type SynchronousInputEmbedAdapter<TProps = unknown> = {
-  /** `InputEmbed.kind` 的匹配键 */
+/** 将就绪的领域输入下沉为 Core contribution */
+export type InputEmbedAdapter<TProps = unknown> = {
+  /** 作者类型标识 */
   kind: string;
-  /** 将领域输入静态下沉为 Core contribution */
+  /** 同步产生当前实例的节点、依赖与运行时输入 */
   lower: (props: TProps, context: InputEmbedContext) => InputEmbedContribution;
-  /** 异步作者入口的能力准备，不执行领域计算 */
-  prepare?: (
-    props: TProps,
-    context: InputEmbedPreparationContext,
-  ) => InputEmbedPreparation | Promise<InputEmbedPreparation>;
 };
-
-/**
- * 同一 kind 的同步与异步作者能力
- * @template TProps adapter 的同步下沉或异步准备入口接受的领域属性类型
- */
-export type InputEmbedAdapter<TProps = unknown> =
-  | SynchronousInputEmbedAdapter<TProps>
-  | Readonly<{
-      /** 作者输入匹配键 */
-      kind: string;
-      /** 全树能力准备 */
-      prepare: (
-        props: TProps,
-        context: InputEmbedPreparationContext,
-      ) => InputEmbedPreparation | Promise<InputEmbedPreparation>;
-      /** 仅异步 adapter 不具有同步入口 */
-      lower?: never;
-    }>;
 
 /** 擦除领域属性泛型后的异构 adapter */
 export type AnyInputEmbedAdapter = InputEmbedAdapter<never>;

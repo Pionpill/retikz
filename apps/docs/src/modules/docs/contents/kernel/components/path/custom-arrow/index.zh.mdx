@@ -22,7 +22,7 @@ ArrowDefinition 同时服务 Path 端点与 `marks[].shape`。它不负责箭头
 
 自定义箭头扩展的是**端点内容**。IR 只保存开放的 shape 名与视觉参数；宿主注入 `ArrowDefinition` 后，Core 从统一 registry 解析名称，在 compile 阶段生成后端中立的 `ScenePrimitive`。
 
-下面注册一个空心 `bracket` 箭头，并通过 `<Layout extensions={{ arrows }}>` 注入。definition、注入和 Draw 使用方式都在同一个可运行示例中。
+下面注册一个空心 `bracket` 箭头，并通过 `<Layout compile={{ arrows }}>` 注入。definition、注入和 Draw 使用方式都在同一个可运行示例中。
 
 <ComponentPreview files="custom-arrow-basic" size="xs" />
 
@@ -83,7 +83,7 @@ Path 的有效 `color` 覆盖箭头自身的 `color`；箭头具体 `stroke` / `
 
 ## 注入与使用
 
-React 通过 `<Layout extensions={{ arrows }}>` 注入；直接调用 core 时使用 `CompileOptions.arrows`。随后在端点或沿线 mark 中引用注册名。
+React 通过 `<Layout compile={{ arrows }}>` 注入；直接调用 core 时使用 `CompileOptions.arrows`。随后在端点或沿线 mark 中引用注册名。
 
 注册时会检查定义中的几何数值：`backX`、`lineContactX`、显式 `tipX` 和 `outerInset` 必须有限，显式 `baseSize` 必须为有限正数，并满足 `backX <= lineContactX <= tipX`。省略 `tipX` 时用 `baseSize`，两者都省略时用 `10`。即使当前图形没有引用该箭头，非法定义也会在注册时被拒绝；缩放等运算产生的非有限结果仍在编译时检查。
 
@@ -93,7 +93,7 @@ React 通过 `<Layout extensions={{ arrows }}>` 注入；直接调用 core 时�
 ```tsx
 import { Draw, Layout } from '@retikz/react';
 
-<Layout extensions={{ arrows: [bracket] }}>
+<Layout compile={{ arrows: [bracket] }}>
   <Draw
     way={[
       [0, 0],
@@ -113,7 +113,7 @@ Vanilla 使用相同 definition，通过 `mount` 的 `compile` 选项注入；HT
 
 ```ts
 import { path, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
@@ -126,7 +126,7 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input, {
+const view = mountSceneView(document.getElementById('diagram')!, input, {
   compile: { arrows: [bracket] },
 });
 // Dispose when the host is removed.
@@ -173,7 +173,7 @@ const view = mount(document.getElementById('diagram')!, input, {
       description: '声明箭头名称、空心状态、基准尺寸与生成 marker 图元的 `emit` 函数。',
     },
     {
-      name: 'Layout.extensions.arrows',
+      name: 'Layout.compile.arrows',
       kind: 'property',
       type: 'ReadonlyArray<ArrowDefinition>',
       description: '在 React Layout 中注入箭头定义，供 Path 和 Draw 按名称解析。',

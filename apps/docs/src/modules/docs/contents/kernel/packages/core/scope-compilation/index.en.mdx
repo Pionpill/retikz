@@ -1,5 +1,5 @@
 ---
-title: Scope Compilation
+title: Compilation / Scope
 description: Understand inheritance, local space, child layout envelopes and group output across Core and Reconciler
 ---
 
@@ -141,6 +141,22 @@ A named Scope contributes its envelope to its parent; an anonymous Scope passes 
 <ComponentPreview files="scope-envelope" size="xl" hideCode type="illustration" />
 
 Both views use the same A, B and Coordinate. A named Scope contributes the illustrated envelope to its parent; an anonymous Scope passes through those child layouts.
+
+### Reusing a rectangular envelope
+
+Suppose the existing envelope runs from `[1, 1]` to `[10, 10]`. A child that was strictly inside and stays inside cannot change its four outer edges. If that child moves outside, its new extrema can extend the envelope. When a child that supported an outer edge moves inward or is removed, the remaining children must be checked again.
+
+Core exports three pure functions from `@retikz/core` so compilation callers can retain and combine the original extrema. They hold no session state and do not reconstruct edges from a center and dimensions.
+
+| Function                                                                                                                                                                             | Input and result                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| <ApiSourceLink label="calculateScopeEnvelopeBounds" path="packages/kernel/core/src/compile/scope/envelope/layout.ts" startLine={51}>`calculateScopeEnvelopeBounds`</ApiSourceLink>   | An ordered `ReadonlyArray<CompiledReferenceGeometry>` → corner extrema; an empty array returns `undefined`                          |
+| <ApiSourceLink label="mergeScopeEnvelopeBounds" path="packages/kernel/core/src/compile/scope/envelope/layout.ts" startLine={70}>`mergeScopeEnvelopeBounds`</ApiSourceLink>           | Earlier and later extrema in the same coordinate system → combined extrema; `undefined` is empty, and ties retain the earlier value |
+| <ApiSourceLink label="compileScopeRectangleEnvelope" path="packages/kernel/core/src/compile/scope/envelope/layout.ts" startLine={85}>`compileScopeRectangleEnvelope`</ApiSourceLink> | Extrema or `undefined` → `CompiledScopeGeometry`; empty input produces a zero-size rectangle at the origin                          |
+
+Reconciler retains the previous four extrema and compares the current child layouts with the previous ones. It merges changed contributions locally only when their old geometry was strictly inside the old envelope. Boundary contact, numeric ties, or a different layout count trigger a complete calculation, preserving declaration order and signed-zero behavior. Circular envelopes still use the complete point set. The prepared rectangle reaches Core through `PreparedScopeLayout.envelope`; a failed candidate commit leaves the previous state intact.
+
+For a named rectangular Scope that depends only on a child’s layout, Reconciler can retain the parent envelope as soon as the child reports a change if both the old and new geometry lie strictly inside the previous bounds. That notification needs no sibling layout collection or comparison. Paths that reference the child directly still receive updates. Drawing output, resources and diagnostics are still assembled for the complete Scene.
 
 ### Placement, Clipping and Group Output
 

@@ -48,6 +48,7 @@ export class PreparedTransformPlan<TSource> implements Extract<DataTransformPrep
     /** 本地执行阶段的位置，用于接入源物化产生的事件 */
     readonly localStages: ReadonlySet<number>,
   ) {
+    this.bind = this.bind.bind(this);
     const lineage = resolveDataLineageOptions(request.lineage);
     this.requirements = {
       preserveProvenance: request.provenance === true,
@@ -61,7 +62,7 @@ export class PreparedTransformPlan<TSource> implements Extract<DataTransformPrep
   }
 
   /** 校验实际输入并创建独立的一次性执行实例 */
-  bind = (input: InputDataTransformStage<TSource>): DataTransformExecution => {
+  bind(input: InputDataTransformStage<TSource>): DataTransformExecution {
     assertDataExecutionActive(this.signal);
     assertDataTransformModel(this.descriptor.model, input.kind === 'source' ? input.model : input.result.model);
     if (
@@ -74,12 +75,12 @@ export class PreparedTransformPlan<TSource> implements Extract<DataTransformPrep
       throw new RetikzDataError('data: bound input has provenance not covered by preflight requirements');
     if (input.kind === 'result') assertDataTransformResult(this.descriptor.model, input.result);
     return new TransformExecution(this, input);
-  };
+  }
 
   /** 源物化遵守请求级取消、模型与来源要求 */
-  materialize = async (
+  async materialize(
     input: Extract<InputDataTransformStage<TSource>, { kind: 'source' }>,
-  ): Promise<DataTransformResult> => {
+  ): Promise<DataTransformResult> {
     const materializer = this.materializeSource;
     if (materializer === undefined) throw new RetikzDataError('data: source materializer is unavailable');
 
@@ -98,7 +99,7 @@ export class PreparedTransformPlan<TSource> implements Extract<DataTransformPrep
       throw new RetikzDataError('data: materialized provenance is not covered by preflight requirements');
 
     return result;
-  };
+  }
 
   /** 为本地阶段绑定计划语义；每次执行建立独立的计算上下文 */
   bindLocalStage(

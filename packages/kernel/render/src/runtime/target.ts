@@ -1,64 +1,55 @@
+import type { Scene } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
-import type { ReconcilerCommitTarget, ReconcilerResult } from '@retikz/reconciler';
+import type { ReconcilerCommitTarget } from '@retikz/reconciler';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { createFullSceneRuntimeSnapshot } from '../scene';
-import type { ScenePatch } from '../scene';
-import { captureRuntimeConfig } from './config';
+import type { ScenePatch, SceneRuntimeSnapshot } from '../scene';
+import { prepareRuntimeConfig } from './config';
 import type { InputRenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
-import { EMPTY_READONLY_LAYERS, snapshotReadonlyLayers } from './readonly-layer';
-import type { RenderReadonlyLayer } from './readonly-layer';
-import { getRetainedRendererExecutor, isRetainedRenderer, isSvgHost, isCanvasHost } from './renderer';
-import type {
-  RetainedRenderer,
-  RetainedRendererFactory,
-  RetainedRendererRead,
-  InputRetainedRendererFactory,
-} from './renderer';
+import { getRendererExecutor, isRenderer, isSvgHost, isCanvasHost } from './renderer';
+import type { Renderer, RendererFactory, RendererRead, InputRendererFactory } from './renderer';
 import { runtimeStructuralEquals } from './shared';
 import { assertSceneRuntimeSnapshot, sceneRuntimeSnapshotEquals, assertScenePatch } from './validator';
 
 /** 同一宿主重建编译会话时交接 renderer 的句柄 */
-export type RetainedRenderLease = Readonly<{ renderer: RetainedRenderer }>;
-const leaseOwners = new WeakMap<RetainedRenderLease, object>();
+export type RenderLease = Readonly<{ renderer: Renderer }>;
+const leaseOwners = new WeakMap<RenderLease, object>();
 /** 编译结果到保留式宿主的接线配置 */
-export type RetainedRenderTargetOptions = Readonly<{
+export type RenderTargetOptions = Readonly<{
   /** 宿主提交的可选观测出口 */
   trace?: PerformanceTraceSink;
   /** 创建当前宿主的后端实例 */
-  rendererFactory: RetainedRendererFactory;
+  rendererFactory: RendererFactory;
   /** 重建会话时可接管的现有后端 */
-  rendererLease?: RetainedRenderLease;
+  rendererLease?: RenderLease;
   /** 每次准备读取本次输出配置 */
   configuration: () => InputRenderRuntimeConfig;
-  /** 从同一编译结果解析只读图层 */
-  resolveReadonlyLayers?: (output: ReconcilerResult['compilation']) => ReadonlyArray<RenderReadonlyLayer>;
   /** 首次建立新宿主或接管已有宿主 */
   mountMode?: 'create' | 'adopt';
 }> &
   (
-    | (Extract<InputRetainedRendererFactory, { backend: 'svg' }> &
+    | (Extract<InputRendererFactory, { backend: 'svg' }> &
         Readonly<{
           /** 接管 SVG 宿主时预期的首帧 */
-          expectedInitialFrame?: StaticRenderFrame;
+          expectedInitialScene?: Scene;
         }>)
-    | Extract<InputRetainedRendererFactory, { backend: 'canvas' }>
+    | Extract<InputRendererFactory, { backend: 'canvas' }>
   );
 /** Render 对外的读取及单目标提交能力 */
-export type RetainedRenderTarget = Readonly<{
+export type RenderTarget = Readonly<{
   /** 供会话调度的单目标提交协议 */
   target: ReconcilerCommitTarget;
   /** 仅返回最近成功提交的宿主状态 */
-  read: () => RetainedRendererRead;
+  read: () => RendererRead;
   /** 会话之间交接后端所有权的稳定句柄 */
-  lease: RetainedRenderLease;
+  lease: RenderLease;
 }>;
 
 /** 创建与计算会话解耦的宿主提交目标 */
-export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): RetainedRenderTarget => {
-  let options: RetainedRenderTargetOptions;
+export const createRenderTarget = (input: RenderTargetOptions): RenderTarget => {
+  let options: RenderTargetOptions;
   try {
     if (input.backend === 'svg') options = { ...input };
     else options = { ...input };
@@ -77,7 +68,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
     let disposeFailure: unknown;
     if (options.rendererLease === undefined) {
       try {
-        getRetainedRendererExecutor(renderer)?.dispose();
+        getRendererExecutor(renderer)?.dispose();
       } catch (cause) {
         disposeFailure = cause;
       }
@@ -87,19 +78,19 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
       cause: { renderer, disposeFailure },
     });
   }
-  const executor = getRetainedRendererExecutor(renderer);
+  const executor = getRendererExecutor(renderer);
   if (executor === undefined) throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid });
   const lease = options.rendererLease ?? Object.freeze({ renderer });
   if (options.rendererLease === undefined) leaseOwners.set(lease, owner);
-  let committedRead: RetainedRendererRead | undefined;
+  let committedRead: RendererRead | undefined;
   let disposed = false;
-  let currentFrame = options.rendererLease === undefined ? undefined : executor.read().frame;
-  const offset = currentFrame === undefined ? 0 : currentFrame.primary.revision + 1;
+  let currentSnapshot = options.rendererLease === undefined ? undefined : executor.read().snapshot;
+  const offset = currentSnapshot === undefined ? 0 : currentSnapshot.revision + 1;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
   const target: ReconcilerCommitTarget = {
     prepare: (candidate, previous) => {
       try {
-        const prior = currentFrame;
+        const prior = currentSnapshot;
         const priorRead = committedRead;
         const priorOwner = leaseOwners.get(lease);
         const revision = candidate.revision + offset;
@@ -109,56 +100,58 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
           throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch });
         const primary =
           sameCompilation && prior !== undefined
-            ? { ...prior.primary, revision }
+            ? Object.freeze({ ...prior, revision })
             : createFullSceneRuntimeSnapshot(candidate.compilation.result.scene, revision, provenance!);
-        const frame: RenderFrameSnapshot = Object.freeze({
-          primary,
-          layers: snapshotReadonlyLayers(
-            options.resolveReadonlyLayers?.(candidate.compilation) ?? EMPTY_READONLY_LAYERS,
-          ),
-        });
-        if (frame.layers.length > 0 && renderer.readonlyLayerCapability !== 'supported')
-          throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererReadonlyLayerUnsupported });
-        if (previous === undefined && options.backend === 'svg' && options.expectedInitialFrame !== undefined) {
-          const expected = options.expectedInitialFrame;
+        if (previous === undefined && options.backend === 'svg' && options.expectedInitialScene !== undefined) {
+          const expected = options.expectedInitialScene;
           const normalized = {
-            ...expected.primary,
-            resources: expected.primary.resources ?? { paints: [], clips: [] },
-            animations: expected.primary.animations ?? [],
+            ...expected,
+            resources: expected.resources ?? { paints: [], clips: [] },
+            animations: expected.animations ?? [],
           };
-          if (
-            !runtimeStructuralEquals(normalized, primary.scene) ||
-            !runtimeStructuralEquals(snapshotReadonlyLayers(expected.layers), frame.layers)
-          )
+          if (!runtimeStructuralEquals(normalized, primary.scene))
             throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInitialFrameMismatch });
         }
-        const config = captureRuntimeConfig(options.configuration());
+        const config = prepareRuntimeConfig(options.configuration());
         const patch: ScenePatch | undefined =
           prior === undefined
             ? undefined
             : {
-                baseRevision: prior.primary.revision,
+                baseRevision: prior.revision,
                 nextRevision: revision,
                 operations: sameCompilation ? [] : [{ kind: 'replaceScene', snapshot: primary }],
               };
-        if (patch !== undefined && prior !== undefined) assertScenePatch(prior.primary, patch, primary);
+        // 本目标只为同一 compilation 构造空补丁：根、Scene 和拓扑沿用已提交帧，仅推进版本
+        const reusesValidatedPrimary =
+          sameCompilation &&
+          prior !== undefined &&
+          priorRead?.snapshot === prior &&
+          Number.isSafeInteger(revision) &&
+          revision === prior.revision + 1;
+        if (patch !== undefined && prior !== undefined && !reusesValidatedPrimary)
+          assertScenePatch(prior, patch, primary);
         const token =
           patch === undefined
-            ? executor.prepareMount(frame, config, options.mountMode ?? 'create')
-            : executor.prepare(patch, frame, config);
+            ? executor.prepareMount(primary, config, options.mountMode ?? 'create')
+            : executor.prepare(patch, primary, config);
         let committed = false;
         return {
           commit: () => {
             token.commit();
-            committedRead = snapshotRendererRead(executor.read(), frame, animationControlsCache);
-            currentFrame = frame;
+            committedRead = snapshotRendererRead(
+              executor.read(),
+              primary,
+              animationControlsCache,
+              reusesValidatedPrimary,
+            );
+            currentSnapshot = primary;
             leaseOwners.set(lease, owner);
             committed = true;
           },
           rollback: () => {
             committed = false;
             token.rollback();
-            currentFrame = prior;
+            currentSnapshot = prior;
             committedRead = priorRead;
             if (priorOwner === undefined) leaseOwners.delete(lease);
             else leaseOwners.set(lease, priorOwner);
@@ -200,7 +193,7 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
         executor.dispose();
         leaseOwners.delete(lease);
       }
-      currentFrame = undefined;
+      currentSnapshot = undefined;
     },
   };
   return {
@@ -215,8 +208,8 @@ export const createRetainedRenderTarget = (input: RetainedRenderTargetOptions): 
 };
 
 /** 验证 renderer 的宿主归属，不允许把别的宿主接入本目标 */
-const isRetikzRendererForHost = (renderer: RetainedRenderer, options: RetainedRenderTargetOptions): boolean =>
-  isRetainedRenderer(renderer) && renderer.backend === options.backend && renderer.host === options.host;
+const isRetikzRendererForHost = (renderer: Renderer, options: RenderTargetOptions): boolean =>
+  isRenderer(renderer) && renderer.backend === options.backend && renderer.host === options.host;
 
 const invalidRendererRead = (cause: unknown): never => {
   throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeRendererInvalid, cause });
@@ -320,10 +313,11 @@ const freezeAnimationControls = (
 };
 
 const snapshotRendererReadUnsafe = (
-  value: RetainedRendererRead,
-  lineage: RenderFrameSnapshot | undefined,
+  value: RendererRead,
+  lineage: SceneRuntimeSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
-): RetainedRendererRead => {
+  reusesValidatedPrimary: boolean,
+): RendererRead => {
   const candidate: unknown = value;
   if (lineage === undefined || typeof candidate !== 'object' || candidate === null) {
     throw new RetikzRenderError({
@@ -332,40 +326,41 @@ const snapshotRendererReadUnsafe = (
     });
   }
 
-  const rawFrame: unknown = Reflect.get(candidate, 'frame');
+  const rawSnapshot: unknown = Reflect.get(candidate, 'snapshot');
   const animation = Reflect.get(candidate, 'animation') as AnimationControls | undefined;
-  if (typeof rawFrame !== 'object' || rawFrame === null) {
+  if (typeof rawSnapshot !== 'object' || rawSnapshot === null) {
     throw new RetikzRenderError({
       code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
       cause: value,
     });
   }
 
-  const frame = rawFrame as RenderFrameSnapshot;
-  assertSceneRuntimeSnapshot(frame.primary);
-  if (
-    !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
-    !runtimeStructuralEquals(frame.layers, lineage.layers)
-  ) {
-    throw new RetikzRenderError({
-      code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
-      cause: { expected: lineage, received: frame },
-    });
+  const snapshot = rawSnapshot as SceneRuntimeSnapshot;
+  // 只有原样交还的帧可复用提交目标的验证；其它读回值仍按第三方输出完整检查
+  if (!reusesValidatedPrimary || snapshot !== lineage) {
+    assertSceneRuntimeSnapshot(snapshot);
+    if (!sceneRuntimeSnapshotEquals(snapshot, lineage)) {
+      throw new RetikzRenderError({
+        code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch,
+        cause: { expected: lineage, received: snapshot },
+      });
+    }
   }
 
   return Object.freeze({
-    frame: lineage,
+    snapshot: lineage,
     ...(animation === undefined ? {} : { animation: freezeAnimationControls(animation, animationControlsCache) }),
   });
 };
 
 const snapshotRendererRead = (
-  value: RetainedRendererRead,
-  lineage: RenderFrameSnapshot | undefined,
+  value: RendererRead,
+  lineage: SceneRuntimeSnapshot | undefined,
   animationControlsCache: WeakMap<object, AnimationControls>,
-): RetainedRendererRead => {
+  reusesValidatedPrimary: boolean,
+): RendererRead => {
   try {
-    return snapshotRendererReadUnsafe(value, lineage, animationControlsCache);
+    return snapshotRendererReadUnsafe(value, lineage, animationControlsCache, reusesValidatedPrimary);
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
     throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeScenePatchSnapshotMismatch, cause });

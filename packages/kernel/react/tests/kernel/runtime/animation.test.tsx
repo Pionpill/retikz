@@ -194,10 +194,10 @@ describe('命令式动画句柄（animationRef）', () => {
     expect(typeof ref.current?.seek).toBe('function');
   });
 
-  it('static SVG 交互 track 继续发布 AnimationControls', async () => {
+  it('增量协调器下 SVG 交互 track 继续发布 AnimationControls', async () => {
     const ref = createRef<AnimationControls | null>();
     await mount(
-      <Layout width={100} height={100} animationRef={ref} runtime={{ mode: 'static' }}>
+      <Layout width={100} reconciler={{ mode: 'incremental' }} height={100} animationRef={ref}>
         <Node id="a" position={[0, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );

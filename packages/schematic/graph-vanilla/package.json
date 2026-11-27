@@ -69,6 +69,7 @@
     "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {
+    "@retikz/core": "workspace:^",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

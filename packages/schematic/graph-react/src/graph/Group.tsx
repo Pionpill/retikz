@@ -1,7 +1,6 @@
 import type { InputGroup } from '@retikz/graph-vanilla';
 import { groupInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
 import type { GraphEmbeddableComponent } from '../shared';
@@ -16,7 +15,7 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 
 const createGroupInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const collected = collectGroupInput(props, context.id);
-  return withInputEmbedAdapters(collected.input, collected.adapters);
+  return collected.input;
 };
 
 const GroupComponent: FC<GroupProps> = () => null;

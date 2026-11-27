@@ -51,9 +51,9 @@ import {
   normalizeRelation,
   relationEmbedKind,
 } from '@retikz/graph-vanilla';
-import type { AnyInputEmbed, SynchronousInputEmbedAdapter, InputChild, InputScope, InputScene } from '@retikz/vanilla';
-import { normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
-import type { ReactNode } from 'react';
+import type { AnyInputEmbed, InputEmbedAdapter, InputChild, InputScope, InputScene } from '@retikz/vanilla';
+import { embed, normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
+import type { FC, ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';
@@ -68,18 +68,9 @@ type TypedChartSource =
   | IRRegressionChart
   | IRStripChart;
 
-type TypedChartComponent<TInput> = {
-  inputEmbedAdapter: SynchronousInputEmbedAdapter<TInput>;
+type TypedChartComponent<TProps, TInput> = FC<TProps> & {
+  inputEmbedAdapter: InputEmbedAdapter<TInput>;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
-};
-
-const sceneChildrenOf = (inputScene: InputScene): ReadonlyArray<InputChild> => {
-  if ('children' in inputScene) return inputScene.children ?? [];
-
-  return inputScene.layers
-    .map((layer, index) => ({ layer, index }))
-    .sort((left, right) => (left.layer.zIndex ?? 0) - (right.layer.zIndex ?? 0) || left.index - right.index)
-    .flatMap(({ layer }) => layer.children);
 };
 
 const GRAPH_DEFINITION_OPTION_KEYS = new Set([
@@ -239,7 +230,7 @@ const sourceGraphEmbedOf = (
 ): IRChild | undefined => {
   const props = sourcePropsOf(input.props);
 
-  switch (input.kind) {
+  switch (input.adapter.kind) {
     case branchDiagramEmbedKind:
       return normalizeBranchDiagram(props as InputBranchDiagram);
     case flowDiagramEmbedKind:
@@ -307,7 +298,7 @@ const sourceGraphChildOf = (
         RangedDotChart,
         RegressionChart,
         StripChart,
-      ].some(component => input.kind === component.inputEmbedAdapter.kind)
+      ].some(component => input.adapter.kind === component.inputEmbedAdapter.kind)
     ) {
       const source = chartSources.at(chartIndex.value);
       chartIndex.value += 1;
@@ -343,16 +334,13 @@ const sourceChildOf = (
 
 /** 从 typed Chart React component 的同一 Vanilla bridge 读取精简 Source IR */
 const typedChartSourceOf = <TProps, TInput>(
-  component: TypedChartComponent<TInput>,
+  component: TypedChartComponent<TProps, TInput>,
   props: TProps,
 ): TypedChartSource => {
   const input = component.createInputEmbedProps(
     previewEmbedPropsOf(component, props as Readonly<Record<string, unknown>>),
   );
-  const result = normalizeScene(
-    scene({ children: [{ type: 'embed', kind: component.inputEmbedAdapter.kind, props: input }] }),
-    { adapters: [component.inputEmbedAdapter] },
-  );
+  const result = normalizeScene(scene({ children: [embed({ adapter: component.inputEmbedAdapter, props: input })] }));
   let node = result.ir.children[0];
 
   while (node.type === 'scope') node = (node as IRScope).children[0];
@@ -428,7 +416,7 @@ export const buildPreviewSourceIR = (
   runtime: IRScene,
   chartSources: ReadonlyArray<TypedChartSource>,
 ): IRScene => {
-  const inputChildren = sceneChildrenOf(input);
+  const inputChildren = input.children;
   if (inputChildren.length !== runtime.children.length) return runtime;
 
   const chartIndex = { value: 0 };

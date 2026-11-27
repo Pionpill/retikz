@@ -1,5 +1,4 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputMap } from '@retikz/standard-vanilla/collection';
 import { mapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import type { IRMap } from '@retikz/standard/collection';
@@ -75,7 +74,7 @@ const createMapInput = (props: Readonly<Record<string, unknown>>, context: React
     })),
   };
 
-  return withInputEmbedAdapters(result, collected.adapters);
+  return result;
 };
 
 const MapComponent: FC<MapProps> = () => null;

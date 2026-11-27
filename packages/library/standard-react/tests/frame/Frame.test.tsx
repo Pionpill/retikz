@@ -1,16 +1,15 @@
-import { createInputScene, Node, Path, Step } from '@retikz/react';
+import { convertReactToInputScene, Node, Path, Step } from '@retikz/react';
 import { axesProvider, createFrame, frameProvider, gridProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { FrameProps } from '../../src/presentation';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '../../src/presentation';
-import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
-const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
-  const input = createInputScene(children);
-  return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+const normalizeReactInput = (children: Parameters<typeof convertReactToInputScene>[0]) => {
+  const input = convertReactToInputScene(children);
+  return normalizeScene(input);
 };
 
 /** 以 React 真实 authoring 路径归一化一个 Frame */
@@ -51,9 +50,7 @@ describe('<Frame>', () => {
       headerDirection: 'vertical' as const,
       children: (
         <>
-          <FrameTitle text="Explicit title" style={{ font: { family: 'serif' } }}>
-            Ignored title
-          </FrameTitle>
+          <FrameTitle text="Explicit title" style={{ font: { family: 'serif' } }} />
           <FrameDescription layout={{ maxTextWidth: 220 }}>One registry contract.</FrameDescription>
           <Node position={[0, 0]} text="A" />
         </>

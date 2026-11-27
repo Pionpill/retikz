@@ -26,6 +26,8 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 评审围绕 plan 与受影响代码，必要时追踪 owner、入口和消费者，不替主 AI 做最终决策。重点检查：
 
 - 是否混入新功能、公开行为变化或 schema/API 变化。
+- 合并入口或转发层前，对照输入准备、返回产物、状态所有权、失败重试与释放责任；若只有输入准备不同，优先统一入口。
+- 收窄公开 API 前，区分生产调用、测试覆盖和文档示例，说明将失去的使用场景及仍保留的底层能力；不以仓内零调用作为删除的充分依据。
 - 文件 scope、分层边界和依赖方向是否合理。
 - 结构或阶段重构按 [standard-structure](../standard-structure/SKILL.md) 核对真实输入、产物、依赖就绪点和状态生命周期；名称与目录变化不能代替职责收敛，不为套模板新增阶段、类型或文件。
 - 操作 owner 或计时边界变化时，按 [test-performance](../test-performance/SKILL.md#模块与调用方的职责) 核对基准、fixture、预算和报告归属。

@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在 MathJax 配置切换期间保留稳定取景，不把原始 TeX 当普通文本显示 */
-const renderTexPlaygroundLoading = () => <Layout />;
+const renderTexPlaygroundLoading = () => <Layout>{null}</Layout>;
 
 /** 在固定取景中比较 TeX 源码、度量模式与字号 */
 const Demo: FC = () => {

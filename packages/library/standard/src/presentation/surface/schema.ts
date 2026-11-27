@@ -1,5 +1,5 @@
 import {
-  BoxSpacingSchema,
+  BoxSpacingValueSchema,
   ChildSchema,
   CompositeBaseSchema,
   GraphicColorSchema,
@@ -10,7 +10,7 @@ import {
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutOverflow, LayoutOverflowSchema } from '@retikz/layout/compose';
-import { literal, strictObject, union } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { SURFACE_TYPE } from './constants';
@@ -28,17 +28,13 @@ export const SurfaceBorderSchema = strictObject({
   ...PathStrokeSchema.shape,
 }).describe('Optional stroke appearance drawn on the Surface allocation boundary.');
 
-const SurfacePaddingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).describe(
-  'Uniform or side-specific non-negative Surface padding.',
-);
-
 /** 校验单个绘图子项的背景、内边距、边框、圆角与溢出包装配置 */
 export const SurfaceSchema = CompositeBaseSchema.extend({
   namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),
   ...ScopePropsSchema.shape,
   child: ChildSchema.describe('The one JSON-safe Core or Tier 2 child wrapped by this Surface.'),
-  padding: SurfacePaddingSchema.default(0),
+  padding: BoxSpacingValueSchema.default(0).describe('Padding between the Surface boundary and its child.'),
   overflow: LayoutOverflowSchema.default(LayoutOverflow.Visible).describe(
     'Whether child visual overflow remains visible or is clipped.',
   ),

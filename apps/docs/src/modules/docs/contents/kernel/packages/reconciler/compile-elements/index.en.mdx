@@ -1,0 +1,97 @@
+---
+title: Execution / Element Assembly
+description: Follow a node, a named coordinate, and a path as their Core results enter the name frame, subtree layout, and primitive list
+---
+
+[Subtree traversal](/kernel/packages/reconciler/compile-traversal) visits children in declaration order. For each child, two questions matter: can a path refer to it, and does it draw anything of its own? Both node A and coordinate C can serve as endpoints, but only A draws a node. This page follows three leaf declarations through a full compilation until their results reach the current subtree.
+
+## Overview
+
+The example declares **the path first, then node A, then coordinate C**. A is a rectangle centered at [0, 0] with a width of 60. C is at [180, 0]. The line starts at A’s right edge and stops at C. There is no dot at the far end: the coordinate supplies only a position.
+
+<ComponentPreview files="element-example" size="sm" hideCode type="illustration" />
+
+| Declaration  | Work during the visit                                                         | Where the result is used                                                       |
+| ------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Path A → C   | Reserve a primitive slot; defer endpoint evaluation until this level finishes | The pending task retains the original list and placeholder object              |
+| Node A       | Call Core, emit primitives, and register named geometry                       | The path looks up A’s shape and position; the parent scope collects the layout |
+| Coordinate C | Call Core to compute its position and register its name                       | The path looks up a point; the parent scope can use it to compute its envelope |
+
+## Three representations: IR → Canonical → Compiled
+
+Each representation serves a different consumer. Authoring APIs use IR to describe what to draw. Core resolves that declaration in context, then produces results that downstream code can assemble and reuse.
+
+- **IR: the common contract for authoring APIs.** Whether a scene starts in React, Vanilla, or JSON, it reaches the kernel in the same intermediate representation. The entire IR is 100% JSON-serializable: it contains no functions, React elements, or class instances. A primary design goal is for LLMs to understand and generate valid declarations. Zod schemas make field meanings, optional fields, and allowed values explicit and let generated declarations be checked against that same contract.
+- **Canonical: the compiler’s internal input.** Resolution combines explicit IR settings with scope inheritance, the theme, and defaults to determine the effective configuration. Later calculations read `canon` directly without tracing a value back to the declaration or its parent scope.
+- **Compiled: results for downstream consumers.** The consumers determine what a result needs to contain: a parent scope uses layout contributions to compute its envelope, a connecting path uses geometry to find its endpoints, and Reconciler assembles drawing primitives into the Scene. This separation also supports incremental rendering: when only a path changes, Weave can reuse unchanged node geometry and recompute the affected results.
+
+<ComponentAlert
+  type="tip"
+  title="Vanilla normalizes author input first"
+  description="At the Vanilla entry point, normalizeNode turns an InputNode into an IRNode, for example by removing the author-only authoring field. Supplying IR directly starts at the declaration stage. Both entry points then use the same resolution and compilation logic."
+/>
+
+For a node, the three types are <ApiSourceLink label="IRNode" path="packages/kernel/core/src/schemas/node/node.ts" startLine={195}>`IRNode`</ApiSourceLink> → <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink> → <ApiSourceLink label="CompiledNode" path="packages/kernel/core/src/compile/node/types.ts" startLine={23}>`CompiledNode`</ApiSourceLink>. These three lines from <ApiSourceLink label="visitNode" path="packages/kernel/reconciler/src/compile/execution/leaf/node.ts" startLine={13}>`visitNode`</ApiSourceLink> show the handoff: the first two call Core to transform the data, and the third hands the result to Reconciler for assembly.
+
+```ts
+const canon = resolveNode(ir, createNodeResolveContext(runtime, nodeIrPath, frame.context));
+const compiled = compileNode(canon, createNodeCompileContext(runtime, canon, nodeIrPath, frame.context));
+assembleNode(runtime, outputState, ir, nodeIrPath, frame, compiled, semanticOwner);
+```
+
+## Node: one result, several destinations
+
+For A, <ApiSourceLink label="assembleNode" path="packages/kernel/reconciler/src/compile/execution/leaf/node.ts" startLine={28}>`assembleNode`</ApiSourceLink> sends the result to three destinations:
+
+- **Drawing:** Append `compiled.emit.overall.primitives` to `frame.state.primitives` and record the visible bounds contributions in `bounds`. Both the rectangle and its text come from this output.
+- **Parent layout:** Add local node geometry to `geometries` for the parent scope’s envelope, and record the points used for allocating space in `allocations`. The parent can distinguish the extent of the drawing from the space to reserve during layout.
+- **Path references:** For a named node, project its local geometry through the current transform chain and register A in the current name frame. Keep the published geometry in `publications` so an ancestor can adjust its placement. The path can use the shape as well as the center to find the boundary point facing C. An unnamed node still draws and contributes layout; it skips name registration.
+
+## Coordinate: publish a position
+
+C declares only `type: 'coordinate'`, `id: 'C'`, and `position: [180, 0]`. <ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={10}>`visitCoordinate`</ApiSourceLink> calls Core with the current position lookup context. Then <ApiSourceLink label="assembleCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={22}>`assembleCoordinate`</ApiSourceLink> supplies two consumers:
+
+- The parent scope gets the local coordinate in `geometries`. Its allocation contribution consists of one point.
+- The name frame stores `{ position: globalCenter }` under C. In a transformed scope the position is projected before registration. Here both local and global coordinates are [180, 0].
+
+C emits no primitives, so visiting it leaves the primitive list unchanged. The visible endpoint belongs to the path that reaches C, not to a marker drawn by the coordinate.
+
+## Path: reserve a slot, then resolve endpoints
+
+The path appears before A and C. <ApiSourceLink label="queuePathChild" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={45}>`queuePathChild`</ApiSourceLink> appends a placeholder to the primitive list and a pending task to `state.paths`. The task retains the path declaration, effective defaults, theme, and transform chain. The following excerpt from the task type identifies the list to update and the object to replace:
+
+```ts
+placeholderSlot: {
+  primitives: Array<InternalScenePrimitive>;
+  placeholder: {
+    type: typeof PATH_PLACEHOLDER;
+  }
+}
+```
+
+When this level finishes, <ApiSourceLink label="flushPendingPathEmissions" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={84}>`flushPendingPathEmissions`</ApiSourceLink> computes the pending paths. Core can now look up both names. A supplies node geometry, so the line starts at the rectangle’s right edge, [30, 0]. C supplies only a position, so the line ends at [180, 0]. Inside a scope this happens before its local name frame is popped.
+
+## Implementation flow
+
+The diagram shows the primitive list at two moments: after all three visits but before path evaluation (top), and after replacement (bottom). A’s primitives are grouped into one cell for readability. C has no slot in either row.
+
+<ComponentPreview files="assembly-slots" size="md" hideCode type="illustration" />
+
+After Core returns the path results, <ApiSourceLink label="assemblePaths" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={128}>`assemblePaths`</ApiSourceLink> groups replacements by destination list and scans each original list in order. Each placeholder expands into the corresponding path primitives, leaving the other primitives in place. The task also contributes the path’s bounds points to this level. Although computed last, the path still draws before A in this example, which sets no explicit drawing layers.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Execution / Compilation Scheduling',
+      description: 'Trace execution from the session entry to subtree finalization',
+      url: '/kernel/packages/reconciler/compile-scheduling',
+    },
+    {
+      title: 'Execution / Scope Traversal',
+      description: 'Follow local geometry and named references through a scope',
+      url: '/kernel/packages/reconciler/compile-traversal',
+    },
+  ]}
+/>

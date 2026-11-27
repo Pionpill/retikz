@@ -69,10 +69,10 @@ Weave 额外维护的节点身份、current / pending、依赖、失效及版本
 
 ### 会话模式与更新
 
-`SceneReconciler` 继续提供 `mount`、`replace`、`read`、`update`、`updateTarget` 和 `dispose`。会话执行选项增加 `incremental?: boolean`，默认 `true`，在创建时固定：
+`SceneReconciler` 继续提供 `mount`、`replace`、`read`、`update`、`updateTarget` 和 `dispose`。会话执行选项增加 `mode?: ReconcilerMode`，默认 `ReconcilerMode.Full`，在创建时固定：
 
-- `incremental: false`：完整执行并返回结果，结束后释放本次计算记录，不保留 Weave 更新缓存；会话可以保留已发布结果和输出目标，通过 `replace` 重新编译完整输入。调用 `update` 报告执行契约错误。
-- `incremental: true`：首轮完成相同计算，将有效阶段结果、输入及依赖等必要记录提交到 Weave；后续 `update` 消费权威批次并复用仍有效的结果。
+- `mode: ReconcilerMode.Full`：完整执行并返回结果，结束后释放本次计算记录，不保留 Weave 更新缓存；会话可以保留已发布结果和输出目标，通过 `replace` 重新编译完整输入。调用 `update` 报告执行契约错误。
+- `mode: ReconcilerMode.Incremental`：首轮完成相同计算，将有效阶段结果、输入及依赖等必要记录提交到 Weave；后续 `update` 消费权威批次并复用仍有效的结果。
 
 一次性完整编译入口使用不保留缓存的模式。`updateStrategy: auto | full` 继续作为增量会话的更新策略：auto 按有效性复用；full 强制重算同一执行链路中的适用阶段，不能调用另一个完整编译器。是否启用增量缓存与是否强制重算是两个不同的决定；在非增量会话配置更新策略属于无效组合。
 
@@ -116,6 +116,6 @@ Scope 的上下文下传与包络上收保持独立。延迟 Path、后置变换
 - 编译及输出准备失败不发布候选结果、缓存或 warning；已提交输入、产物与版本保持不变。输出目标提交和恢复继续遵循 [064](./064-remove-runtime.md)，不承诺撤销用户服务的任意外部副作用。
 - 绘图解析与几何错误保留 Core owner；执行、模式、版本及调度错误属于 Reconciler；宿主错误保留 Render owner。穿越边界保留原始 cause，等待中断不得被误当成 provider 失败或可恢复试算错误。
 - Reconciler 不依赖 DOM、Render 或框架；无输出目标也能编译、读取和增量更新。只改变输出目标配置时复用已发布计算结果。
-- Vanilla 与 React 通过同一 Reconciler 能力接入，作者 DSL、持久 IR、renderer 的 Scene 契约不因此改变。SSR、静态输出、retained、动画、水合、Inspect 独立编译及 Tier 2 standalone 调用一并迁移，不形成 adapter 专用编译分支。
+- Vanilla 与 React 通过同一 Reconciler 能力接入，作者 DSL、持久 IR、renderer 的 Scene 契约不因此改变。SSR、静态输出、session、动画、水合、Inspect 独立编译及 Tier 2 standalone 调用一并迁移，不形成 adapter 专用编译分支。
 - 本次直接调整 API 和包职责，不提供兼容别名、旧入口转发、双驱动或静默回退。Core 不重新导出 Reconciler。缓存统一不代表增加通用 Runtime、异步调度或无条件的细粒度性能保证。
 - 本决策接受后，替代 [055](./055-reconciler-extraction.md)、[060](./060-core-element-compilation.md)、[061](./061-weave-core-integration.md)、[064](./064-remove-runtime.md) 中 Core 完整驱动与 Reconciler 增量驱动分立、Composite 另走完整 Core 路线的规定；替代 [058](./058-weave-foundation.md)、[060](./060-core-element-compilation.md)、[061](./061-weave-core-integration.md)、[065](./065-compiled-layout-paint.md) 中按元素固定缓存包装及强制 output 随完整 compiled 保存的规定。原子领域语义、变化影响、候选隔离、权威批次、输出事务与 [077](./077-compile-output-contract.md) 的结果收敛原则继续有效。Proposed 不改变现行实现或既有决策效力。

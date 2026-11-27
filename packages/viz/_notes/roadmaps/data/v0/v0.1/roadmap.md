@@ -6,13 +6,13 @@
 
 ## 重点功能
 
-| 重点能力     | 目标                                     | 相关 ADR                                                                                                   |
-| ------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 重点能力     | 目标                                     | 相关 ADR                                                                                                         |
+| ------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | 共享数据边界 | 迁出可被多个可视化包复用的数据层         | [001](../../../../decisions/data/settled/data-model.md)、[002](../../../../decisions/data/settled/data-model.md) |
 | 字段与格式化 | 统一数据模型、字段解释与显示值处理       | [001](../../../../decisions/data/settled/data-model.md)、[003](../../../../decisions/data/settled/data-model.md) |
 | 变换与统计   | 提供可组合的数据操作和统计处理           | [001](../../../../decisions/data/settled/data-model.md)、[002](../../../../decisions/data/settled/data-model.md) |
-| 开放接入     | 明确 Definition、provider 与消费者的职责 | [002](../../../../decisions/data/settled/data-model.md)                                                       |
-| 类型与追溯   | 统一 IRData 命名与运行时 lineage         | [003](../../../../decisions/data/settled/data-model.md)、[004](../../../../decisions/data/settled/lineage.md)   |
+| 开放接入     | 明确 Definition、provider 与消费者的职责 | [002](../../../../decisions/data/settled/data-model.md)                                                          |
+| 类型与追溯   | 统一 IRData 命名与运行时 lineage         | [003](../../../../decisions/data/settled/data-model.md)、[004](../../../../decisions/data/settled/lineage.md)    |
 
 ## 功能规划
 

@@ -1,4 +1,4 @@
-import { connectedScatterChartInputEmbedAdapter, connectedScatterChart } from '@retikz/chart-vanilla/point';
+import { connectedScatterChart } from '@retikz/chart-vanilla/point';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
@@ -29,9 +29,7 @@ it('通过 React 和 Vanilla 保留连通散点图 colorMode', () => {
     properties: { colorMode: 'mark' as const },
   };
   const normalize = (input: typeof vanilla | typeof react) =>
-    normalizeScene(scene({ children: [connectedScatterChart(input)] }), {
-      adapters: [connectedScatterChartInputEmbedAdapter],
-    }).ir;
+    normalizeScene(scene({ children: [connectedScatterChart(input)] })).ir;
 
   expect(normalize(react)).toEqual(normalize(vanilla));
 });

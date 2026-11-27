@@ -1,5 +1,4 @@
 import type { Transform } from '../../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type {
   IRAtTranslateTransform,
   IRBetweenPosition,
@@ -17,6 +16,7 @@ import type { CompiledBoundaryGeometry } from '../../boundary';
 import { evaluatePosition } from '../../reference';
 import type { PositionEvaluation, PositionEvaluateContext, PositionTargetEvaluateContext } from '../../reference';
 import { createCompileInvariantError } from '../../shared';
+import { assertFiniteScopePoint } from './position';
 
 /** scope transform lowering 所需的编译上下文 */
 type ScopeTransformsLoweringContext = {
@@ -26,13 +26,6 @@ type ScopeTransformsLoweringContext = {
   onUnresolved?: (failed: IRTransform) => void;
   /** 旋转与缩放中心求值使用的 Scope 固有包络查询上下文 */
   intrinsicContext?: CompiledBoundaryGeometry;
-};
-
-/** 断言 self point / placement 计算结果是可发布的有限坐标 */
-const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
-  if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
-  }
 };
 
 /**

@@ -7,4 +7,17 @@ This page covers React Layout and execution options, Vanilla `scene` / `layer` b
 
 See [Basic usage](/kernel/components/layout/usage) for integration, the Schema tabs below for persisted fields, and [Vanilla](/kernel/packages/vanilla) for mounting, updating, and disposal.
 
+Compile fields use Reconciler types and defaults. When `compile.measureText` is omitted, Layout uses Vanilla’s environment text measurer and falls back to an estimate only when measurement is unavailable.
+
+Scene-level `animations` accepts a readonly track array. Parsing a scene shallow-freezes the output array, not the array supplied by the caller.
+
+<SourceLinks
+  sources={[
+    { label: 'SceneViewOptions', path: 'packages/kernel/vanilla/src/runtime/view-options.ts', startLine: 7 },
+    { label: 'ProcessOptions', path: 'packages/kernel/vanilla/src/runtime/runtime.ts', startLine: 53 },
+    { label: 'CompileOptions', path: 'packages/kernel/reconciler/src/compile/types.ts', startLine: 101 },
+    { label: 'SceneReconcilerOptions', path: 'packages/kernel/reconciler/src/reconcile/types.ts', startLine: 74 },
+  ]}
+/>
+
 {/* @include kernel/components/layout/reference/generated */}

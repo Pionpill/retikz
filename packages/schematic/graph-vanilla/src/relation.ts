@@ -1,5 +1,5 @@
 import { relationProviderKey } from '@retikz/graph';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { relationEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -15,7 +15,7 @@ const inputOf = (props: RelationInputEmbedProps): InputRelation => {
 };
 
 /** Relation Source 的 InputEmbed adapter */
-export const relationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInputEmbedProps> = {
+export const relationInputEmbedAdapter: InputEmbedAdapter<RelationInputEmbedProps> = {
   kind: relationEmbedKind,
   lower: props => ({
     node: normalizeRelation(inputOf(props)),
@@ -28,4 +28,5 @@ export const relationInputEmbedAdapter: SynchronousInputEmbedAdapter<RelationInp
  * @param input 关系编写字段，端点可使用 id 字符串，路径可使用 way
  * @returns 供 Vanilla 内容树使用的 embed 节点，由 relationInputEmbedAdapter 转换为 Relation Source
  */
-export const relation = (input: RelationInputEmbedProps) => createGraphInputEmbed(relationEmbedKind, input, input.id);
+export const relation = (input: RelationInputEmbedProps) =>
+  createGraphInputEmbed(relationInputEmbedAdapter, input, input.id);

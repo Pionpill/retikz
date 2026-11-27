@@ -40,12 +40,12 @@ export const ScopePositionTargetSchema = union([PositionSchema, strictObject(Nod
 
 /** 将变换后的 Scope 自身锚点对齐到目标 */
 export const ScopeAnchorPositionSchema = strictObject({
-  kind: literal('anchor').describe('Anchor alignment position discriminator.'),
+  kind: literal('anchor'),
   target: ScopePositionTargetSchema.describe('Alignment target resolved in the parent coordinate frame.'),
   selfAnchor: ScopeSelfPointSchema.optional().describe(
     'Point on the transformed Scope envelope aligned to target. Omitted fields use center.',
   ),
-}).describe('Placement that aligns a transformed intrinsic Scope point to a parent-frame target.');
+}).describe('Align a transformed scope point to a parent-frame target.');
 
 /** Scope 原点位置或最终锚点对齐 */
 export const ScopePositionSchema = union([PositionSchema, ScopeAnchorPositionSchema]).describe(
@@ -63,11 +63,7 @@ export const ScopePropsSchema = strictObject({
     .describe(
       'When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.',
     ),
-  transforms: array(TransformSchema)
-    .optional()
-    .describe(
-      'Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time.',
-    ),
+  transforms: array(TransformSchema).optional().describe('Local transforms on all children; the last item acts first.'),
   position: ScopePositionSchema.default([0, 0]).describe(
     'Parent-frame origin position, or final anchor alignment after local transforms. Defaults to [0, 0].',
   ),
@@ -83,16 +79,12 @@ export const ScopePropsSchema = strictObject({
   boundingShape: zodEnum(ScopeBoundingShape)
     .optional()
     .describe("Synthetic bounding envelope for this scope's id: rectangle or circle."),
-  meta: JsonObjectSchema.optional().describe(
-    'Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.',
-  ),
+  meta: JsonObjectSchema.optional().describe('Copied unchanged to Scene primitives without affecting compilation.'),
   animations: array(AnimationTrackSchema)
     .optional()
-    .describe(
-      'Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.',
-    ),
+    .describe('Animate the group without affecting layout or propagating tracks to children.'),
   defaults: ScopeDefaultsSchema.optional().describe('Named descendant defaults and their inheritance barrier.'),
-}).describe('Reusable authored properties for a Scope container.');
+});
 
 /** 递归校验分组容器及其子项，保留局部变换与级联样式描述 */
 export const ScopeSchema = strictObject({

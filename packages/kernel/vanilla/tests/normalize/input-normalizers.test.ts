@@ -18,8 +18,10 @@ describe('Vanilla 输入标准化器', () => {
     };
     const expected = normalizePath({ ...input, arrow: endpoints });
     expect(normalizePath(input)).toEqual(expected);
-    expect(normalizeScene({ children: [input] }).ir.children[0]).toEqual(expected);
-    expect(normalizeScene({ children: [{ type: 'scope', children: [input] }] }).ir.children[0]).toMatchObject({
+    expect(normalizeScene({ type: 'scene', children: [input] }).ir.children[0]).toEqual(expected);
+    expect(
+      normalizeScene({ type: 'scene', children: [{ type: 'scope', children: [input] }] }).ir.children[0],
+    ).toMatchObject({
       children: [expected],
     });
   });
@@ -32,14 +34,14 @@ describe('Vanilla 输入标准化器', () => {
       type: 'node',
       id: 'source',
       position: [0, 0],
-      label: { text: 'source', position: { boundary: 'top', fraction: 0 } },
+      label: { text: 'source', position: { side: 'top', fraction: 0 } },
     };
 
     expect(normalizeNode(input)).toEqual({
       type: 'node',
       id: 'source',
       position: [0, 0],
-      label: { text: 'source', position: { boundary: 'top', fraction: 0 } },
+      label: { text: 'source', position: { side: 'top', fraction: 0 } },
     });
   });
 
@@ -147,13 +149,14 @@ describe('Vanilla 输入标准化器', () => {
     });
   });
 
-  it('拒绝不足两个步骤的非自包含路径', () => {
-    expect(() =>
+  it('单步路径只展开目标简写，几何诊断由 Core 处理', () => {
+    expect(
       normalizePath({
         type: 'path',
-        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+        authoring: 'trace',
+        children: [{ type: 'step', kind: 'fold', via: '-|-', fraction: 0.3, to: 'A' }],
       }),
-    ).toThrow('path requires at least 2 steps');
+    ).toEqual({ type: 'path', children: [{ type: 'step', kind: 'fold', via: '-|-', fraction: 0.3, to: { id: 'A' } }] });
   });
 
   it('允许单个自包含 rectangle 步骤', () => {
@@ -167,10 +170,8 @@ describe('Vanilla 输入标准化器', () => {
     });
   });
 
-  it('将 InputScene 的 children 简写收敛为 IR 与默认 Layer metadata', () => {
-    const input: InputScene = {
-      children: [{ type: 'node', id: 'node', position: [0, 0] }],
-    };
+  it('将 InputScene 的 children 简写收敛为 IR', () => {
+    const input: InputScene = { type: 'scene', children: [{ type: 'node', id: 'node', position: [0, 0] }] };
 
     expect(normalizeScene(input)).toMatchObject({
       ir: {
@@ -179,9 +180,6 @@ describe('Vanilla 输入标准化器', () => {
         children: [{ type: 'node', id: 'node', position: [0, 0] }],
       },
       contributions: [],
-      runtimeMeta: {
-        layers: [{ id: 'default', cache: 'auto', order: 0, zIndex: 0, childIds: ['node'] }],
-      },
     });
   });
 
@@ -202,7 +200,7 @@ describe('Vanilla 输入标准化器', () => {
         ],
       },
     };
-    const input: InputScene = { children: [path] };
+    const input: InputScene = { type: 'scene', children: [path] };
 
     expect(normalizeScene(input).ir.children).toEqual(input.children);
   });

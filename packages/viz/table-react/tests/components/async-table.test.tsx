@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { createDataTransformExecutor } from '@retikz/data';
 import { Layout } from '@retikz/react';
+import { prepareTableData } from '@retikz/table';
 import { detailTable } from '@retikz/table-vanilla';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
@@ -52,9 +53,12 @@ describe('Table 客户端准备', () => {
       transform: [{ operation: { kind: 'normalize', params: { field: 'value', as: 'ratio' } } }],
     });
     const dataBindings = { rows: { kind: 'source' as const, source: { values: [2, 6] } } };
+    const task = await prepareTableData(spec, { dataBindings, dataTransformExecutor });
+    const preparedData = await task.execute();
+    if (!preparedData) throw new Error('expected detail table data');
     const onManifest = vi.fn();
     const table = embedded ? (
-      <Table spec={spec} dataBindings={dataBindings} dataTransformExecutor={dataTransformExecutor} />
+      <Table spec={spec} preparedData={preparedData} />
     ) : (
       <DetailTable
         dataRef="rows"
@@ -62,8 +66,7 @@ describe('Table 客户端准备', () => {
         columns={spec.structure.columns}
         header={false}
         transform={spec.transform}
-        dataBindings={dataBindings}
-        dataTransformExecutor={dataTransformExecutor}
+        preparedData={preparedData}
         onManifest={onManifest}
       />
     );
@@ -71,7 +74,7 @@ describe('Table 客户端准备', () => {
     document.body.append(container);
     const root = createRoot(container);
     await act(async () => {
-      root.render(embedded ? <Layout runtime={{ preparation: 'async' }}>{table}</Layout> : table);
+      root.render(embedded ? <Layout>{table}</Layout> : table);
       await Promise.resolve();
     });
 

@@ -1,4 +1,5 @@
 import { RendererModeProvider } from '@retikz/react';
+import type { RenderMode } from '@retikz/render/runtime';
 import type { FC } from 'react';
 import { memo } from 'react';
 
@@ -6,7 +7,7 @@ import type { Lang } from '@/i18n';
 
 import type { PreviewTheme } from '../theme';
 import { PreviewThemeProvider } from '../theme';
-import type { ComponentPreviewDemoComponent, RendererMode } from '../types';
+import type { ComponentPreviewDemoComponent } from '../types';
 
 export type DemoRendererProps = {
   /** demo 组件。 */
@@ -14,7 +15,7 @@ export type DemoRendererProps = {
   /** 当前文档语言。 */
   lang?: Lang;
   /** 当前渲染目标。 */
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   /** 当前预览实际生效的 Theme。 */
   theme?: PreviewTheme;
   /** 当前预览使用的明暗选择。 */

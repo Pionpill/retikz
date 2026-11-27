@@ -73,7 +73,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const Example = () => <Layout ir={ir} extensions={definitions} />;
+export const Example = () => <Layout ir={ir} compile={{ ...definitions }} />;
 ```
 
 </DocTab>
@@ -81,14 +81,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { rangedDotChart, rangedDotChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { rangedDotChart } from '@retikz/chart-vanilla/point';
 import { rangedDotMinimalData } from './ranged-dot-minimal.data';
 
 const chart = rangedDotChart({
   data: rangedDotMinimalData,
   encodings: { category: 'day', start: 'minimumTemperature', end: 'maximumTemperature' },
 });
-export const svg = renderChart(chart, { adapters: [rangedDotChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>
@@ -102,7 +102,7 @@ import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { rangedDotMinimalData } from './ranged-dot-minimal.data';
 
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const chart = RangedDotChartSchema.parse({
   namespace: 'chart',
@@ -122,7 +122,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
+export const svg = renderToSvg(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

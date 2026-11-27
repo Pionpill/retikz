@@ -78,7 +78,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const Example = () => <Layout ir={ir} extensions={definitions} />;
+export const Example = () => <Layout ir={ir} compile={{ ...definitions }} />;
 ```
 
 </DocTab>
@@ -86,14 +86,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { scatterChart, scatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { scatterChart } from '@retikz/chart-vanilla/point';
 import { scatterMinimalData } from './scatter-minimal.data';
 
 const chart = scatterChart({
   data: scatterMinimalData,
   encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
 });
-export const svg = renderChart(chart, { adapters: [scatterChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>
@@ -107,7 +107,7 @@ import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { scatterMinimalData } from './scatter-minimal.data';
 
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const chart = ScatterChartSchema.parse({
   namespace: 'chart',
@@ -127,7 +127,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
+export const svg = renderToSvg(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

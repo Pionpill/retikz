@@ -58,7 +58,7 @@ export const renderRibbonGeometryPreview = (values: RibbonGeometryPreviewValues)
   const resolvedValues = values;
 
   return (
-    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ paths: [ribbonPathDefinition] }}>
+    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} compile={{ paths: [ribbonPathDefinition] }}>
       <Path
         kind="ribbon"
         kindOptions={ribbonOf(resolvedValues)}

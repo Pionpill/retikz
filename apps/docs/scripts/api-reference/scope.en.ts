@@ -1,5 +1,7 @@
 /** 经核对的 Scope API 英文说明，标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '创建作用域时传给 scope 的选项；子图元单独传入': 'Options for scope; pass children separately',
+  '当前作用域内按声明顺序收集的 JSX 图元': 'JSX children collected in declaration order',
   'Scope 在父坐标系中的原点位置或最终锚点对齐': 'Scope origin position in parent coordinates or final anchor alignment',
   '坐标位置在局部 transforms 外侧应用；anchor 形式将变换后包络的 selfAnchor 对齐 target，selfAnchor 缺省为 center':
     'A coordinate position is applied outside local transforms. The anchor form aligns selfAnchor on the transformed envelope to target; selfAnchor defaults to center',
@@ -14,8 +16,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
 
   创建一组图元的作者侧作用域输入: 'Create authoring input for a group of drawing elements',
   '作者侧 Scope 输入': 'Scope authoring input',
-  '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
-    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
+  '归一化时保留的作者元数据，不进入 Core IR': 'Authoring metadata retained during normalization; excluded from Core IR',
   '局部变换、样式、裁剪与引用配置': 'Local transforms, styles, clipping, and reference configuration',
   '按声明顺序保留的子图元，不复制子数组': 'Children retained in declaration order; the array is not copied',
   '保留配置与子图元引用的 Scope 输入，尚未归一化或编译':
@@ -32,8 +33,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Whether to create a local namespace; when true, child ids are hidden from outer scopes',
   '通过 id 引用整组图元时使用的包络形状；支持矩形或圆形，默认使用轴对齐矩形包络':
     'Envelope shape used when referencing the group by id; supports rectangles or circles and defaults to an axis-aligned rectangle',
-  '将子图元组合为作用域，统一设置样式、变换、定位与裁剪':
-    'Group child elements into a scope with shared styling, transforms, placement, and clipping',
+  局部作用域: 'Local scope',
   '为一组图元设置局部样式、命名空间、变换、裁剪和引用包络':
     'Configure local styles, namespaces, transforms, clipping, and reference bounds for a group of elements',
 
@@ -59,16 +59,15 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale',
   'Scope 容器组件——TikZ `\\begin{scope}[...]...\\end{scope}` 同义':
     'Scope container, equivalent to TikZ `\\begin{scope}[...]...\\end{scope}`',
-  '给一组节点 / 路径提供局部样式、命名空间、原点或锚点定位、局部变换、裁剪和引用包络':
-    'Provides local styles, namespaces, origin or anchor positioning, local transforms, clipping, and reference bounds for a group of nodes and paths',
+  '为一组子图元设置共同的样式、变换和裁剪': 'Groups child elements under shared styles, transforms, and clipping',
   '—': '—',
   '': '',
   '级联样式子集（graphic state + 四通道 every-X）抽到共享 ScopeStyleProps，与 `<Layout>` 复用；\n  本类型额外带容器 / 命名空间 / 局部变换 / 屏障 / 栈序 / 裁剪等 scope 专属字段':
     'Cascading styles (graphic state and four element-default channels) are shared through ScopeStyleProps with `<Layout>`; this type adds Scope-specific container, namespace, transform, barrier, stacking, and clipping fields',
   'scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素':
     'Timeline animations for the whole Scope; rendered as animation or a static fallback, without participating in layout or propagating to children',
-  '可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR':
-    'Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR',
+  '收集 JSX 时保留的作者元数据，不进入 Core IR':
+    'Authoring metadata retained when collecting JSX; excluded from Core IR',
   "scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB）":
     "Synthetic reference-envelope shape for the Scope id: the closed enum 'rectangle' | 'circle', rather than an open Node shape reference; defaults to 'rectangle' (axis-aligned bounding box)",
   'scope 子节点：嵌套 Node / Path / Coordinate / Scope': 'Scope children: nested Node, Path, Coordinate, or Scope',

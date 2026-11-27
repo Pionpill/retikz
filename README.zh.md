@@ -90,19 +90,22 @@ export const Example = () => (
 );
 ```
 
-不想用 React？官方的 `@retikz/vanilla` 提供无框架的命令式 builder，以及 `mountSvg` / `mountCanvas`（同样支持 SSR）：
+不想用 React？官方的 `@retikz/vanilla` 提供无框架的命令式 builder，以及用于浏览器挂载的 `mountSceneView`：
 
 ```ts
-import { figure, node, draw } from '@retikz/vanilla';
+import { node, path, scene } from '@retikz/vanilla';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
-const fig = figure([
-  node('idea', { position: [0, 0], text: 'Idea' }),
-  node('ir', { position: [110, 0], text: 'JSON IR' }),
-  node('svg', { position: [230, 0], text: 'SVG' }),
-  draw(['idea', 'ir', 'svg'], { arrow: '->' }),
-]);
+const input = scene({
+  children: [
+    node({ id: 'idea', position: [0, 0], text: 'Idea' }),
+    node({ id: 'ir', position: [110, 0], text: 'JSON IR' }),
+    node({ id: 'svg', position: [230, 0], text: 'SVG' }),
+    path({ way: ['idea', 'ir', 'svg'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+  ],
+});
 
-fig.mount(document.querySelector('#diagram')); // 也可 fig.toSvgString() / fig.toCanvas(canvas)
+const view = mountSceneView(document.querySelector('#diagram')!, input);
 ```
 
 可以从[快速开始](https://pionpill.github.io/retikz/kernel/get-start)一步步搭起这个例子，也可以直接看更完整的[示例](https://pionpill.github.io/retikz/kernel/examples/karl-circle)。
@@ -123,7 +126,7 @@ retikz 0.3 聚焦通用图形原语，并补齐了多后端渲染、动画与交
 | 多后端渲染（SVG / Canvas 2D） | 同一份 IR 可编译到 SVG 或 Canvas 2D 两种后端                                 |
 | 动画                          | 在 `<Layout>` 上声明动画，SVG / Canvas 双后端播放；可静态截帧用于 SSR 海报帧 |
 | 交互、事件与水合              | 节点 / 路径事件与 hit-test；SSR 输出后在客户端水合                           |
-| 无框架 / SSR                  | `@retikz/vanilla` 的 `mountSvg` / `mountCanvas` 与 `renderToSvgString`       |
+| 无框架 / SSR                  | `@retikz/vanilla` 的 `mountSceneView` 与 `renderToSvg`                       |
 
 数据驱动图表由新兴的 Tier 2 层 `@retikz/plot`（独立包，当前 alpha）承接；流程布局、codec 和更多渲染目标见[路线图](https://pionpill.github.io/retikz/about/releases/roadmap)。
 
@@ -155,7 +158,7 @@ React JSX / plain JS objects / future DSL / AI JSON
 | [`@retikz/core`](https://www.npmjs.com/package/@retikz/core)       | 框架无关的 JSON IR、schema、纯 parser、IR 到 Scene 的编译器                                                                 | `zod`                                               |
 | [`@retikz/render`](https://www.npmjs.com/package/@retikz/render)   | Scene 渲染后端命名空间：`./svg`（Scene → SVG descriptor / 字符串）、`./canvas`（Scene → Canvas 2D），以及动画与水合 runtime | `@retikz/core`                                      |
 | [`@retikz/react`](https://www.npmjs.com/package/@retikz/react)     | 官方 React 组件、JSX 到 IR 的 builder，挂载 SVG / Canvas 双后端                                                             | `@retikz/core`、`@retikz/render`，peer `react >=18` |
-| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | 官方无框架 runtime：命令式 `mountSvg` / `mountCanvas`、`renderToSvgString`（SSR）与具名 builder                             | `@retikz/core`、`@retikz/render`                    |
+| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | 官方无框架 runtime：命令式 `mountSceneView`、`renderToSvg`（SSR）与具名 builder                                             | `@retikz/core`、`@retikz/render`                    |
 
 core / render / react / vanilla 四个 Tier 1 包按同一版本号 lockstep 发布。
 

@@ -4,7 +4,6 @@ import type { Transform } from '../../../../contract';
 import type { CanonicalPathStep } from '../../../../resolve';
 import type { IRPosition, IRTarget } from '../../../../schemas';
 import { BuiltinCompileWarningCode } from '../../../shared';
-import { pointOfTarget } from '../../target';
 import type { PathTargetView } from '../../types';
 import type { StrokeTargetStep } from './helpers';
 import { isStrokeTargetStep, nodeIdFromResolvableTarget } from './helpers';
@@ -53,7 +52,7 @@ export class StrokeCursor {
     this.anchors = steps.map((step, index) => {
       if (!isStrokeTargetStep(step)) return null;
 
-      const anchor = pointOfTarget(step.to, targetView, scopeChain);
+      const anchor = targetView.pointOfTarget(step.to, scopeChain);
       const targetId = nodeIdFromResolvableTarget(step.to);
       if (!anchor && targetId !== undefined) {
         warn(

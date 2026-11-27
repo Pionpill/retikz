@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -190, y: -55, width: 380, height: 110 }}
-      extensions={{ arrows: [squareArrowDefinition, openSquareArrowDefinition] }}
+      compile={{ arrows: [squareArrowDefinition, openSquareArrowDefinition] }}
     >
       <Draw
         way={[

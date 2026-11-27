@@ -41,7 +41,7 @@ The convenient notation expands into basic IR (the persistable drawing declarati
 
 <ComponentPreview files="sugar-flow" size="xs" hideCode />
 
-“Parse / expand” happens during IR construction: for example, Vanilla's `normalizePath` calls Vanilla's `parseWay` to parse a Draw's `way` into basic steps. Standard shapes preserve their composite intent until compilation. The resulting basic IR then enters compilation.
+“Parse / expand” happens during IR construction: for example, React Draw calls Vanilla’s `parseWay` to expand its `way` into Step children of Path. Standard shapes preserve their composite intent until compilation. The resulting basic IR then enters compilation.
 
 ## Choosing a Layer
 
@@ -75,7 +75,7 @@ Kernel provides the following Sugar components through `@retikz/react`. This lis
 | Component                                             | Purpose                                              |
 | ----------------------------------------------------- | ---------------------------------------------------- |
 | [Draw](/kernel/components/path/usage)                 | Expand path shorthand into Path and Step             |
-| [EdgeLabel](/kernel/components/path/step)             | Convert child notation into Step label configuration |
+| [StepLabel](/kernel/components/path/step)             | Convert child notation into Step label configuration |
 | [Arc, Sector](/library/standard/shape/circle-ellipse) | Circular arcs, elliptical arcs, and sector paths     |
 
 Circle, Ellipse and the other [Standard shapes](/library/standard/shape/circle-ellipse) retain composite intent in IR. `DrawWay.Cycle` and relative-coordinate strings remain Kernel authoring shorthand.

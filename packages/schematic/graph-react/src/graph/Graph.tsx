@@ -2,8 +2,7 @@ import type { GraphDefinitionOptions } from '@retikz/graph';
 import type { GraphInputEmbedProps, InputGraph } from '@retikz/graph-vanilla';
 import { graphInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { Layout, withInputEmbedAdapters } from '@retikz/react';
-import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
+import { Layout } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 import { useId, useMemo } from 'react';
 
@@ -26,7 +25,6 @@ export type GraphProps = Omit<InputGraph, 'children'> &
 
 type GraphInputCollection = Readonly<{
   input: GraphInputEmbedProps;
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
 /** 将 React children 与 props 组装为唯一 Graph Vanilla Input */
@@ -43,9 +41,9 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   const {
     children,
     authoring: _authoring,
-    compileDriver: _compileDriver,
     handlers: _handlers,
-    runtime: _runtime,
+    reconciler: _reconciler,
+    onDiagnostic: _onDiagnostic,
     width: _width,
     height: _height,
     viewBox: _viewBox,
@@ -72,9 +70,9 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     ...input
   } = props;
   void _authoring;
-  void _compileDriver;
   void _handlers;
-  void _runtime;
+  void _reconciler;
+  void _onDiagnostic;
   void _width;
   void _height;
   void _viewBox;
@@ -106,19 +104,17 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
       ...input,
       ...(collected.children.length === 0 ? {} : { children: collected.children }),
     },
-    adapters: collected.adapters,
   };
 };
 
 /** 将 public Graph props 转为外层 Layout 可消费的 embed props */
 const createGraphInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const collected = collectGraphInput(props, context.id, true);
-  return withInputEmbedAdapters(collected.input, collected.adapters);
+  return collected.input;
 };
 
 type GraphRuntimeEmbedProps = Readonly<{
   input: GraphInputEmbedProps;
-  adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
 /** standalone Graph 内部复用的私有 Graph embed marker */
@@ -128,8 +124,8 @@ GraphRuntimeEmbed.displayName = 'GraphRuntimeEmbed';
 GraphRuntimeEmbed.isTier2Embeddable = true;
 GraphRuntimeEmbed.inputEmbedAdapter = graphInputEmbedAdapter;
 GraphRuntimeEmbed.createInputEmbedProps = props => {
-  const { input, adapters } = props as GraphRuntimeEmbedProps;
-  return withInputEmbedAdapters(input, adapters);
+  const { input } = props as GraphRuntimeEmbedProps;
+  return input;
 };
 
 const GraphComponent: FC<GraphProps> = props => {
@@ -150,13 +146,28 @@ const GraphComponent: FC<GraphProps> = props => {
       },
     };
   }, [ambientGraphThemeDefinitions, generatedId, props]);
-  const { shapes, boundaries, clips, arrows, patterns, paths, composites, themeDefinitions, ...hostProps } =
-    graphLayoutHostPropsOf(props);
+  const {
+    nodeDistance,
+    fontSize,
+    lowerTex,
+    shapes,
+    boundaries,
+    clips,
+    arrows,
+    patterns,
+    paths,
+    composites,
+    themeDefinitions,
+    ...hostProps
+  } = graphLayoutHostPropsOf(props);
 
   return (
     <Layout
       {...hostProps}
-      extensions={{
+      compile={{
+        nodeDistance,
+        fontSize,
+        lowerTex,
         shapes,
         boundaries,
         clips,
@@ -167,7 +178,7 @@ const GraphComponent: FC<GraphProps> = props => {
         themeDefinitions,
       }}
     >
-      <GraphRuntimeEmbed input={collected.input} adapters={collected.adapters} />
+      <GraphRuntimeEmbed input={collected.input} />
     </Layout>
   );
 };

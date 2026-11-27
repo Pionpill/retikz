@@ -3,7 +3,6 @@ import { LayoutItemKind } from '@retikz/layout';
 import type { InputOverlayLayout } from '@retikz/layout-vanilla';
 import { overlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
@@ -12,7 +11,7 @@ import { createInputLayoutItems } from '../shared';
 /** Overlay 布局的 React 属性 */
 export type OverlayLayoutProps = Omit<InputOverlayLayoutConfig, 'children'> &
   Readonly<{
-    /** 交给可选编译驱动解释的不透明声明数据 */
+    /** 归一化时保留的不透明声明数据 */
     authoring?: unknown;
     /** 必须由 Overlay 类型布局项目组成的子元素；省略时容器为空
      * @default []
@@ -26,10 +25,7 @@ const createOverlayLayoutInput = (props: Readonly<Record<string, unknown>>, cont
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Overlay, context);
 
-  return withInputEmbedAdapters(
-    { ...input, children: collected.items } satisfies InputOverlayLayout,
-    collected.adapters,
-  );
+  return { ...input, children: collected.items } satisfies InputOverlayLayout;
 };
 
 const OverlayLayoutComponent: FC<OverlayLayoutProps> = () => null;

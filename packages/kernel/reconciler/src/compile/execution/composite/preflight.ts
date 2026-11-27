@@ -1,5 +1,5 @@
 import type { CompositeReplay } from '@retikz/core';
-import { createCompositeContractError, resolveClip } from '@retikz/core';
+import { createContractViolationError, guardProviderOutput, resolveClip } from '@retikz/core';
 
 import type { CompositeCompileOwner, CompositeReplayTransaction } from '../../runtime';
 import { isCompositeOutputHandle } from './handle';
@@ -23,28 +23,28 @@ export const preflightCompositeOutputs = (
 
   const visitHandle = (handle: unknown): void => {
     if (handle === null || typeof handle !== 'object') {
-      throw createCompositeContractError(`${owner.label} received an invalid or forged output child.`);
+      throw createContractViolationError(`${owner.label} received an invalid or forged output child.`);
     }
 
     const entry = execution.runtime.state.composite.outputChildren.get(handle);
     if (entry === undefined) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} received an output child that does not belong to this compile or was forged.`,
       );
     }
 
     if (entry.owner !== owner) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} received an output child that does not belong to this composite callback.`,
       );
     }
 
     if (entry.used) {
-      throw createCompositeContractError(`${owner.label} received an output child that was already consumed.`);
+      throw createContractViolationError(`${owner.label} received an output child that was already consumed.`);
     }
 
     if (preparedOutputs.has(handle)) {
-      throw createCompositeContractError(`${owner.label} received the same output child more than once.`);
+      throw createContractViolationError(`${owner.label} received the same output child more than once.`);
     }
 
     entriesToConsume.push(entry);
@@ -54,11 +54,13 @@ export const preflightCompositeOutputs = (
     }
 
     if (entry.child.kind === 'scope') {
+      const { props } = entry.child;
+      const clip = guardProviderOutput(owner.label, () => props.clip);
       const scopeClipPath =
-        entry.child.props.clip === undefined
+        clip === undefined
           ? undefined
           : execution.runtime.state.workspace.clipRegistry.lower(
-              resolveClip(entry.child.props.clip, {
+              resolveClip(clip, {
                 clipRegistry: execution.runtime.context.registries.clipRegistry,
                 irPath: ['clip'],
               }),
@@ -77,25 +79,25 @@ export const preflightCompositeOutputs = (
     preparedOutputs.set(handle, { output: entry.child });
     const transaction = execution.runtime.state.composite.replayTransactions.get(entry.child.replay);
     if (transaction === undefined) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} received a replay token that does not belong to this compile or was forged.`,
       );
     }
 
     if (transaction.owner !== owner) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} received a replay token that does not belong to this composite callback.`,
       );
     }
 
     if (transaction.used) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${transaction.owner.label} replay token may be placed at most once and was already replayed.`,
       );
     }
 
     if (preparedReplays.has(entry.child.replay)) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner.label} received the same replay token more than once and it was already replayed.`,
       );
     }

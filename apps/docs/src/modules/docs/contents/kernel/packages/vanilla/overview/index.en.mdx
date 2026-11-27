@@ -5,39 +5,83 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 `@retikz/vanilla` is the API foundation shared by all framework adapters. It organizes ordinary TypeScript data as an `InputScene`, normalizes that input into Core `IRScene`, and runs shared processing. React, Vue, and other framework packages only collect their framework input and host the result.
 
+Import factory option types from the package root: `node(options)` accepts `NodeOptions`, `coordinate(options)` accepts `CoordinateOptions`, and `path(options)` accepts `PathOptions`. In `scope(options, children)`, `ScopeOptions` excludes the children passed separately. Pass either `SceneOptions` or a child array to `scene(input)`.
+
 The package root works safely in SSR, build scripts, and other frameworks. Its default text measurer probes browser Canvas when measurement is requested. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
-Applications use `createProcessingController`, `prepareStaticProcessing`, or `compileToScene` from the package root. Custom compile drivers implement `VanillaCompileDriver` with its input, session, and output contracts. Input preparation, runtime metadata snapshots, and driver execution/commit helpers remain internal.
+Applications use `SceneRuntime` or `compileToScene` from the package root.
+
+Use `runtime.diagnostics()` to read session diagnostics.
+
+One-shot compilation and session updates share input preparation. One-shot compilation returns a `CompileResult` directly. In session mode, the read-only `runtime.current` property exposes the same committed `ReconcilerResult` snapshot that subscribers receive. Read the frame’s output from `snapshot.compilation.result` and pass the snapshot itself as `expected` for incremental updates. Read the snapshot in the subscriber. If it triggers another update, submit it after the current notification returns. A precompiled Scene goes straight to Render without creating a compilation session.
+
+To export an already compiled Scene, call `renderToSvg(scene)`. It serializes the scene without recompiling it. To type sizing or animation options separately, use `NonNullable<RenderToStringOptions['output']>` or `NonNullable<RenderToStringOptions['animation']>` with the exported `RenderToStringOptions` type.
 
 ## One-shot compilation
 
-Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Compile configuration stays under `options.compile`. Use `compileToSceneAsync` for asynchronous authoring preparation, with adapters that provide prepare.
+Pass Core IR or a Vanilla InputScene to `compileToScene` to obtain a Scene and artifacts without creating or disposing a session. Pass compile options in `options.compile`.
 
 ```ts
-import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+import { compileToScene } from '@retikz/vanilla';
 
 const result = compileToScene(ir);
 const configured = compileToScene(ir, { compile: { padding: 10 } });
-const prepared = await compileToSceneAsync(input, { adapters });
 
 console.log(result.scene, result.artifacts);
 ```
 
-Both entries return the existing ProcessingResult with static revision 0. Use a controller for subsequent updates and subscriptions, or `normalizeXxx` when only assembling typed Input into Core IR.
+One-shot compilation returns a `CompileResult` with the scene and artifacts; use `compileLayers` for a separate ordered list of named results. Use `SceneRuntime` for subsequent updates and subscriptions, or `normalizeXxx` when only assembling typed Input into Core IR.
+
+## Update a single drawing
+
+For IR, use `new SceneRuntime(ir, options)`. For authoring input, use `SceneRuntime.fromInput(input, options)` to normalize the input and bind component dependencies and instance data for that frame.
+
+```ts
+import { SceneRuntime } from '@retikz/vanilla';
+
+const runtime = SceneRuntime.fromInput(input);
+try {
+  runtime.replace(nextInput);
+  const svg = runtime.toSvgString();
+} finally {
+  runtime.dispose();
+}
+```
+
+A full replacement may switch between authored input and IR; it does not infer a diff. In incremental mode, read the current version with `expected = runtime.current`, resolve addresses with `runtime.getScopeId(path, expected)`, then submit `runtime.update(batch, expected)`. Stale versions are rejected. Exporting reads the last committed frame.
+
+Use `replace(source, compile?)` for either complete IR or authoring input. By default it uses the session’s base compilation options, not the previous frame’s authoring bindings.
+
+When integrating a renderer, pass `createTarget` to the constructor to create the render target on the first commit and reuse it thereafter. If only host state such as event handlers changes, call `updateTarget()` to recommit the compiled result without replacing the scene.
 
 ## Default text measurement
 
 An explicit `compile.measureText` takes precedence. Otherwise, Vanilla lazily uses Canvas 2D, falling back to the Core estimator when the environment or context is unavailable. Measurement failures and invalid metrics still fail. React's `Layout` uses the same default path.
 
-`defaultFontFamily` supplies the measurement and display font when text has no explicit family; React forwards `Layout.style.fontFamily` to this option. If neither is set, browser measurement uses the computed font of the page `body`, then `sans-serif`. SVG export, SVG mounting, and Canvas mounting all accept this host default. Existing Scenes are not measured again, and font loading does not automatically trigger compilation. See [Text Metrics](/kernel/components/runtime-mechanics/text-metrics).
+When text has no explicit font family, the default browser measurer uses the computed font of the page’s `body`, then `sans-serif`. Host CSS affects display, not the geometry of an existing Scene. See [Text Metrics](/kernel/components/runtime-mechanics/text-metrics).
 
-## Async authoring preparation
+## Submit ready input
 
-The internal `prepareProcessingInputAsync` traverses the complete author tree and calls adapter.prepare for non-computing preflight, then runs preparation.execute and normalizes the contributions. Nested inputs register through context.prepareChildren; children cannot execute during preparation. Synchronous adapters provide lower; asynchronous adapters must provide prepare, without probing support by invoking lower.
+Await external data before constructing the input and calling `compileToScene` or the runtime’s `replace`. Updates follow submission order. The application decides whether to ignore an older request that finished late. Each embed adapter’s `lower` synchronously returns its node, dependencies and per-instance runtime inputs; those inputs stay outside JSON IR.
 
-Use `compileToSceneAsync(input, options?)` for one-shot compilation, or `prepareStaticProcessingAsync` for explicit commit/discard. Interactive hosts use `createProcessingControllerAsync` and await committed/discarded update outcomes. Signals and newer requests invalidate stale results; failure preserves committed output. Core compilation and renderers remain synchronous; Promises live at the authoring preparation boundary.
+For example, submit a Plot that uses an external executor alongside an ordinary node in one update:
 
-Contributions bind prepared runtimeInputs to actual Source positions outside JSON IR. Composite children use opaque child transport rather than guessing instances from ids, dataset names or object references. Domain hosts already connect this boundary; applications normally use their async entry points.
+```ts
+import { preparePlotData } from '@retikz/plot';
+import { plotInputEmbedAdapter } from '@retikz/plot-vanilla';
+import { embed, node, scene } from '@retikz/vanilla';
+
+const task = await preparePlotData(spec, { dataBindings, dataTransformExecutor });
+const preparedData = await task.execute();
+runtime.replace(
+  scene({
+    children: [
+      node({ id: 'origin', position: [0, 0] }),
+      embed({ adapter: plotInputEmbedAdapter, props: { spec, preparedData } }),
+    ],
+  }),
+);
+```
 
 ## Install and use
 
@@ -46,30 +90,27 @@ pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { layer, node, path, renderToSvgString, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
-  id: 'flow',
-  layers: [
-    layer({
-      id: 'main',
-      children: [
-        node({ id: 'a', position: [0, 0], text: 'A' }),
-        node({ id: 'b', position: [120, 0], text: 'B' }),
-        path({ id: 'edge', way: ['a', 'b'], arrow: { end: {} } }),
-      ],
-    }),
+  children: [
+    node({ id: 'a', position: [0, 0], text: 'A' }),
+    node({ id: 'b', position: [120, 0], text: 'B' }),
+    path({ id: 'edge', way: ['a', 'b'], arrow: { end: {} } }),
   ],
 });
 
-const svg = renderToSvgString(input);
-const view = mount(document.querySelector('#diagram')!, input);
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
+const view = mountSceneView(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvgString` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mount` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` owns later `update`, interaction hydration, animation controls, and disposal.
+`renderToSvg` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mountSceneView` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` provides `replace`, interaction hydration, animation controls, and disposal.
 
-`scene({ theme: { name, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization copies Theme objects rather than mutating caller input; both routes finally use the same Core Theme and compile contract.
+When neither an explicit playback setting nor a snapshot time is supplied, a mounted view follows changes to the system reduced-motion preference without recompiling the scene. Disposing the view stops the subscription.
+
+`scene({ theme: { name, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization reuses the Theme reference without mutating caller input; both routes finally use the same Core Theme and compile contract.
 
 ## Input normalization and processing
 
@@ -77,17 +118,17 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 Node, Path, and Scope objects written directly in `children` must declare their `type`. The `node()`, `path()`, and `scope()` helpers and their JSX counterparts supply it for you.
 
-Vanilla path configurations require exactly one of `way` and `children`. If both reach the runtime, explicit `children` take precedence, even when empty.
+Vanilla path configurations require exactly one of `way` and `children`. The `way` parser checks operator and target order. Explicit `children` expand shorthand without a minimum step count: Core diagnoses short paths during compilation, whether or not `authoring` is set. Both components of a relative offset string must be finite. Three-leg folds (`-|-` or `|-|`) accept `fraction` to position the middle leg.
 
-Vanilla constructors do not take a separate ID string argument. `node({ id, position })`, `path({ id, way })`, `coordinate({ id, position })`, and `layer({ id, children })` read identity from their configuration. Each input contract still determines whether `id` is required.
+Vanilla constructors do not take a separate ID string argument. `node({ id, position })`, `path({ id, way })`, `coordinate({ id, position })`, and `layer({ name, scene })` read identity from their configuration. Each input contract still determines whether `id` is required.
 
 Domain builders also take their configuration directly, such as `shape.circle({ id, center, radius })` and `entity({ id, role, position })`. Inputs with a domain `id` reuse it as the embed identity; anonymous inputs do not gain a referenceable graphic ID. Layout inputs have no domain `id`, so use entries such as `flexLayout({ children })` directly.
 
-Generic embedding uses an object with `kind`, `props`, and optional `id` and `authoring` fields: `embed({ kind, props })`. Plot and Table use `embedPlot(source, datasets, lowerOptions?)` and `embedTable(spec, options?)`, without an extra embed ID argument.
+Use the embed factory to pair `adapter` with `props`, and optional `id` and `authoring` fields: `embed({ adapter, props })`. Plot and Table use `embedPlot(source, datasets, lowerOptions?)` and `embedTable(spec, options?)`, without an extra embed ID argument.
 
 ### Why InputScene exists
 
-Directly building `@retikz/core` IR is valid, but applications often need authoring-friendly Path, Scope, Layer, Tier 2 embeds, and runtime metadata. `scene`, `layer`, `node`, `path`, `scope`, and `embed` construct those inputs as ordinary data, without JSX, a React runtime, or component lifecycles.
+Directly building `@retikz/core` IR is valid, but applications often need authoring-friendly Path, Scope, Layer, Tier 2 embeds, and authoring payloads. `scene`, `layer`, `node`, `path`, `scope`, and `embed` construct those inputs as ordinary data, without JSX, a React runtime, or component lifecycles.
 
 `InputScene` is not a second graphics semantic. `normalizeScene()` centrally handles input sugar, authoring provenance, and embed lowering, then produces the only Core `IRScene`. The resulting IR remains JSON-serializable; callers and their domain adapters decide whether `authoring` and `embed.props` are serializable.
 
@@ -97,19 +138,19 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
 
 <ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
 
-| Input            | Owner             | How processing handles it                                              |
-| ---------------- | ----------------- | ---------------------------------------------------------------------- |
-| `InputScene`     | `@retikz/vanilla` | Normalizes input, lowers embeds, and collects metadata                 |
-| Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                |
-| Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; DOM can only redraw it statically |
+| Input            | Owner             | How processing handles it                                                       |
+| ---------------- | ----------------- | ------------------------------------------------------------------------------- |
+| `InputScene`     | `@retikz/vanilla` | Normalizes input, lowers embeds, and collects contributions and authoring sites |
+| Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                         |
+| Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; pass it directly to Render                 |
 
-`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and metadata. The internal `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` holds a SceneReconciler in retained mode, while `prepareStaticProcessing()` compiles once through a temporary non-incremental reconciler and disposes it.
+For an `InputScene`, `SceneRuntime` normalizes authoring shorthand to IR, resolves embedded components’ dependencies, and binds instance inputs to that IR. An `IRScene` goes directly to the reconciler. `compileToScene()` creates the same session, reads its first compilation result, and disposes it.
 
 <SourceLinks
   sources={[
     {
-      label: 'Input helpers and scene() construction',
-      path: 'packages/kernel/vanilla/src/normalize/helpers.ts',
+      label: 'Authoring input factories',
+      path: 'packages/kernel/vanilla/src/normalize/factory.ts',
     },
     {
       label: 'InputScene and normalized-result contracts',
@@ -121,53 +162,72 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
     },
     {
       label: 'Processing input preparation',
-      path: 'packages/kernel/vanilla/src/processing/prepare.ts',
+      path: 'packages/kernel/vanilla/src/runtime/runtime.ts',
     },
   ]}
 />
 
 ## Execution and DOM boundary
 
-| API                 | Purpose                             | Returns                      |
-| ------------------- | ----------------------------------- | ---------------------------- |
-| `renderToSvgString` | Produce an `<svg>` string for SSR   | `string`                     |
-| `mount`             | Mount SVG or Canvas by `renderer`   | `VanillaView` / `CanvasView` |
-| `mountSvg`          | Explicitly mount SVG DOM            | `VanillaView`                |
-| `mountCanvas`       | Explicitly mount Canvas             | `CanvasView`                 |
-| `hydrate`           | Bind handlers to SSR / existing SVG | `HydrationHandle`            |
+| API              | Purpose                           | Returns                                                     |
+| ---------------- | --------------------------------- | ----------------------------------------------------------- |
+| `renderToSvg`    | Produce an `<svg>` string for SSR | `string`                                                    |
+| `mountSceneView` | Mount SVG or Canvas by `renderer` | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
 
-The last four APIs are imported from `@retikz/vanilla/dom`. By default, `InputScene` and `IRScene` create a `VanillaViewMode.Retained` view. `update(next, options?)` atomically publishes the same processing transaction's Scene, artifacts, readonly layers, runtime metadata, events, and animation. A failed transaction publishes no new revision; if rollback itself fails, the view becomes broken and must be disposed and remounted.
+Import the DOM mount APIs from `@retikz/vanilla/dom`. Call `mountSceneView(container, source)` with IR or authored input. IR is mounted directly; authored input is normalized once with its embed definitions and instance data. SVG is the default; pass `{ renderer: 'canvas' }` for Canvas. Replace the scene with `view.replace(source, options?)`. A successful transaction publishes the scene, artifacts, and render configuration together; failure publishes no new frame. If rollback fails, dispose and remount the view.
 
-With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRScene` fully normalizes, compiles, and redraws without a Session, Snapshot, Patch, transaction, or rollback. A precompiled `Scene` is always static and accepts only another `Scene`.
+You can also pass a `MountOptions` variable when the backend is chosen at runtime; the root then has type `SVGSVGElement | HTMLCanvasElement`. Calling `view.diagnostics()` drains the diagnostics. Its `ReadonlyArray<unknown>` can include original values thrown by callbacks; narrow each value before accessing its fields.
 
-`mode` and `updateStrategy` are fixed when mounting. `VanillaRetainedRuntimeOptions` permits `rendererFactory`; it is an optional DOM retained-backend extension point, and static mode rejects it. Dispose and remount to change the renderer, DPR, compile topology, or retained strategy.
+Both backends accept `animate` and `snapshotAt` in update options. Read the committed artifacts from `view.compileResult.artifacts`. Bind handlers with `view.hydrate({ handlers })` to use the current scene as the event context. Call view methods on the instance; pass `() => view.dispose()` rather than `view.dispose` as a cleanup callback.
+
+The update strategy and optional renderer factory are fixed at mount. Dispose and remount to change the renderer, DPR, compile topology, or update strategy.
+
+DOM mounting and React Layout share `SceneViewOptions`. For example, `{ width: "100%", compile: { padding: 12 }, handlers }` has the same meaning on both hosts. The reconciler defaults to full compilation; use `reconciler` to request an incremental session. Initial handlers are active on the first frame; hydrate adds independent registrations.
 
 <SourceLinks
   sources={[
     {
-      label: 'One-shot routing for SSR and precompiled Scene',
-      path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
+      label: 'Serialize a compiled Scene as SVG',
+      path: 'packages/kernel/vanilla/src/runtime/svg.ts',
     },
     {
       label: 'Unified DOM mount dispatch',
       path: 'packages/kernel/vanilla/src/dom/mount.ts',
     },
     {
-      label: 'DOM retained processing controller',
-      path: 'packages/kernel/vanilla/src/dom/retained.ts',
+      label: 'DOM view',
+      path: 'packages/kernel/vanilla/src/dom/view.ts',
     },
   ]}
 />
 
 ## Layers and embeds
 
-`scene({ children })` creates an implicit Layer with the id `default`. Use `layers` and `layer()` when you need draw order, stable Layer ids, or cache hints. `zIndex` only orders the Layer stack, retaining declaration order for equal values. `cache` enters `InputRuntimeMeta` only; the DOM retained renderer conservatively reduces it to a Render cache policy and it never enters Core IR.
+`scene(children)` creates a single-scene input, not a layer. Use `layer({ name, scene: ir })` for Core IR. For authored input, `layerFromInput({ name, scene: input })` normalizes it once at creation and retains its embed definitions and instance data. Moving it to another layer does not change anonymous embed IDs; adapters receive identity paths within the scene only. `compileLayers(layers)` always returns an ordered list of named results, even for zero or one layer. The default stacking values for background, main, and overlay are 0, 10, and 100; custom names default to 10. Ties keep declaration order. References and element stacking stay within a layer.
 
-Tier 2 capabilities enter through `embed({ kind, id, props })`. Vanilla does not parse components or run hooks. It finds the caller-injected `InputEmbedAdapter` by `kind`, lowering typed props into a Core child and Composite dependency contribution.
+Layers inherit the stack’s `compile` and `reconciler` options and can override them with `layer.config`. Background layers default to full compilation. A `LayerStack` owns layer names, stacking order, and session lifetimes. `stack.get(name)` returns the actual `SceneRuntime`: use it directly to replace content, submit a batch, read diagnostics, or export SVG.
+
+```ts
+import { LayerStack } from '@retikz/vanilla';
+
+const stack = new LayerStack(layers, options);
+try {
+  const overlay = stack.get('overlay');
+  overlay.replace(nextInput);
+  const svg = overlay.toSvgString();
+  stack.setLayerOrder('overlay', 120);
+} finally {
+  stack.dispose();
+}
+```
+
+`stack.current` lists named results in stacking order. `stack.subscribe(listener)` also observes updates committed directly through a child session. Use `stack.replaceLayer(inputLayer)` to add or replace a complete layer declaration and `stack.replace(layers)` to replace the entire stack. A change in effective options rebuilds the affected session. Look it up again after rebuilding or removing and re-adding a layer; do not dispose borrowed sessions yourself. Rendering still takes one scene, not a composited layer stack.
+
+Tier 2 capabilities enter through `embed({ adapter, id, props })`. Vanilla does not parse components or run hooks. It calls the adapter bound to that node, lowering typed props into a Core child and Composite dependency contribution.
 
 ```ts
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { embed, layer, node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileLayers, embed, layerFromInput, node, scene } from '@retikz/vanilla';
 
 type BadgeProps = { label: string };
 
@@ -179,16 +239,20 @@ const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
   }),
 };
 
-const input = scene({
-  layers: [layer({ id: 'content', children: [embed({ kind: 'badge', id: 'sales', props: { label: 'Sales' } })] })],
-});
+const layers = [
+  layerFromInput({
+    name: 'content',
+    scene: scene([embed({ adapter: BadgeInputEmbedAdapter, id: 'sales', props: { label: 'Sales' } })]),
+  }),
+];
 
-const svg = renderToSvgString(input, { adapters: [BadgeInputEmbedAdapter] });
+const [{ name, result }] = compileLayers(layers);
+console.log(name, result.scene);
 ```
 
-`normalizeScene()` is exported from the package root. `adapters` is a top-level render, mount, and processing option—not a field inside `compile`. To inspect a normalized result, call `normalizeScene(input, { adapters })` and read `ir`, `contributions`, `runtimeMeta`, and `authoringSites`.
+`normalizeScene()` is exported from the package root. Hosts do not register adapters. To inspect a normalized result, call `normalizeScene(input)` and read the single result for `ir`, `contributions`, `runtimeInputs`, and `authoringSites`. Nodes without an `authoring` payload do not produce a site; sites explicitly contributed by adapters are retained.
 
-Adapters, Composite definitions, and compile topology are fixed for a retained mount's lifetime. A domain adapter can process new props at the same authored position; dispose and remount to change the adapter set, a Composite schema, definition count, or execution branch.
+Callers must keep compile and render options, composite definitions, and registered handler maps stable while in use. In-place mutation is unsupported; Vanilla does not guarantee isolation from its effects. A domain adapter can process new props at the same authored position; dispose and remount to change a Composite schema, definition count, or execution branch.
 
 ## Responsibility boundaries
 
@@ -206,30 +270,23 @@ React applications use [`@retikz/react`](/kernel/packages/react/overview) to col
 
 | API                                  | Kind          | Description                                                                   |
 | ------------------------------------ | ------------- | ----------------------------------------------------------------------------- |
-| `scene` / `layer`                    | Input helper  | Build a Scene input and named Layer                                           |
+| `scene` / `layer` / `layerFromInput` | Input helper  | Build a Scene input and named Layer                                           |
 | `node` / `coordinate` / `path`       | Input helper  | Build Core primitives or authoring Path input                                 |
 | `scope` / `embed`                    | Input helper  | Build Scope and Tier 2 embed input                                            |
-| `InputLayerCache`                    | const object  | Layer cache hint                                                              |
+| `BuiltinLayerName`                   | const object  | Built-in layer names                                                          |
 | `InputScene` / `InputChild`          | type          | Framework-neutral authoring root and children                                 |
 | `InputLayer` / `InputNode`           | type          | Layer and Node input                                                          |
 | `InputPath` / `InputScope`           | type          | Path and Scope input with authoring sugar or payload                          |
 | `InputEmbed`                         | type          | Tier 2 embed input                                                            |
 | `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution                                 |
-| `isInputScene` / `normalizeScene`    | normalization | Detect and normalize InputScene                                               |
-| `SceneNormalizationResult`           | type          | IR, contributions, metadata, and authoring provenance                         |
-| `ProcessingSource`                   | type          | InputScene or IRScene accepted by processing                                  |
-| `ProcessingOptions`                  | type          | Compile, adapters, driver, and retained update strategy                       |
-| `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and metadata                          |
-| `createProcessingController`         | processing    | Framework-neutral retained processing controller                              |
+| `isInputScene` / `normalizeScene`    | normalization | Distinguish typed InputScene / IRScene and normalize authoring input          |
+| `SceneNormalizationResult`           | type          | IR, contributions, instance inputs, and authoring provenance                  |
+| `ProcessOptions`                     | type          | Compilation and session update strategy                                       |
+| `SceneRuntime`                       | processing    | Framework-neutral session processing controller                               |
 | `compileToScene`                     | processing    | One-shot synchronous compilation of InputScene or Core IR                     |
-| `compileToSceneAsync`                | processing    | One-shot compilation after asynchronous authoring preparation                 |
-| `prepareStaticProcessing`            | processing    | One lifecycle-free processing result                                          |
-| `renderToSvgString`                  | SSR           | Render InputScene, IRScene, or Scene as an SVG string                         |
-| `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
-| `VanillaRuntimeOptions`              | type          | Retained or static runtime config for InputScene / IRScene                    |
-| `VanillaRetainedRuntimeOptions`      | type          | Retained mode, update strategy, optional renderer factory                     |
-| `VanillaStaticRuntimeOptions`        | type          | Closed configuration permitting only `mode: 'static'`                         |
-| `RetainedVanillaView`                | runtime       | Transactional retained view for IRScene / InputScene                          |
-| `StaticVanillaView`                  | runtime       | Full-redraw view for Scene, IRScene, or InputScene                            |
+| `renderToSvg`                        | SSR           | Serialize a compiled Scene to an SVG string                                   |
+| `mountSceneView`                     | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
+| `SceneViewOptions`                   | type          | Compile, reconciler, display and event options shared by DOM and React        |
+| `SceneView`                          | runtime       | Transactional session view for IRScene / InputScene                           |
 | `RetikzVanillaError`                 | error         | The single Vanilla error class; code, details, and cause distinguish failures |
-| `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, DOM, and driver error codes            |
+| `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, and DOM error codes                    |

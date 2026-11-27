@@ -1,0 +1,92 @@
+---
+title: Execution / Compilation Scheduling
+description: Trace a full compilation through Core stage execution, forward path references and assembly of the scene snapshot
+---
+
+[Core’s compilation flow](/kernel/packages/core/compilation) explains how to calculate node boundaries and path endpoints. Declaring a path before its two target nodes, A and B, raises a scheduling question: its endpoints are unknown when the compiler reaches it, yet it must still draw beneath the nodes. Follow one full compilation from the session input to the returned snapshot to see how Reconciler preserves both orders.
+
+<ComponentAlert
+  type="tip"
+  title="Scope"
+  description="Unless otherwise noted, the execution chapters describe full compilation. Differences in incremental mode are called out separately. The Weave chapters explain how updates are processed and previous results reused."
+/>
+
+## Overall flow
+
+A full compilation begins when the session receives a scene declaration. Reconciler prepares the runtime, then the executor walks the declaration tree and calls Core as the data each element needs becomes available. For example, once the node boundaries are available, the executor can schedule the path calculation that determines its endpoints. When the primitives and visible bounds for the whole tree are ready, Reconciler assembles the Scene and returns it to the session as part of the compilation snapshot.
+
+<ComponentPreview files="scheduling-overview" size="sm" hideCode type="flow" />
+
+The session passes the root declaration and compilation options to <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={58}>`createCompileRuntime`</ApiSourceLink>, preparing capabilities and workspace state for name lookup, resource registration and diagnostics. <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={69}>`compileScene`</ApiSourceLink> then hands the root’s children to the subtree executor. It passes the resulting drawing output, the root declaration and the same runtime to scene assembly. The session receives a snapshot from this entry point; the executor determines when each element can be computed.
+
+## Declaration order and evaluation order
+
+In the Core example below, the root declares a path, node A and node B in that order, without explicit stacking levels. The nodes are centered at [0, 0] and [180, 0] and are each 60 units wide. Although the path names only its targets, its endpoints lie on their boundaries at [30, 0] and [150, 0].
+
+<ComponentPreview
+  files={[
+    '/kernel/packages/core/compilation/compilation-example',
+    '/kernel/packages/core/compilation/compilation-example.data',
+  ]}
+  size="xs"
+  hideCode
+  type="illustration"
+/>
+
+Traversal starts at the root. <ApiSourceLink label="compileRootChildren" path="packages/kernel/reconciler/src/compile/execution/subtree/element.ts" startLine={95}>`compileRootChildren`</ApiSourceLink> creates a frame for the root’s children and visits them in declaration order. Track the contents of the same primitive
+list:
+
+| When               | What the executor does                                                                                                                                                                                                                                                                      | Primitive list (abbreviated) |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Visit the path     | <ApiSourceLink label="queuePathChild" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={46}>`queuePathChild`</ApiSourceLink> queues the path, retains the context for resolving its references and reserves its output position                               | Slot                         |
+| Visit A and B      | Core computes each node; <ApiSourceLink label="assembleNode" path="packages/kernel/reconciler/src/compile/execution/leaf/node.ts" startLine={28}>`assembleNode`</ApiSourceLink> appends its primitives and registers its geometry for lookup in the current namespace                       | Slot, A, B                   |
+| Finish the subtree | <ApiSourceLink label="flushPendingPathEmissions" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={86}>`flushPendingPathEmissions`</ApiSourceLink> resolves the named targets, calls Core to compute the path and fills the original slot with its primitives | Path, A, B                   |
+
+Place the same three declarations inside a Scope: its `children` hold the input declarations, while the child execution frame holds pending path tasks in `state.paths` and drawing output in `state.primitives`. The figure shows the relevant fields for one task and two nodes.
+
+<ComponentPreview files="scope-storage" size="xl" hideCode type="illustration" />
+
+① When the path is queued, `PendingPathEmission.placeholderSlot` references both the output array and the slot object P inside it. ② Processing each node writes its primitives to that array and registers its geometry by name in the runtime’s `namespaceStack`. ③ As the Scope finishes, the flush reads the pending task, looks up A and B, computes the path primitives and replaces P using the stored references. The two arrays on the right show the same array before and after that replacement.
+
+The slot exists only during compilation. Appending the path when its computation finishes would draw it on top of the nodes. Filling its original slot lets computation wait for dependencies while preserving declaration order at the same stacking level. Primitives with an explicit `zIndex` are still sorted by stacking level.
+
+## How a Scope schedules its subtree
+
+The figure places the path, A and B inside one Scope. This adds a dependency that a flat list of root children does not have: the Scope needs its children’s layout to determine its bounds and transforms, and the pending path needs those transforms to connect A and B in the right place. When traversal encounters a Scope, <ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink> schedules the work in this order:
+
+1. **Enter the Scope and visit its children.** The child execution frame receives the inherited settings and transform context. The path reserves a slot in this frame; A and B are laid out and their geometry registered. A nested Scope processes its own subtree in the same way.
+2. **Compute the Scope layout, then fill the path slot.** After child traversal returns, Reconciler calls Core’s `compileScope`. It applies the resulting transforms to published geometry and updates the transform chain of each pending path before flushing those paths. The connection therefore uses updated endpoints even when the Scope moves its children.
+3. **Leave the Scope and return its output to the parent.** Path computation finishes while names in this Scope are still available. The executor then leaves the Scope and contributes its drawing output and visible bounds to the parent frame, which can continue with the next sibling.
+
+This sequence explains when Reconciler invokes each stage. For the calculation of bounds and transforms, see [Scope Compilation in Core](/kernel/packages/core/scope-compilation).
+
+## From subtree to scene snapshot
+
+After filling the path slot, the root returns only ordered primitives, visible bounds and any Composite artifacts. It does not assemble parent measurement or replay data. <ApiSourceLink label="finalizeSceneCompilation" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={20}>`finalizeSceneCompilation`</ApiSourceLink> assembles the scene: an explicit `viewBox` determines its layout; otherwise the compiler derives it from visible bounds and padding. Paint and clip resources, when present, come from the same workspace. This step does not visit the nodes and paths again.
+
+The caller reads the renderable Scene from `compilation.result.scene` on the mount result. Domain artifacts live alongside the Scene in `artifacts`; diagnostics and optional provenance belong to the compilation snapshot. A renderer can consume drawing data alone, while tools can inspect records from the same compilation.
+
+## Implementation walkthrough
+
+Follow the path through this mount: its output position is known before its endpoints are.
+
+<ComponentPreview files="path-scheduling" size="md" hideCode type="flow" />
+
+Start at `compileScene` and enter `assembleCompileSubtree`. Follow child traversal to find the path slot and node registration, then the executor’s `finish` method for path materialization and sorting. Return to `finalizeSceneCompilation` for scene assembly.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation Flow',
+      description: 'Compare scheduling with Core resolution and computation',
+      url: '/kernel/packages/core/compilation',
+    },
+    {
+      title: 'Compilation Output',
+      description: 'Look up Scene, primitive and resource contracts',
+      url: '/kernel/packages/core/compilation-output',
+    },
+  ]}
+/>

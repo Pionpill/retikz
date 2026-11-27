@@ -67,7 +67,6 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
         identity,
         semanticOwner: identity,
         parent: root,
-        order: index,
         primitivePath: ['primitives', index],
         publicId: identifier,
       };
@@ -339,7 +338,6 @@ describe('Scene 补丁验证器', () => {
               {
                 identity: insertedIdentity,
                 semanticOwner: insertedIdentity,
-                order: 0,
                 primitivePath: [],
                 publicId: 'b',
               },
@@ -475,7 +473,6 @@ describe('Scene 补丁验证器', () => {
       nextRevision: next.revision,
       operations: next.topology.map((node, index) => ({
         kind: 'update' as const,
-        identity: node.identity,
         subtree: {
           root: node.identity,
           primitive: next.scene.primitives[index],
@@ -483,7 +480,6 @@ describe('Scene 补丁验证器', () => {
             {
               identity: node.identity,
               semanticOwner: node.semanticOwner,
-              order: 0,
               primitivePath: [],
               ...(node.publicId === undefined ? {} : { publicId: node.publicId }),
             },
