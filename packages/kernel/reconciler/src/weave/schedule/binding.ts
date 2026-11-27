@@ -187,13 +187,29 @@ export const createWeaveBindingFlow = ({
     return { ...entry, geometry };
   };
 
+  // ⚡只跳过本批已重新编译且未发布名称的连续实例；保留的贡献在 output 阶段仍可能重新编译
+  const previousCandidates = new Map<number, number>();
+  const previousCandidate = (index: number, entry: WeaveEntry) => {
+    const previous = previousCandidates.get(index);
+    if (previous !== undefined) return previous;
+    const execution = executions.get(entry);
+    if (!execution?.bindingsReady || execution.retained !== undefined || execution.bindings.length !== 0) return index;
+    const candidate = previousCandidates.get(index - 1) ?? index - 1;
+    previousCandidates.set(index, candidate);
+    return candidate;
+  };
   const lookup = (consumer: WeaveEntry, name: string, closed: boolean): NamespaceEntry | undefined => {
-    const binding = names.lookup({ consumer, name, visibility: closed ? 'closed' : 'declaration' }, entry => {
-      if (entry === consumer) return executions.get(entry)?.bindings ?? [];
-      ensure(entry);
-      if (executions.has(entry) && !executions.get(entry)!.bindingsReady) requireTask(prepareAddress(entry));
-      return executions.get(entry)?.bindings ?? entry.current?.contribution?.bindings ?? [];
-    });
+    const binding = names.lookup(
+      { consumer, name, visibility: closed ? 'closed' : 'declaration' },
+      entry => {
+        if (entry === consumer) return executions.get(entry)?.bindings ?? [];
+        ensure(entry);
+        if (executions.has(entry) && !executions.get(entry)!.bindingsReady) requireTask(prepareAddress(entry));
+        return executions.get(entry)?.bindings ?? entry.current?.contribution?.bindings ?? [];
+      },
+      false,
+      previousCandidate,
+    );
     if (binding === undefined) return;
     const producer = binding.entry;
     if (producer.type === 'scope' && ancestorsOf(consumer).includes(producer)) {
