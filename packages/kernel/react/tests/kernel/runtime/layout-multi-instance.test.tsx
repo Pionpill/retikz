@@ -1,10 +1,11 @@
+// @vitest-environment jsdom
 import { defineArrow } from '@retikz/core';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout } from '../../../src';
 import { Path } from '../../../src';
 import { Step } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 const TestOpenArrowDefinition = defineArrow({
   name: 'testOpen',
@@ -29,7 +30,7 @@ const TestOpenArrowDefinition = defineArrow({
 
 describe('独立的 Layout 箭头', () => {
   it('两实例不同 spec → 各自独立 marker，不互相串话', () => {
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <div>
         <Layout width={100} height={100}>
           <Path arrow={{ end: { shape: 'stealth', color: '#dc2626' } }}>

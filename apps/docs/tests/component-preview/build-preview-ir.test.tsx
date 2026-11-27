@@ -199,9 +199,9 @@ describe('buildPreviewIR', () => {
     },
   );
 
-  it('当提供 rootScope 时，保持完整的 IR 不变', () => {
+  it('直接传入完整 IR 时保留其引用', () => {
     const ir = { type: 'scene' as const, version: 1 as const, children: [] };
-    const preview = buildPreviewIR(() => <Layout ir={ir} rootScope={{ defaults: { style: { stroke: 'red' } } }} />);
+    const preview = buildPreviewIR(() => <Layout ir={ir} />);
 
     expect(preview.sourceIr).toBe(ir);
     expect(preview.ir).toBe(ir);

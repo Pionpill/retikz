@@ -13,7 +13,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={57}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={51}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/container/Layout.tsx"} startLine={60}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/container/Layout.tsx"} startLine={54}>LayoutProps</ApiSourceLink>
 
 将 JSX 子图元或完整 IR 渲染为 SVG 或 Canvas，必须选择一种输入
 
@@ -37,7 +37,6 @@
 | `onDiagnostic?`        | `(diagnostic: ReconcilerDiagnostic) => void`                                                      | —                         | 接收协调器的结构化诊断                                                                                   |
 | `readonly reconciler?` | `Omit<FullSceneReconcilerOptions, 'target'> \| Omit<IncrementalSceneReconcilerOptions, 'target'>` | —                         | 协调器执行选项；提交目标由宿主接入                                                                       |
 | `renderer?`            | `RenderMode`                                                                                      | `'svg'`                   | 渲染后端；缺省使用 SVG，框架宿主可从上下文继承                                                           |
-| `rootScope?`           | `ScopeStyleProps`                                                                                 | —                         | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                       |
 | `snapshotAt?`          | `number`                                                                                          | —                         | 动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate                                 |
 | `style?`               | `CSSProperties`                                                                                   | —                         | 宿主内联样式                                                                                             |
 | `theme?`               | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                          | —                         | —                                                                                                        |
@@ -48,29 +47,31 @@
 
 公共属性适用于所有分支；输入还需满足至少一个分支的属性约束。
 
-<DocTabs defaultValue="children">
-
-<DocTab value="children" label="属性 · JSX 子元素">
-
-<ApiTable>
-
-| 成员       | 类型        | 默认值 | 说明                                         |
-| ---------- | ----------- | ------ | -------------------------------------------- |
-| `children` | `ReactNode` | —      | 通过 JSX 声明的图形内容                      |
-| `ir?`      | `never`     | —      | 直接传入持久化 Source IR，与 children 二选一 |
-
-</ApiTable>
-
-</DocTab>
+<DocTabs defaultValue="ir">
 
 <DocTab value="ir" label="属性 · 完整 IR">
 
 <ApiTable>
 
-| 成员        | 类型      | 默认值 | 说明                                         |
-| ----------- | --------- | ------ | -------------------------------------------- |
-| `children?` | `never`   | —      | 通过 JSX 声明的图形内容                      |
-| `ir`        | `IRScene` | —      | 直接传入持久化 Source IR，与 children 二选一 |
+| 成员         | 类型      | 默认值 | 说明             |
+| ------------ | --------- | ------ | ---------------- |
+| `children?`  | `never`   | —      | —                |
+| `ir`         | `IRScene` | —      | 完整的持久化场景 |
+| `rootScope?` | `never`   | —      | —                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="属性 · JSX 子元素">
+
+<ApiTable>
+
+| 成员         | 类型              | 默认值 | 说明                        |
+| ------------ | ----------------- | ------ | --------------------------- |
+| `children`   | `ReactNode`       | —      | 通过 JSX 声明的图形内容     |
+| `ir?`        | `never`           | —      | —                           |
+| `rootScope?` | `ScopeStyleProps` | —      | JSX 子图的隐式根 Scope 覆盖 |
 
 </ApiTable>
 

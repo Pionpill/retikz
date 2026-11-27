@@ -1,5 +1,5 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import type { InputLegend } from '@retikz/standard-vanilla/presentation';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/presentation';
 import type { ReactElement, ReactNode } from 'react';
@@ -58,7 +58,7 @@ const collectRequiredSlot = (
     });
   }
 
-  const input = createInputScene(nodes[0], { embedIdPrefix });
+  const input = convertReactToInputScene(nodes[0], { embedIdPrefix });
   const childrenInput = input.children;
   if (childrenInput.length !== 1) {
     throw new RetikzStandardError({
@@ -87,7 +87,7 @@ const collectOptionalSlot = (
     });
   }
 
-  const input = createInputScene(nodes[0], { embedIdPrefix });
+  const input = convertReactToInputScene(nodes[0], { embedIdPrefix });
   const childrenInput = input.children;
   if (childrenInput.length !== 1) {
     throw new RetikzStandardError({

@@ -1,4 +1,4 @@
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import { SceneRuntime } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
@@ -22,7 +22,7 @@ it('Tree 预览保留四个方向的根配置', () => {
 });
 it('Tree 的保留模式更新移除并恢复节点及缺失槽位', () => {
   const inputScene = (empty: boolean, missing: boolean) =>
-    createInputScene(
+    convertReactToInputScene(
       renderTreePreview({ direction: 'down', gap: '32', empty, missing, arrows: true, styled: true }).props.children,
     );
   const first = inputScene(false, true);
@@ -40,7 +40,7 @@ it('Tree 的保留模式更新移除并恢复节点及缺失槽位', () => {
 });
 
 it('Tree 默认预览不将 undefined 写入 会话输入', () => {
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     renderTreePreview({
       direction: 'down',
       gap: '32',

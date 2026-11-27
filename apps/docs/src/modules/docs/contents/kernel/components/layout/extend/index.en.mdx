@@ -33,6 +33,8 @@ This section demonstrates shape injection only; later custom-usage guides for ea
 
 Use `onArtifacts` to read domain artifacts returned by composites, such as the container and item layout of FlexLayout. Artifacts are collected automatically. The callback runs after React commits, and later updates leave previous snapshots unchanged.
 
+Replacing `onArtifacts` or `onCompileResult` delivers the current result to the new callback without recompiling. Pass a stable function reference to avoid repeat notifications when the parent renders.
+
 <ComponentPreview files="layout-artifacts" size="xs" />
 
 The example displays the artifact count and the FlexLayout domain value outside the drawing. Each component defines its fields and coordinate semantics; ordinary nodes do not produce separate layout artifacts.

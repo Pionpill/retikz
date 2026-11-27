@@ -1,7 +1,7 @@
 import { resolveCoreProviderDependencies } from '@retikz/core';
 import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import { normalizeScene, compileToScene } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, Fragment } from 'react';
@@ -12,7 +12,7 @@ import { RetikzDiagramReactError, RetikzDiagramReactErrorCode } from '../src';
 import * as FlowReact from '../src/flow';
 
 it('忽略具有等效解析默认值的 React 和 Vanilla Source 中的空目录', () => {
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowEntity id="item" text="Item" />
     </FlowReact.FlowDiagram>,
@@ -43,7 +43,7 @@ it('通过 React 和 Vanilla 同样保留 Graph Group 标题、标签和本地�
     defaults: { style: { opacity: { overall: 0.8 } } },
     zIndex: 2,
   };
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowGroup {...group}>
         <FlowReact.FlowEntity id="request" text="Request" />
@@ -62,7 +62,7 @@ it('通过 React 和 Vanilla 同样保留 Graph Group 标题、标签和本地�
 });
 
 it('通过 React 和 Vanilla 同样保留局部 Layout 排除', () => {
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowLayout id="row" kind="linear" direction="right" excludeFromBounds={['png']}>
         <FlowReact.FlowEntities items={['canvas', 'png']} />
@@ -106,7 +106,7 @@ const components = () => ({
 });
 
 const flowSourceFromChildren = (FlowDiagram: FlowComponent, children: ReactNode) => {
-  const input = createInputScene(createElement(FlowDiagram, null, children));
+  const input = convertReactToInputScene(createElement(FlowDiagram, null, children));
   const normalized = normalizeScene(input);
   return normalized.ir.children[0];
 };
@@ -170,7 +170,7 @@ describe('@retikz/diagram-react/flow', () => {
       { id: 'b', text: 'B' },
     ];
     const relation = { source: 'a', target: 'b', routing: { kind, cornerRadius: 3 } };
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(
         FlowReact.FlowDiagram,
         null,
@@ -227,7 +227,7 @@ describe('@retikz/diagram-react/flow', () => {
       children: ['group'],
     };
     const direct = FlowDiagramSchema.parse({ namespace: 'diagram', type: 'flow', ...source });
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(
         FlowReact.FlowDiagram,
         null,
@@ -267,7 +267,7 @@ describe('@retikz/diagram-react/flow', () => {
       children: ['node'],
       relations: [relation],
     });
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(
         FlowReact.FlowDiagram,
         props,
@@ -403,7 +403,7 @@ describe('@retikz/diagram-react/flow', () => {
       [completeMarker, emptyBatchMarker],
       [completeMarker, secondCompleteMarker],
     ]) {
-      expect(() => createInputScene(createElement(FlowDiagram, null, ...declarations))).toThrowError(
+      expect(() => convertReactToInputScene(createElement(FlowDiagram, null, ...declarations))).toThrowError(
         expect.objectContaining({
           code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID',
           details: expect.objectContaining({ reason }),
@@ -465,7 +465,7 @@ describe('@retikz/diagram-react/flow', () => {
 
     if (FlowDiagram === undefined || FlowEntities === undefined || FlowEntity === undefined) return;
 
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(
         FlowDiagram,
         null,
@@ -542,7 +542,7 @@ describe('@retikz/diagram-react/flow', () => {
         ? createElement(FlowGroup, { id: 'owner' }, nestedRelations)
         : createElement(FlowLayout, { kind: 'linear' as const, id: 'owner', direction: 'right' }, nestedRelations);
 
-    expect(() => createInputScene(createElement(FlowDiagram, null, owner))).toThrowError(
+    expect(() => convertReactToInputScene(createElement(FlowDiagram, null, owner))).toThrowError(
       expect.objectContaining({
         code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID',
         details: expect.objectContaining({ reason: 'relation-outside-root' }),
@@ -653,7 +653,7 @@ describe('@retikz/diagram-react/flow', () => {
     )
       return;
 
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(
         FlowDiagram,
         { id: 'architecture', theme: { mode: 'dark' }, defaultFlow: { layout: { nodeGap: 0, rankGap: 48 } } },
@@ -674,7 +674,7 @@ describe('@retikz/diagram-react/flow', () => {
 
     if (FlowDiagram === undefined || FlowEntity === undefined) return;
 
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(
         FlowDiagram,
         null,
@@ -715,7 +715,7 @@ describe('@retikz/diagram-react/flow', () => {
       return;
 
     expect(() =>
-      createInputScene(
+      convertReactToInputScene(
         createElement(
           FlowDiagram,
           null,
@@ -730,7 +730,7 @@ describe('@retikz/diagram-react/flow', () => {
     );
 
     expect(() =>
-      createInputScene(
+      convertReactToInputScene(
         createElement(FlowDiagram, { width: undefined }, createElement(FlowEntity, { id: 'only', text: 'Only' })),
       ),
     ).toThrowError(
@@ -777,7 +777,7 @@ describe('@retikz/diagram-react/flow', () => {
 
     if (FlowDiagram === undefined || FlowEntity === undefined) return;
 
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(FlowDiagram, null, createElement(FlowEntity, { id: 'only', text: 'Only' })),
     );
     const result = compileToScene(input, {
@@ -811,7 +811,7 @@ it('通过 React、Vanilla 和直接 Source 相同地编译弯曲和完整标签
     { id: 'a', text: 'A' },
     { id: 'b', text: 'B' },
   ];
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowEntities items={entities} />
       <FlowReact.FlowRelations items={[relation]} />
@@ -874,7 +874,7 @@ it('在所有编写条目中保留自动、显式贝塞尔曲线和平滑路由'
       },
     },
   ];
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowEntity id="a" text="A" />
       <FlowReact.FlowEntity id="b" text="B" />
@@ -922,7 +922,7 @@ it('在 React、Vanilla 和 JSON 上保持端点约束和稀疏默认值相等',
     { source: { id: 'a', side: 'right' as const }, target: { id: 'b', overlap: 'separate' as const } },
   ];
   const defaultFlow = { relation: { source: { overlap: 'separate' as const } } };
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram defaultFlow={defaultFlow}>
       <FlowReact.FlowEntities items={entities} />
       <FlowReact.FlowRelations items={relations} />
@@ -950,7 +950,7 @@ it('在 React、Vanilla 和 JSON 上保持端点约束和稀疏默认值相等',
 });
 
 it('容器等宽与行内填充在 React 和 Vanilla 中保留相同 Source', () => {
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowLayout id="rows" kind="linear" direction="down" containerWidth="match-largest">
         <FlowReact.FlowLayout id="row" kind="linear" direction="right" itemWidth="fill">
@@ -979,7 +979,7 @@ it('容器等宽与行内填充在 React 和 Vanilla 中保留相同 Source', ()
 });
 
 it('分组等高在 React、Vanilla 和直接 IR 中保持同一 Source', () => {
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <FlowReact.FlowDiagram>
       <FlowReact.FlowLayout id="row" kind="linear" direction="right" containerHeight="match-largest">
         <FlowReact.FlowGroup id="g">

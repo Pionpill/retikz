@@ -1,9 +1,11 @@
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout } from '../../../src';
 import { Path } from '../../../src';
 import { Step } from '../../../src';
+
+// @vitest-environment jsdom
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 /**
  * 回归：自包含 rectangle step 单独成 <Path>（无前置 move）应正常渲染
@@ -13,7 +15,7 @@ import { Step } from '../../../src';
  */
 describe('<Layout> 单个自包含 rectangle step', () => {
   it('lone rounded rectangle（demo 形态）→ 渲染出 <path>，不抛错', () => {
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={260} height={140}>
         <Path style={{ fill: 'lightgray', stroke: 'currentColor' }}>
           <Step kind="rectangle" from={[-80, -40]} to={[80, 40]} cornerRadius={10} />

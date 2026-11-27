@@ -9,8 +9,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   编译选项: 'Compile options',
   '协调器执行选项；提交目标由宿主接入': 'Reconciler execution options; the host supplies the commit target',
   接收协调器的结构化诊断: 'Receives structured reconciler diagnostics',
-  '统一设置子树的动画模式；嵌套时以最近的设置为准':
-    'Sets the animation mode for descendants; the nearest provider takes precedence',
+  '设置子树的默认动画模式；Layout 的 animate 优先':
+    'Sets the default animation mode for descendants; an explicit Layout animate prop takes precedence',
   动画模式提供器: 'Animation mode provider',
   '设置子树的默认渲染后端；Layout 的 renderer 优先':
     'Sets the default backend for descendants; an explicit Layout renderer takes precedence',
@@ -123,8 +123,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '自定义 path 定义': 'Custom path definitions',
   '自定义 pattern 定义': 'Custom pattern definitions',
   渲染目标: 'Rendering target',
-  'JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效':
-    'Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently',
+  'JSX 子图的隐式根 Scope 覆盖': 'Implicit root Scope overrides for JSX children',
+  完整的持久化场景: 'Complete persisted scene',
   自定义形状定义: 'Custom shape definitions',
   静态动画采样时刻: 'Time at which to sample a static animation frame',
   宿主内联样式: 'Host inline styles',

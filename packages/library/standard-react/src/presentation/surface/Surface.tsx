@@ -1,5 +1,5 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import type { InputSurface } from '@retikz/standard-vanilla/presentation';
 import { surfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import type { InputSurfaceConfig } from '@retikz/standard/presentation';
@@ -17,7 +17,7 @@ export type SurfaceProps = Omit<InputSurfaceConfig, 'namespace' | 'type' | 'chil
 /** 将唯一 React child 收集为 Standard Vanilla Input */
 const createSurfaceInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { children, ...input } = props as SurfaceProps;
-  const childInput = createInputScene(children, { embedIdPrefix: `${context.id}:child` });
+  const childInput = convertReactToInputScene(children, { embedIdPrefix: `${context.id}:child` });
   const childrenInput = childInput.children;
   if (childrenInput.length !== 1) {
     throw new RetikzStandardError({

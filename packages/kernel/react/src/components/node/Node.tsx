@@ -5,7 +5,7 @@ import type { FC, ReactElement, ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
-import type { HydrationEventProps } from '../../hydration';
+import type { HydrationEventProps } from '../../shared';
 import { KernelDisplayName, getDisplayName, mergeLabels } from '../../shared';
 import type { NodeLabelProps } from './NodeLabel';
 import { convertTextProps } from './Text';

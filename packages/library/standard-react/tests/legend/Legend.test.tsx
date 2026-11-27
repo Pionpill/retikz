@@ -1,4 +1,4 @@
-import { createInputScene, Layout, Node, Path, Step } from '@retikz/react';
+import { convertReactToInputScene, Layout, Node, Path, Step } from '@retikz/react';
 import {
   createLegend,
   LegendContentKind,
@@ -26,7 +26,7 @@ const itemLabel = <Node position={[0, 0]} text="Active" />;
 
 /** 以 React 真实 authoring 路径归一化一个 Legend */
 const contribute = ({ children, ...props }: LegendProps) => {
-  const input = createInputScene(<Legend {...props}>{children}</Legend>);
+  const input = convertReactToInputScene(<Legend {...props}>{children}</Legend>);
   const normalized = normalizeScene(input);
 
   return {
@@ -259,16 +259,16 @@ describe('<Legend>', () => {
       }),
     ).toThrow(/one LegendRamp/i);
 
-    expect(() => normalizeScene(createInputScene(<LegendTitle>{itemLabel}</LegendTitle>))).toThrow(
+    expect(() => normalizeScene(convertReactToInputScene(<LegendTitle>{itemLabel}</LegendTitle>))).toThrow(
       /direct child of Legend/i,
     );
-    expect(() => normalizeScene(createInputScene(<LegendItem itemKey="item" sample={itemSample} />))).toThrow(
+    expect(() => normalizeScene(convertReactToInputScene(<LegendItem itemKey="item" sample={itemSample} />))).toThrow(
       /direct child of Legend/i,
     );
-    expect(() => normalizeScene(createInputScene(<LegendRamp>{itemSample}</LegendRamp>))).toThrow(
+    expect(() => normalizeScene(convertReactToInputScene(<LegendRamp>{itemSample}</LegendRamp>))).toThrow(
       /direct child of Legend/i,
     );
-    expect(() => normalizeScene(createInputScene(<LegendTick tickKey="tick" offset={0} />))).toThrow(
+    expect(() => normalizeScene(convertReactToInputScene(<LegendTick tickKey="tick" offset={0} />))).toThrow(
       /direct child of Legend/i,
     );
   });

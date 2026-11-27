@@ -33,9 +33,9 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
   sources={[
     {
       label: 'Layout collects declarations and calls Vanilla',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      path: 'packages/kernel/react/src/container/Layout.tsx',
     },
-    { label: 'JSX to InputScene', path: 'packages/kernel/react/src/components/layout/input-scene.ts' },
+    { label: 'JSX to InputScene', path: 'packages/kernel/react/src/container/convert.ts' },
   ]}
 />
 
@@ -104,7 +104,7 @@ These excerpts show the path structure. The complete Scene also contains rectang
 
 ## Render and hosts
 
-Render consumes the geometry in Scene. The SVG backend builds a `SvgNode` tree of elements and attributes, which React or Vanilla's DOM host commits as SVG elements. The Canvas backend executes drawing operations on a canvas managed by its host.
+Render consumes the geometry in Scene. The SVG backend builds a `SvgNode` tree of elements and attributes, which the native SVG renderer commits into the root provided by React or Vanilla. The Canvas backend executes drawing operations on a canvas managed by its host.
 
 <ComponentPreview files="pipeline-output" size="sm" hideCode type="flow" />
 
@@ -115,7 +115,10 @@ Static export can serialize the SVG tree into a string. Applications with an exi
 <SourceLinks
   sources={[
     { label: 'SVG description tree', path: 'packages/kernel/render/src/svg/builders/document.ts' },
-    { label: 'React displays processing results', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+    {
+      label: 'React displays processing results',
+      path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx',
+    },
     { label: 'Vanilla DOM host', path: 'packages/kernel/vanilla/src/dom/mount.ts' },
     { label: 'Canvas drawing', path: 'packages/kernel/render/src/canvas/render-to-canvas.ts' },
   ]}
@@ -127,13 +130,13 @@ Follow the example's first render from React JSX to SVG through these entries. A
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-Start at Layout's `createInputScene`, then follow Vanilla's `compileToScene`. It creates a temporary `SceneRuntime`, which normalizes authoring input and passes the IR to the reconciler. It reads `compilation.result` from the first committed snapshot and disposes the session. The result returns to React's `ProcessingResultHost`; `buildSvgDocument` and `svgToReact` produce React elements for React to commit to the page.
+Layout collects JSX with `convertReactToInputScene` and sizes the initial host using `compileToScene`. Once React mounts the empty SVG root, Layout starts a `SceneRuntime` with a DOM render target. The native SVG renderer commits the children and handles subsequent updates.
 
 <SourceLinks
   sources={[
-    { label: 'React scene entry', path: 'packages/kernel/react/src/components/layout/Layout.tsx' },
+    { label: 'React scene entry', path: 'packages/kernel/react/src/container/Layout.tsx' },
     { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
-    { label: 'SvgNode to React elements', path: 'packages/kernel/react/src/render/svg-to-react.ts' },
+    { label: 'React SVG root host', path: 'packages/kernel/react/src/container/render/SvgHost.tsx' },
   ]}
 />
 

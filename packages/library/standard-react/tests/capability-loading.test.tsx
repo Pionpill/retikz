@@ -1,4 +1,4 @@
-import { createInputScene, Layout, Node } from '@retikz/react';
+import { convertReactToInputScene, Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameTitle, Grid, Legend, LegendItem } from '@retikz/standard-react/presentation';
 import {
   createGrid,
@@ -52,7 +52,7 @@ describe('Standard React 定义加载', () => {
       ),
     ).not.toThrow();
 
-    const input = createInputScene(legend);
+    const input = convertReactToInputScene(legend);
     const normalized = normalizeScene(input);
 
     expect(normalized.contributions[0]).toEqual({

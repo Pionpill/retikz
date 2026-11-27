@@ -46,7 +46,7 @@ const adapter: InputEmbedAdapter<typeof source> = {
 
 const inputEmbed = embed({ adapter, id: 'authoring', props: source });
 
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import type { FC } from 'react';
 
 const ServiceView: FC<typeof source> = () => null;
@@ -59,7 +59,7 @@ const Service = Object.assign(ServiceView, {
 
 describe('自定义代码块 React 编写', () => {
   it('重复使用 Vanilla 适配器并匹配 Direct IR 和 Vanilla Scene', () => {
-    const input = createInputScene(<Service key="service" {...source} />);
+    const input = convertReactToInputScene(<Service key="service" {...source} />);
     const normalized = normalizeScene(input);
 
     expect(normalized.ir.children).toEqual([source]);

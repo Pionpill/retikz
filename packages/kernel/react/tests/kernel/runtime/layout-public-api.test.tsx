@@ -23,7 +23,7 @@ describe('Layout 公共 API', () => {
     const svg = renderToStaticMarkup(<Layout {...props} />);
 
     expect(svg).toContain('<svg');
-    expect(svg).toContain('viewBox=');
+    expect(svg).toMatch(/><\/svg>$/);
   });
 
   it('paths 接受带完整 subject schema 的自定义 Definition', () => {

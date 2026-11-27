@@ -5,6 +5,8 @@ description: Provide drawing input and configure framing, defaults, and renderin
 
 `<Layout>` is the top-level React drawing entry. Place Node, Path, or other drawing components inside it. Framing is automatic by default, so ordinary figures need no explicit size or viewBox. See [Quick start](/kernel/components/get-start) for setup.
 
+An explicit `animate={true}` or `animate={false}` overrides the nearest `AnimationModeProvider`. Omit `animate` to inherit the provider. With no provider, or in `system` mode, playback follows the system reduced-motion preference.
+
 ## Using data from asynchronous sources
 
 Await the data outside the drawing component, then pass the ready children to Layout. Standalone and embedded components take the same input; Layout needs no special option. For SSR, await the data before rendering synchronously. See [domain data computation](/viz/data/transform/computation).
@@ -179,7 +181,7 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
 
 - **Rendering backend**: SVG is the default output. Set `renderer="canvas"` to switch to Canvas. See [Animation](/kernel/visual/animation/usage) for playback and static snapshots.
 - **Choose one input**: Supply either `ir` or JSX `children`, never both or neither. Use `<Layout>{null}</Layout>` for an empty JSX scene.
-- **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Layout does not apply `rootScope` and warns in development when `rootScope.defaults` is supplied.
+- **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Only the JSX children branch accepts `rootScope`.
 - **Style scope**: `Layout.style` sets host CSS; use `rootScope.defaults.style` for primitive styles.
 
 ## Related props

@@ -2,7 +2,7 @@ import { pickDefined } from '@retikz/foundation';
 import type { InputScope, ScopeOptions } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
-import type { HydrationEventProps } from '../hydration';
+import type { HydrationEventProps } from '../shared';
 import { KernelDisplayName } from '../shared';
 
 /** Scope 的级联视觉覆盖与后代默认通道，Layout 通过 rootScope 承载 */

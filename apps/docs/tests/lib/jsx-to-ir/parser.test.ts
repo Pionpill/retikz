@@ -1,4 +1,4 @@
-import { Draw, Layout, Node, Path, createInputScene } from '@retikz/react';
+import { Draw, Layout, Node, Path, convertReactToInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
@@ -22,7 +22,7 @@ const parseErr = (source: string): string => {
 
 /** 将 JSX child 通过唯一的 React-to-Vanilla Input 路径归一为 Source IR */
 const normalizeReactChildren = (children: ReactNode) => {
-  const input = createInputScene(children);
+  const input = convertReactToInputScene(children);
   return normalizeScene(input);
 };
 

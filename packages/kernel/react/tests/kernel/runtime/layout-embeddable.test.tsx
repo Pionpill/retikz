@@ -1,12 +1,13 @@
+// @vitest-environment jsdom
 import type { AnyCompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
 import { Layout, Node } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 type FixtureProps = { id: string; data: unknown };
 
@@ -82,14 +83,14 @@ describe('<Layout> 复合提供者图', () => {
     const First = makeFixture({ displayName: 'First', key, makeDefinition, params: { a: dataA } });
     const Second = makeFixture({ displayName: 'Second', key, makeDefinition, params: { b: dataB } });
 
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100}>
         <First id="one" data={dataA} />
         <Second id="two" data={dataB} />
       </Layout>,
     );
 
-    expect(makeDefinition).toHaveBeenCalledTimes(1);
+    expect(makeDefinition).toHaveBeenCalledTimes(2);
     expect(svg).toContain('data-retikz-id="demo-one"');
     expect(svg).toContain('data-retikz-id="demo-two"');
   });
@@ -114,13 +115,13 @@ describe('<Layout> 复合提供者图', () => {
       extraProviders: [providerOf(frameKey, frameMaker)],
     });
 
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100}>
         <Card id="one" data={null} />
       </Layout>,
     );
 
-    expect(calls).toEqual(['standard.frame', 'third.card']);
+    expect(calls).toEqual(['standard.frame', 'third.card', 'standard.frame', 'third.card']);
     expect(svg).toContain('data-retikz-id="third-one"');
   });
 
@@ -141,14 +142,14 @@ describe('<Layout> 复合提供者图', () => {
     User.isTier2Embeddable = true;
     User.inputEmbedAdapter = userAdapter;
 
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100} compile={{ composites: [definitionOf(userKey)] }}>
         <Demo id="embedded" data={null} />
         <User id="manual" data={null} />
       </Layout>,
     );
 
-    expect(demoMaker).toHaveBeenCalledTimes(1);
+    expect(demoMaker).toHaveBeenCalledTimes(2);
     expect(svg).toContain('data-retikz-id="demo-embedded"');
     expect(svg).toContain('data-retikz-id="user-manual"');
   });
@@ -165,7 +166,7 @@ describe('<Layout> 复合提供者图', () => {
     });
 
     expect(() =>
-      renderToStaticMarkup(
+      mountedMarkup(
         <Layout width={100} height={100}>
           <Missing id="missing" data={null} />
         </Layout>,
@@ -183,7 +184,7 @@ describe('<Layout> 复合提供者图', () => {
     });
 
     expect(() =>
-      renderToStaticMarkup(
+      mountedMarkup(
         <Layout width={100} height={100}>
           <Cyclic id="cycle" data={null} />
         </Layout>,
@@ -195,7 +196,7 @@ describe('<Layout> 复合提供者图', () => {
     const Valid = makeFixture({ displayName: 'Valid', key, makeDefinition });
 
     expect(() =>
-      renderToStaticMarkup(
+      mountedMarkup(
         <Layout width={100} height={100} compile={{ composites: [definitionOf(key)] }}>
           <Valid id="conflict" data={null} />
         </Layout>,
@@ -204,7 +205,7 @@ describe('<Layout> 复合提供者图', () => {
   });
 
   it('当不存在贡献时，保持纯内核 Layout 不变', () => {
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100}>
         <Node id="plain" position={[0, 0]} text="hi" />
       </Layout>,

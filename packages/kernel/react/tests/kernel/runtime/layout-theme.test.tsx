@@ -1,11 +1,12 @@
+// @vitest-environment jsdom
 import type { IRScene, IRTheme } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import { Layout, Node, Scope, Text, ThemeProvider } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 const testThemeDefinitions = ['academic', 'vibrant', 'clean'].map(name =>
   defineTheme({
@@ -114,7 +115,7 @@ const themeProbe = defineComposite({
 
 describe('<Layout 主题>', () => {
   it('children 模式允许 Node textColor 使用 contextual color 权重', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout theme={{ mode: ThemeMode.Dark }} width={100} height={100}>
         <Node position={[0, 0]} style={{ color: '#336699', fill: 0.2, textColor: 0.8 }}>
           A
@@ -127,7 +128,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('children 模式允许 Text 行级 fill 使用 contextual color 权重', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout theme={{ mode: ThemeMode.Dark }} width={100} height={100}>
         <Node position={[0, 0]} style={{ color: '#336699' }}>
           <Text fill={0.4}>A</Text>
@@ -139,7 +140,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('ir 模式把 contextual color 按 Layout 最终 Dark Theme 确定后再渲染', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout
         ir={{
           type: 'scene',
@@ -163,7 +164,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('children模式把宿主Theme写入根Scene供Composite读取', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout
         theme={{ name: 'academic', mode: ThemeMode.Dark }}
         compile={{ themeDefinitions: testThemeDefinitions }}
@@ -182,7 +183,7 @@ describe('<Layout 主题>', () => {
     const irBefore = structuredClone(input);
     const themeBefore = structuredClone(theme);
 
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout
         ir={input}
         theme={theme}
@@ -201,7 +202,7 @@ describe('<Layout 主题>', () => {
   it('ir 模式把值为 undefined 的宿主字段视为未声明', () => {
     const theme: IRTheme = { name: undefined, mode: ThemeMode.Dark };
 
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout
         ir={input}
         theme={theme}
@@ -216,7 +217,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('省略宿主 prop 时保留持久化 IR Theme', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout
         ir={{ ...input, theme: { name: 'academic', mode: ThemeMode.Dark } }}
         compile={{ composites: [themedBox], themeDefinitions: testThemeDefinitions }}
@@ -230,7 +231,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('Theme prop不进入样式 Scope且不会给 Core primitive隐式着色', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout
         ir={{
           type: 'scene',
@@ -255,7 +256,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('ambient Theme 按 Provider → IR → Layout 顺序覆盖 selector', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <ThemeProvider theme={{ name: 'academic' }} themeDefinitions={testThemeDefinitions}>
         <Layout
           ir={{
@@ -276,7 +277,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('嵌套 ThemeProvider 对 selector 按字段继承', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <ThemeProvider theme={{ name: 'academic' }} themeDefinitions={testThemeDefinitions}>
         <ThemeProvider theme={{ mode: ThemeMode.Dark }}>
           <Layout width={100} height={100}>
@@ -290,7 +291,7 @@ describe('<Layout 主题>', () => {
   });
 
   it('Core 编译嵌入项时应用所在 Scope 的主题', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout
         theme={{ name: 'academic', mode: ThemeMode.Light }}
         compile={{ themeDefinitions: testThemeDefinitions }}
@@ -308,7 +309,7 @@ describe('<Layout 主题>', () => {
 
   it('不同 Scope 内的匿名嵌入组件保持不同的内部 identity', () => {
     expect(() =>
-      renderToStaticMarkup(
+      mountedMarkup(
         <Layout compile={{ themeDefinitions: testThemeDefinitions }} width={100} height={100}>
           <Scope>
             <ThemedBox />

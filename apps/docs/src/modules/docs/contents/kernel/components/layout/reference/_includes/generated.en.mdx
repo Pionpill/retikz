@@ -13,7 +13,7 @@ For initial setup, see [Basic usage](/kernel/components/layout/usage). React pro
 
 ## Component declarations
 
-#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={57}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/components/layout/Layout.tsx"} startLine={51}>LayoutProps</ApiSourceLink>
+#### <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/container/Layout.tsx"} startLine={60}>Layout</ApiSourceLink> / <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/container/Layout.tsx"} startLine={54}>LayoutProps</ApiSourceLink>
 
 Renders either JSX children or a complete IR scene as SVG or Canvas; exactly one input is required
 
@@ -37,7 +37,6 @@ Renders either JSX children or a complete IR scene as SVG or Canvas; exactly one
 | `onDiagnostic?`        | `(diagnostic: ReconcilerDiagnostic) => void`                                                      | —                         | Receives structured reconciler diagnostics                                                                                                                                               |
 | `readonly reconciler?` | `Omit<FullSceneReconcilerOptions, 'target'> \| Omit<IncrementalSceneReconcilerOptions, 'target'>` | —                         | Reconciler execution options; the host supplies the commit target                                                                                                                        |
 | `renderer?`            | `RenderMode`                                                                                      | `'svg'`                   | Renderer; defaults to SVG and may be inherited from framework context                                                                                                                    |
-| `rootScope?`           | `ScopeStyleProps`                                                                                 | —                         | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
 | `snapshotAt?`          | `number`                                                                                          | —                         | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
 | `style?`               | `CSSProperties`                                                                                   | —                         | Host inline styles                                                                                                                                                                       |
 | `theme?`               | `{ name?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                          | —                         | —                                                                                                                                                                                        |
@@ -48,29 +47,31 @@ Renders either JSX children or a complete IR scene as SVG or Canvas; exactly one
 
 Common members apply to every branch; a value must also satisfy at least one branch.
 
-<DocTabs defaultValue="children">
-
-<DocTab value="children" label="Members · JSX children">
-
-<ApiTable>
-
-| Member     | Type        | Default | Description                                   |
-| ---------- | ----------- | ------- | --------------------------------------------- |
-| `children` | `ReactNode` | —       | Drawing content declared with JSX             |
-| `ir?`      | `never`     | —       | Persisted Source IR, used instead of children |
-
-</ApiTable>
-
-</DocTab>
+<DocTabs defaultValue="ir">
 
 <DocTab value="ir" label="Members · Complete IR">
 
 <ApiTable>
 
-| Member      | Type      | Default | Description                                   |
-| ----------- | --------- | ------- | --------------------------------------------- |
-| `children?` | `never`   | —       | Drawing content declared with JSX             |
-| `ir`        | `IRScene` | —       | Persisted Source IR, used instead of children |
+| Member       | Type      | Default | Description              |
+| ------------ | --------- | ------- | ------------------------ |
+| `children?`  | `never`   | —       | —                        |
+| `ir`         | `IRScene` | —       | Complete persisted scene |
+| `rootScope?` | `never`   | —       | —                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="children" label="Members · JSX children">
+
+<ApiTable>
+
+| Member       | Type              | Default | Description                                    |
+| ------------ | ----------------- | ------- | ---------------------------------------------- |
+| `children`   | `ReactNode`       | —       | Drawing content declared with JSX              |
+| `ir?`        | `never`           | —       | —                                              |
+| `rootScope?` | `ScopeStyleProps` | —       | Implicit root Scope overrides for JSX children |
 
 </ApiTable>
 

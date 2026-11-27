@@ -24,22 +24,23 @@
 - 必须直接依赖 `@retikz/vanilla`。React 不直接调用 `@retikz/core` 的 authoring helper 或直接拼装 Source IR，也不实现 Runtime session 或 renderer 编排；它只调用 Vanilla 的公开 normalize / processing API 并把只读结果映射到 React 宿主。不 import app 包或 Tier 2 包。
 - 不新增第三方运行时依赖；确需新增时先说明理由。
 - 不引 Tailwind / shadcn / 样式库；adapter 输出原生 SVG / Canvas 宿主，样式由消费者或 props 控制。
-- `components/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。
+- `components/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `container/render/` 和 `container/context/` 的系统偏好订阅中访问。
 
 ## 目录职责
 
 ```text
 src/index.ts            包根公开 API，不暴露内部转换函数
 components/             简单图元直接放在根目录；node/、path/ 汇总各自的图元、步骤和标签
-components/layout/      Layout、场景收集与根作用域；每组 hook、Provider 与 context 同放一个 use-*.tsx 文件
-hydration/              React 事件 props、事件名映射与 handler 收集
-render/                 SVG / Canvas 宿主与 processing result 映射
-shared/                 跨模块共享的组件展示名与嵌入协议
+container/              Layout、场景收集与根作用域
+container/context/      主题、渲染模式与动画模式的 context、hook 和 Provider
+container/hydration.ts  从 JSX 子树收集事件处理器
+container/render/       SVG / Canvas 宿主与 processing result 映射
+shared/                 跨模块共享的组件展示名、事件契约与嵌入协议
 ```
 
 - 组件家族的 `index.ts` 汇总同组组件与内部 adapter，`components/index.ts` 精选公共导出；包根只公开声明与已有公开入口，不导出图元 adapter。
-- 图元 adapter 只转换当前元素，可接收步骤序号信息或已收集的子项，不依赖 Layout、runtime 或 renderer。整棵场景的遍历、嵌入上下文及图元分派归 `components/layout`。
-- Sugar 可以依赖 Kernel，Kernel 不依赖 Sugar 实现；`render` 不依赖容器，不创建编译会话。
+- 图元 adapter 只转换当前元素，可接收步骤序号信息或已收集的子项，不依赖 Layout、runtime 或 renderer。整棵场景的遍历、嵌入上下文及图元分派归 `container`。
+- Sugar 可以依赖 Kernel，Kernel 不依赖 Sugar 实现；渲染宿主不创建编译会话。
 
 ## Kernel 组件
 

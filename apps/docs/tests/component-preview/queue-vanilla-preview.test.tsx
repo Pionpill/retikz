@@ -1,4 +1,4 @@
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import { SceneRuntime } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
@@ -10,7 +10,7 @@ import { renderQueuePreview as renderLayout } from '../../src/modules/docs/conte
 
 it('Queue 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
   const input = (incoming: boolean, outgoing: boolean) =>
-    createInputScene(
+    convertReactToInputScene(
       renderLayout({
         direction: 'right',
         border: true,
@@ -77,7 +77,7 @@ it('Queue 预览保留嵌套的 Matrix 和外部单元格引用', () => {
 
 it.each([true, false])('matrix=%s 时 Queue 虚线单元格在保留模式更新中可切换', matrix => {
   const input = (dashed: boolean) =>
-    createInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
+    convertReactToInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
   const first = input(true);
   const controller = SceneRuntime.fromInput(first);
   try {
@@ -93,7 +93,7 @@ it.each([true, false])('matrix=%s 时 Queue 虚线单元格在保留模式更新
 it('Queue 数量变化时保留模式更新可在各个方向移除并恢复两个操作箭头', () => {
   for (const direction of ['up', 'down', 'left', 'right'] as const) {
     const input = (count: '0' | '1' | '3') =>
-      createInputScene(
+      convertReactToInputScene(
         renderLayout({ direction, border: true, padding: '8', input: true, output: true, styled: true, count }).props
           .children,
       );

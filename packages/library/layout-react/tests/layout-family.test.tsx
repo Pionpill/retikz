@@ -18,7 +18,7 @@ import {
   OverlayLayoutItem,
   OverlayLayout,
 } from '@retikz/layout-react';
-import { createInputScene, Node } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import { normalizeScene } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
@@ -44,7 +44,7 @@ Foreign.inputEmbedAdapter = {
 
 /** 以 React 真实 authoring 路径归一化 Layout family JSX */
 const normalizeReactInput = (children: ReactNode) => {
-  const input = createInputScene(children);
+  const input = convertReactToInputScene(children);
   return normalizeScene(input);
 };
 

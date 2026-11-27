@@ -7,7 +7,7 @@ import type {
   RelationInputEmbedProps,
 } from '@retikz/graph-vanilla';
 import type { LayoutProps } from '@retikz/react';
-import { createInputScene, Node, Path, Step, Text } from '@retikz/react';
+import { convertReactToInputScene, Node, Path, Step, Text } from '@retikz/react';
 import type { CompileOptions } from '@retikz/reconciler';
 import type { InputChild } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
@@ -184,7 +184,7 @@ const collectEntityTextNodes = (children: ReactNode): Array<ReactNode> => {
 /** 将 Entity 文本 children 交给 Core React Node authoring 读取 */
 const entityTextOf = (children: ReactNode, embedIdPrefix: string): InputEntity['text'] | undefined => {
   const textNodes = collectEntityTextNodes(children);
-  const input = createInputScene(createElement(Node, { position: [0, 0] }, textNodes), {
+  const input = convertReactToInputScene(createElement(Node, { position: [0, 0] }, textNodes), {
     embedIdPrefix,
   });
   const child = input.children.at(0);
@@ -251,7 +251,7 @@ const collectRelationStepNodes = (children: ReactNode): Array<ReactNode> => {
 /** 通过 Core React 与 Vanilla 共用 grammar 把 Step children 归一为 route */
 const relationRouteOf = (children: ReactNode, embedIdPrefix: string): InputRelation['route'] | undefined => {
   const stepNodes = collectRelationStepNodes(children);
-  const input = createInputScene(createElement(Path, null, stepNodes), { embedIdPrefix });
+  const input = convertReactToInputScene(createElement(Path, null, stepNodes), { embedIdPrefix });
   const child = input.children.at(0);
   if (child === undefined || 'namespace' in child || child.type !== 'path') {
     throw new RetikzGraphReactError({
@@ -297,7 +297,7 @@ export const collectRelationInput = (props: RelationProps, embedIdPrefix: string
 
 /** 通过 Core React 通用 traversal 收集 Graph children */
 export const collectGraphChildren = (children: ReactNode, embedIdPrefix: string): GraphChildCollection => {
-  const input = createInputScene(children, { embedIdPrefix });
+  const input = convertReactToInputScene(children, { embedIdPrefix });
   return {
     children: input.children,
   };

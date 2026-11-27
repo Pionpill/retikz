@@ -12,7 +12,7 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { sectorShapeDefinition } from '@retikz/extension';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
-import { createInputScene, Layout, Node, Scope } from '@retikz/react';
+import { convertReactToInputScene, Layout, Node, Scope } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react/presentation';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { normalizeScene } from '@retikz/vanilla';
@@ -301,7 +301,7 @@ describe('buildPreviewSource', () => {
       throw new Error('ChartDemo must return one function-component root');
     }
 
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
     );
     const normalized = normalizeScene(input);

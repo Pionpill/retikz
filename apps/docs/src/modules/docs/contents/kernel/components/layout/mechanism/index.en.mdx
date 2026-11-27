@@ -17,7 +17,7 @@ On both sides, A inherits blue and B stays orange. **defaults** supplies values 
 
 Layout leaves the children unchanged when `rootScope.defaults` is omitted. Providing `defaults` creates an ordinary Scope, even for `{}` or `{ reset: false }`. React does not inspect its contents.
 
-- **ir supplied**: use the complete child structure described by IR, without JSX children; `rootScope` does not apply. Change the IR itself to change its scopes; host CSS `style` remains applicable.
+- **ir supplied**: use the complete child structure described by IR, without JSX children or a `rootScope` prop. Change the IR itself to change its scopes; host CSS `style` remains applicable.
 
 **The synthetic Scope is not a local namespace.** `rootScope` only accepts `defaults`. Use an explicit Scope inside the drawing for `localNamespace`; see [Scope usage](/kernel/components/scope/usage) for naming and references.
 
@@ -25,14 +25,14 @@ Layout leaves the children unchanged when `rootScope.defaults` is omitted. Provi
   sources={[
     {
       label: 'Wrap children when defaults are supplied',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 100,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 98,
     },
     {
       label: 'Layout: ir and rootScope boundaries',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 92,
-      endLine: 104,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 96,
+      endLine: 102,
     },
   ]}
 />
@@ -69,9 +69,9 @@ Moving, adding, or removing elements can therefore change the automatic viewport
   sources={[
     {
       label: 'Layout: explicit viewBox overrides the input',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 106,
-      endLine: 119,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 104,
+      endLine: 117,
     },
     {
       label: 'Core: select an explicit viewport or automatic bounds',
@@ -127,15 +127,13 @@ SVG and Canvas share this display-size calculation. CSS strings are not parsed a
     },
     {
       label: 'SVG: apply size to the root element',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 166,
-      endLine: 169,
+      path: 'packages/kernel/react/src/container/render/SvgHost.tsx',
     },
     {
       label: 'Canvas: reuse the display-size calculation',
-      path: 'packages/kernel/react/src/render/CanvasHost.tsx',
-      startLine: 130,
-      endLine: 138,
+      path: 'packages/kernel/react/src/container/render/CanvasHost.tsx',
+      startLine: 19,
+      endLine: 26,
     },
   ]}
 />
@@ -172,13 +170,13 @@ Two further boundaries affect final colors:
   sources={[
     {
       label: 'Layout: merge Provider, input, and explicit themes',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 106,
-      endLine: 119,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 104,
+      endLine: 117,
     },
     {
       label: 'Field-wise Theme merge',
-      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
+      path: 'packages/kernel/react/src/container/context/use-theme.tsx',
       startLine: 5,
       endLine: 13,
     },
@@ -200,7 +198,7 @@ Two further boundaries affect final colors:
     },
     {
       label: 'Nested ThemeProvider inheritance',
-      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
+      path: 'packages/kernel/react/src/container/context/use-theme.tsx',
       startLine: 46,
       endLine: 54,
     },

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -186,7 +186,7 @@ describe('Layout renderer 规格', () => {
     await act(() => root.unmount());
   });
 
-  it('default-renderer-is-svg：SSR 默认输出带 opaque seed 的 SVG', () => {
+  it('default-renderer-is-svg：SSR 默认只输出带尺寸的空 SVG 宿主', () => {
     const markup = renderToStaticMarkup(
       <Layout width={120} height={80}>
         <Node id="a" position={[0, 0]}>
@@ -196,8 +196,36 @@ describe('Layout renderer 规格', () => {
     );
 
     expect(markup).toContain('<svg');
-    expect(markup).toContain('data-retikz-id="a"');
+    expect(markup).toMatch(/><\/svg>$/);
     expect(markup).not.toContain('<canvas');
+  });
+
+  it('客户端接管服务端的空 SVG 根元素并绘制、更新子节点', async () => {
+    const drawing = (text: string) => (
+      <Layout>
+        <Node id="a" position={[0, 0]}>
+          {text}
+        </Node>
+      </Layout>
+    );
+    const container = document.createElement('div');
+    container.innerHTML = renderToStaticMarkup(drawing('first'));
+    const svg = container.firstElementChild;
+    expect(svg?.childElementCount).toBe(0);
+    let root: ReturnType<typeof hydrateRoot>;
+    await act(() => {
+      root = hydrateRoot(container, drawing('first'));
+    });
+    try {
+      expect(container.firstElementChild).toBe(svg);
+      expect(svg?.textContent).toContain('first');
+      await act(() => root.render(drawing('second')));
+      expect(container.firstElementChild).toBe(svg);
+      expect(svg?.textContent).toContain('second');
+      expect(svg?.textContent).not.toContain('first');
+    } finally {
+      await act(() => root.unmount());
+    }
   });
 
   it('svg-canvas-host-parity：同一 JSX 可进入两种 session host shell', async () => {
@@ -236,4 +264,41 @@ describe('Layout renderer 规格', () => {
     if (descriptor === undefined) Reflect.deleteProperty(globalThis, 'devicePixelRatio');
     else Object.defineProperty(globalThis, 'devicePixelRatio', descriptor);
   });
+});
+
+it('Canvas 宿主配置和主题变化复用画布和编译结果，卸载后不再重绘', async () => {
+  const recorded = createTestCanvasContext();
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(recorded.context);
+  const onCompileResult = vi.fn();
+  const container = document.createElement('div');
+  const root = createRoot(container);
+  const content = <Node position={[0, 0]} text="A" />;
+  const renderView = (width: number) => (
+    <Layout renderer="canvas" width={width} onCompileResult={onCompileResult}>
+      {content}
+    </Layout>
+  );
+  await act(() => root.render(renderView(100)));
+  const canvas = container.firstElementChild;
+  await act(() => root.render(renderView(200)));
+  expect(container.firstElementChild).toBe(canvas);
+  expect(onCompileResult).toHaveBeenCalledTimes(1);
+  recorded.fillText.mockClear();
+  const html = document.documentElement;
+  const initialTheme = html.getAttribute('data-theme');
+  try {
+    await act(async () => {
+      html.setAttribute('data-theme', 'canvas-test');
+      await Promise.resolve();
+    });
+    expect(recorded.fillText).toHaveBeenCalled();
+    expect(onCompileResult).toHaveBeenCalledTimes(1);
+  } finally {
+    await act(() => root.unmount());
+    recorded.fillText.mockClear();
+    if (initialTheme === null) html.removeAttribute('data-theme');
+    else html.setAttribute('data-theme', initialTheme);
+    await Promise.resolve();
+  }
+  expect(recorded.fillText).not.toHaveBeenCalled();
 });

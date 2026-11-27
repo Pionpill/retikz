@@ -1,5 +1,5 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import type { InputCell } from '@retikz/standard-vanilla/collection';
 import type { IRCell, IRArrayCell } from '@retikz/standard/collection';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
@@ -112,7 +112,7 @@ export const createCellsInput = <TLayout extends CellLayoutSource>(
 
     if (typeof cell.content === 'string') return { ...cell, content: cell.content };
 
-    const collected = createInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
+    const collected = convertReactToInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
     const children = collected.children;
     if (children.length !== 1) {
       return invalidCellAuthoring('Each collection cell requires exactly one authoring child.');

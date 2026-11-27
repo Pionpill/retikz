@@ -17,7 +17,7 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 未设置 `rootScope.defaults` 时，Layout 直接使用原 children。显式提供 `defaults` 时就包一层普通 Scope，即使值是 `{}` 或 `{ reset: false }`。React 不检查内部字段。
 
-- **直接传入 ir**：使用 IR 已描述的完整子图，不能同时传 children；`rootScope` 不生效。要改变其中的作用域，应修改 IR 本身；宿主 CSS `style` 仍然生效。
+- **直接传入 ir**：使用 IR 已描述的完整子图，不能同时传 `children` 或 `rootScope`。要改变其中的作用域，应修改 IR 本身；宿主 CSS `style` 仍然生效。
 
 **这层合成 Scope 不是局部命名空间。** `rootScope` 只接收 `defaults`；需要 `localNamespace` 时，应在子图中显式使用 Scope，命名与引用机制见 [Scope 用法](/kernel/components/scope/usage)。
 
@@ -25,14 +25,14 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
   sources={[
     {
       label: '按 defaults 决定是否包装根 Scope',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 100,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 98,
     },
     {
       label: 'Layout 的 ir 分支与 rootScope 边界',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 92,
-      endLine: 104,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 96,
+      endLine: 102,
     },
   ]}
 />
@@ -69,9 +69,9 @@ $$
   sources={[
     {
       label: 'Layout：显式 viewBox 覆盖输入值',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 106,
-      endLine: 119,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 104,
+      endLine: 117,
     },
     {
       label: 'Core：选择显式视窗或自动边界',
@@ -124,15 +124,13 @@ SVG 和 Canvas 共用这套显示尺寸计算。CSS 字符串不会被当作绘�
     },
     {
       label: 'SVG：将尺寸应用到根元素',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 166,
-      endLine: 169,
+      path: 'packages/kernel/react/src/container/render/SvgHost.tsx',
     },
     {
       label: 'Canvas：复用显示尺寸计算',
-      path: 'packages/kernel/react/src/render/CanvasHost.tsx',
-      startLine: 130,
-      endLine: 138,
+      path: 'packages/kernel/react/src/container/render/CanvasHost.tsx',
+      startLine: 19,
+      endLine: 26,
     },
   ]}
 />
@@ -169,13 +167,13 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
   sources={[
     {
       label: 'Layout：合并 Provider、输入与显式主题',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 106,
-      endLine: 119,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 104,
+      endLine: 117,
     },
     {
       label: 'Theme 的逐字段合并',
-      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
+      path: 'packages/kernel/react/src/container/context/use-theme.tsx',
       startLine: 5,
       endLine: 13,
     },
@@ -197,7 +195,7 @@ Layout 把主题写入输入场景，供后续处理读取；它不会把主题�
     },
     {
       label: '嵌套 ThemeProvider 的继承',
-      path: 'packages/kernel/react/src/components/layout/use-theme.tsx',
+      path: 'packages/kernel/react/src/container/context/use-theme.tsx',
       startLine: 46,
       endLine: 54,
     },

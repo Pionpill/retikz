@@ -34,6 +34,8 @@ describe('Layout API 公开范围', () => {
     const jsxBranch = layoutProps.split('<DocTab value="children"')[1]?.split('</DocTab>')[0];
     expect(irBranch).toContain('`ir`');
     expect(irBranch).toContain('`children?` | `never`');
+    expect(irBranch).toContain('`rootScope?` | `never`');
+    expect(jsxBranch).toContain('`rootScope?` | `ScopeStyleProps`');
     expect(jsxBranch).toContain('`children`');
     expect(jsxBranch).toContain('`ir?` | `never`');
     expect(layoutProps).toMatch(

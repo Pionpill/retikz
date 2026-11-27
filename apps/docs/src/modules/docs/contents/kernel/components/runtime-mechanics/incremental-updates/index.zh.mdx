@@ -9,7 +9,7 @@ description: 沿一次节点改色，追踪输入准备、Reconciler 会话、We
   description="增量更新目前为实验性功能。完整输入更新、基础元素批次和宿主提交具有不同边界，不保证每次更新都只重算局部。"
 />
 
-把节点 A 从橙色改成蓝色，哪些工作需要重做？本文沿 Vanilla DOM 的 session 更新追踪：Vanilla 准备输入，Reconciler 会话组合 Core 原子阶段，Render 准备并提交画面，成功后才发布新结果。React 订阅处理结果后显示它，拥有不同的宿主提交边界。
+把节点 A 从橙色改成蓝色，哪些工作需要重做？本文沿 Vanilla DOM 的 session 更新追踪：Vanilla 准备输入，Reconciler 会话组合 Core 原子阶段，Render 准备并提交画面，成功后才发布新结果。React 提供宿主根元素，绘制使用相同的 DOM 渲染目标。
 
 阅读前先了解[渲染链路](/kernel/components/runtime-mechanics/rendering-pipeline)中的 IR、Scene 与包职责。单次编译见 [Core 编译流程](/kernel/packages/core/compilation)。
 
@@ -76,14 +76,14 @@ Vanilla DOM 通过 `createRenderTarget` 把 renderer 接入会话输出目标，
 
 Scene 快照根据编译 provenance 记录图元身份、owner 与拓扑，供 Render 验证和水合使用。这些身份不等于 Weave 批次中的节点地址，也不保证宿主进行局部更新。
 
-React Layout 先订阅成功发布的 `ReconcilerResult`，再构建宿主输出。Reconciler 输出目标的回滚保证不覆盖 React 自身的提交周期。
+React Layout 将已挂载的根元素传给 DOM 渲染目标，并订阅成功发布的结果。Reconciler 输出目标的回滚保证不覆盖 React 自身的提交周期。
 
 <SourceLinks
   sources={[
     { label: 'Vanilla DOM 目标装配', path: 'packages/kernel/vanilla/src/dom/view.ts' },
     { label: '候选帧、Patch 与提交', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'Scene 快照与身份', path: 'packages/kernel/render/src/scene/snapshot.ts' },
-    { label: 'React 显示处理结果', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+    { label: 'React 显示处理结果', path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx' },
   ]}
 />
 
@@ -101,7 +101,7 @@ React Layout 先订阅成功发布的 `ReconcilerResult`，再构建宿主输出
   sources={[
     { label: '发布、回滚与 broken 边界', path: 'packages/kernel/reconciler/src/reconcile/reconciler.ts' },
     { label: '宿主状态恢复', path: 'packages/kernel/render/src/runtime/target.ts' },
-    { label: 'React 保留成功结果', path: 'packages/kernel/react/src/components/layout/Layout.tsx' },
+    { label: 'React 保留成功结果', path: 'packages/kernel/react/src/container/Layout.tsx' },
   ]}
 />
 

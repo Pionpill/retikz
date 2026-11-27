@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
 import type { EllipsePrimitive, PathPrimitive, RectPrimitive, ScenePrimitive, TextPrimitive } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
@@ -16,11 +17,12 @@ import type { ScopeStyleProps } from '../../../src';
  *   children 包进合成根 `<Scope>`，编译产物 = 用户手写一层根 `<Scope>` 的同一 IR。覆盖：
  *   - happy：node / path / label 各通道继承 + 主色级联
  *   - 边界：无样式 prop 时 IR 形态逐字节不变（不包空 scope）/ 空 children / 单通道只进该通道
- *   - 错误路径：与 `ir` prop 并用 → dev warn + 样式忽略 / 非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错
+ *   - 错误路径：非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错
  *   - 交互：内层 `<Scope>` 覆盖 / 图元显式属性胜出 / 内层 `<Scope resetStyle>` 屏障切断继承
  *   断言层：从 Layout 读取编译输入并通过 Vanilla normalize 出 IR 形态；SceneReconciler 出已解析 primitive 样式
  */
 import { compileTestResult } from '../../helpers/compilation';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
 // --- helpers ---------------------------------------------------------------
@@ -102,13 +104,13 @@ describe('rootScope 的空覆盖与命名空间边界', () => {
   });
 
   it('宿主 CSS 与绘图覆盖独立', () => {
-    const markup = renderToStaticMarkup(
+    const markup = mountedMarkup(
       <Layout style={{ backgroundColor: 'yellow' }} rootScope={{ defaults: { style: { fill: 'red' } } }}>
         <Node position={[0, 0]} />
       </Layout>,
     );
 
-    expect(markup).toContain('background-color:yellow');
+    expect(markup).toMatch(/background-color:\s*yellow/);
     expect(markup).toContain('fill="red"');
   });
 });
@@ -168,7 +170,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
     expect(linePathOf(prims)?.stroke).toBe('blue');
 
     // 端到端：真实 <Layout> 组件渲染也应把主色透出到 SVG
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout rootScope={{ defaults: { style: { color: 'blue' } } }}>
         <Node id="A" position={[0, 0]}>
           A
@@ -292,38 +294,10 @@ describe('边界：无样式 / 空 children / 单通道', () => {
 });
 
 // ===========================================================================
-// 错误路径（≥ 2）
+// 非法默认配置
 // ===========================================================================
 
-describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
-  it('layout_ir_prop_with_style_warns：同时传 ir + 样式 prop → dev warn + 样式被忽略', () => {
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
-    };
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const withStyle = renderToStaticMarkup(
-      <Layout
-        ir={ir}
-        rootScope={{
-          defaults: {
-            style: { stroke: 'red' },
-            node: {
-              style: { fill: 'lime' },
-            },
-          },
-        }}
-      />,
-    );
-    const plain = renderToStaticMarkup(<Layout ir={ir} />);
-
-    // 样式被忽略：与不传样式的渲染逐字符一致
-    expect(withStyle).toBe(plain);
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain('<Layout>');
-  });
-
+describe('非法默认配置', () => {
   it('layout_invalid_nodedefault_rejected：非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错', () => {
     // fill 期望 string | IRPaint，给 number 是非法结构（模拟无类型 JS 调用方 / LLM 生成）
     const badIr = layoutIR(

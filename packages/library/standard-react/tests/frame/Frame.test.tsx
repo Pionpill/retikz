@@ -1,4 +1,4 @@
-import { createInputScene, Node, Path, Step } from '@retikz/react';
+import { convertReactToInputScene, Node, Path, Step } from '@retikz/react';
 import { axesProvider, createFrame, frameProvider, gridProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -7,8 +7,8 @@ import type { FrameProps } from '../../src/presentation';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '../../src/presentation';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
-const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
-  const input = createInputScene(children);
+const normalizeReactInput = (children: Parameters<typeof convertReactToInputScene>[0]) => {
+  const input = convertReactToInputScene(children);
   return normalizeScene(input);
 };
 

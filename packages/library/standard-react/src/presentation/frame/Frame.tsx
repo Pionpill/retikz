@@ -1,5 +1,5 @@
 import type { HydrationEventProps, NodeProps, ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene, Node } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import type { InputFrame, InputFrameHeaders } from '@retikz/standard-vanilla/presentation';
 import { frameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import type { InputFrameConfig } from '@retikz/standard/presentation';
@@ -38,7 +38,7 @@ const convertHeaderProps = (
   props: FrameTitleProps | FrameDescriptionProps,
   kind: 'title' | 'description',
 ): InputNode => {
-  const input = createInputScene(createElement(Node, { ...props, position: [0, 0] }));
+  const input = convertReactToInputScene(createElement(Node, { ...props, position: [0, 0] }));
   const children = input.children;
   if (children.length !== 1) {
     throw new RetikzStandardError({
@@ -120,7 +120,7 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
 
   const { children, ...input } = props as FrameProps;
   const parts = readFrameParts(children);
-  const bodyInput = createInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
+  const bodyInput = convertReactToInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
   const childrenInput = bodyInput.children;
 
   const headers: InputFrameHeaders = {

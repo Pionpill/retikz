@@ -1,27 +1,5 @@
 export { Coordinate } from './Coordinate';
 export type { CoordinateProps } from './Coordinate';
-export {
-  AnimationModeContext,
-  AnimationModeProvider,
-  Layout,
-  RendererModeContext,
-  RendererModeProvider,
-  ThemeContext,
-  ThemeProvider,
-  createInputScene,
-  useAnimationMode,
-  useRendererMode,
-  useTheme,
-  useThemeDefinitions,
-} from './layout';
-export type {
-  AnimationMode,
-  AnimationModeProviderProps,
-  InputSceneCreationOptions,
-  LayoutProps,
-  RendererModeProviderProps,
-  ThemeProviderProps,
-} from './layout';
 export { Node, NodeLabel, Text } from './node';
 export type { NodeLabelProps, NodeProps, TextProps } from './node';
 export { Draw, Path, PathLabel, Step, StepLabel } from './path';

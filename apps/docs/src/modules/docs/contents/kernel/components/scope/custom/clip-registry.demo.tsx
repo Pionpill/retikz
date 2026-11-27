@@ -1,4 +1,4 @@
-import { createInputScene, Layout, Node, Scope } from '@retikz/react';
+import { convertReactToInputScene, Layout, Node, Scope } from '@retikz/react';
 import { compileToScene, normalizeScene, renderToSvg } from '@retikz/vanilla';
 import type { FC } from 'react';
 
@@ -42,7 +42,7 @@ const Content: FC = () => (
 export const previewSource = {
   deriveIR: false,
   buildViews: ({ theme }) => {
-    const authoring = createInputScene(<Content />);
+    const authoring = convertReactToInputScene(<Content />);
     const input = { ...authoring, ...(theme === undefined ? {} : { theme }) };
     const ir = normalizeScene(input).ir;
     const compileResult = compileToScene(input, {

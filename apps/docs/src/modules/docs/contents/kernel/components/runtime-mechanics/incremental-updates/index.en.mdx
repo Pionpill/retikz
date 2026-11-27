@@ -9,7 +9,7 @@ description: Follow a node color change through input preparation, the Reconcile
   description="Incremental updates are experimental. Complete-input updates, basic-element batches and host commits have different boundaries; local recomputation is not guaranteed for every update."
 />
 
-When node A changes from orange to blue, what needs to run again? This page follows a Vanilla DOM session update: Vanilla prepares input, a Reconciler session invokes Core, Render prepares and commits the drawing, and the new result is published only after success. React subscribes to processing results and displays them with its own host commit boundary.
+When node A changes from orange to blue, what needs to run again? This page follows a Vanilla DOM session update: Vanilla prepares input, a Reconciler session invokes Core, Render prepares and commits the drawing, and the new result is published only after success. React supplies the host root and draws through the same DOM render target.
 
 First read the IR, Scene and package roles in the [rendering pipeline](/kernel/components/runtime-mechanics/rendering-pipeline). For one compilation, see [Core compilation](/kernel/packages/core/compilation).
 
@@ -85,14 +85,17 @@ Vanilla DOM connects a renderer through `createRenderTarget`, combining host com
 
 Scene snapshots record primitive identities, owners and topology from compilation provenance for Render validation and hydration. These identities are not Weave batch node addresses and do not guarantee local host updates.
 
-React Layout subscribes to a successfully published `ReconcilerResult` before constructing host output. Reconciler target rollback guarantees do not cover React's own commit cycle.
+React Layout passes the mounted root to the DOM render target and subscribes to successfully published results. Reconciler target rollback guarantees do not cover React's own commit cycle.
 
 <SourceLinks
   sources={[
     { label: 'Vanilla DOM target assembly', path: 'packages/kernel/vanilla/src/dom/view.ts' },
     { label: 'Candidate frames, Patches and commits', path: 'packages/kernel/render/src/runtime/target.ts' },
     { label: 'Scene snapshots and identities', path: 'packages/kernel/render/src/scene/snapshot.ts' },
-    { label: 'React displays processing results', path: 'packages/kernel/react/src/render/processing-result.tsx' },
+    {
+      label: 'React displays processing results',
+      path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx',
+    },
   ]}
 />
 
@@ -112,7 +115,7 @@ Warning callbacks, tracing and commit-token cleanup failures after publication a
     { label: 'Host state recovery', path: 'packages/kernel/render/src/runtime/target.ts' },
     {
       label: 'React retains successful results',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
+      path: 'packages/kernel/react/src/container/Layout.tsx',
     },
   ]}
 />

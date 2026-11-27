@@ -84,7 +84,7 @@ const explicit = (
 );
 ```
 
-`readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `createInputScene()` produces the single `InputScene` with adapters bound to each embed for Vanilla normalization.
+`readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `convertReactToInputScene()` produces the single `InputScene` with adapters bound to each embed for Vanilla normalization.
 
 To check whether a React element is marked as embeddable, pass `element.type` to `isEmbeddableMarked`. To obtain its adapter, use `resolveInputEmbedAdapter(element.type)`. If the element is optional, check that it exists first.
 
@@ -106,7 +106,7 @@ To check whether a React element is marked as embeddable, pass `element.type` to
 
 ### Update boundaries
 
-The first render compiles synchronously through Vanilla, so the server can emit SVG without firing commit callbacks. After the client commits, Layout subscribes to a Vanilla scene session. New JSX or IR replaces the whole source in that session. If replacement fails, the last successful result stays visible.
+The first render compiles synchronously through Vanilla, so the server can size the empty host without firing commit callbacks. After the client commits, Layout subscribes to a Vanilla scene session. New JSX or IR replaces the whole source in that session. If replacement fails, the last successful result stays visible.
 
 Equivalent inline extension arrays such as `[shape]` do not trigger recompilation: Layout compares the order and identity of the definitions. Changing compile options recompiles the current source. Changing reconciler options starts a new session. Unmounting disposes the session.
 
@@ -122,7 +122,7 @@ Layout passes `reconciler` to Vanilla. The default `full` mode does not retain a
 
 <SourceLinks
   sources={[
-    { label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx', startLine: 134 },
+    { label: 'Layout', path: 'packages/kernel/react/src/container/Layout.tsx', startLine: 132 },
     { label: 'SceneRuntime', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: 'SceneReconcilerOptions', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}
@@ -134,14 +134,14 @@ Layout passes `reconciler` to Vanilla. The default `full` mode does not retain a
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| Stage                | Owner                | Responsibility                                                                                 |
-| -------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
-| Kernel / Sugar JSX   | `@retikz/react`      | Collect props and children; expand Sugar into Kernel first                                     |
-| `createInputScene()` | `@retikz/react`      | Walk the component tree, produce `InputScene`, with adapters bound to embeds                   |
-| `normalizeScene()`   | `@retikz/vanilla`    | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies         |
-| `IRScene`            | `@retikz/core`       | JSON-serializable drawing contract with no React element, hook, or DOM                         |
-| `SceneReconciler`    | `@retikz/core`       | Process composites; resolve registries, references, geometry, layout, resources, and animation |
-| `CompileResult`      | `@retikz/reconciler` | Scene and artifacts from one compilation                                                       |
+| Stage                        | Owner                | Responsibility                                                                                 |
+| ---------------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| Kernel / Sugar JSX           | `@retikz/react`      | Collect props and children; expand Sugar into Kernel first                                     |
+| `convertReactToInputScene()` | `@retikz/react`      | Walk the component tree, produce `InputScene`, with adapters bound to embeds                   |
+| `normalizeScene()`           | `@retikz/vanilla`    | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies         |
+| `IRScene`                    | `@retikz/core`       | JSON-serializable drawing contract with no React element, hook, or DOM                         |
+| `SceneReconciler`            | `@retikz/core`       | Process composites; resolve registries, references, geometry, layout, resources, and animation |
+| `CompileResult`              | `@retikz/reconciler` | Scene and artifacts from one compilation                                                       |
 
 `Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as processing compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX collector. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 
@@ -151,7 +151,7 @@ Use `Layout.onCompileResult` to receive the compiled frame after React commits. 
   sources={[
     {
       label: 'React collecting JSX into an InputScene',
-      path: 'packages/kernel/react/src/components/layout/input-scene.ts',
+      path: 'packages/kernel/react/src/container/convert.ts',
       startLine: 62,
       endLine: 126,
     },
@@ -161,9 +161,9 @@ Use `Layout.onCompileResult` to receive the compiled frame after React commits. 
     },
     {
       label: 'Layout constructing the processing source and options',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 98,
-      endLine: 133,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 96,
+      endLine: 131,
     },
     {
       label: 'Core IR to Scene compiler',
@@ -176,10 +176,12 @@ Use `Layout.onCompileResult` to receive the compiled frame after React commits. 
 
 Scene no longer contains React component semantics. Vanilla processing obtains the result for the current revision, while `@retikz/react` only subscribes to and hosts that result through React:
 
-| Target | `@retikz/vanilla`                                                     | `@retikz/react`                                                 |
-| ------ | --------------------------------------------------------------------- | --------------------------------------------------------------- |
-| SVG    | Manages the processing controller, Core Computation, and Scene result | Maps the result with `ProcessingResultHost` and binds hydration |
-| Canvas | Manages the processing controller, Core Computation, and Scene result | Maps the result with `ProcessingResultHost` to a Canvas host    |
+| Target | `@retikz/vanilla`                                                       | `@retikz/react`                                                                                     |
+| ------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| SVG    | The native renderer commits SVG children and binds events and animation | Owns the root, sets its display size, and supplies event and animation settings                     |
+| Canvas | Manages the processing controller, Core Computation, and Scene result   | Supplies the canvas element; the existing session commits to the same Render backend as Vanilla DOM |
+
+Server rendering outputs only a sized, empty host. The drawing appears after client mount. For static SVG output, use Vanilla’s `renderToSvg`.
 
 Handlers stay outside IR. React collects JSX events and then adds explicit handlers by element ID; both run in that order for the same event. Complete IR uses only the explicit table.
 
@@ -187,19 +189,17 @@ Handlers stay outside IR. React collects JSX events and then adds explicit handl
   sources={[
     {
       label: 'Layout passing source and options to Vanilla processing',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 98,
-      endLine: 133,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 96,
+      endLine: 131,
     },
     {
       label: 'React mapping a processing result to SVG or Canvas',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 91,
-      endLine: 170,
+      path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx',
     },
     {
       label: 'JSX handler runtime side channel',
-      path: 'packages/kernel/react/src/hydration/collect.ts',
+      path: 'packages/kernel/react/src/container/hydration.ts',
       startLine: 53,
       endLine: 94,
     },

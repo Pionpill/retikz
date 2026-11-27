@@ -84,7 +84,7 @@ const explicit = (
 );
 ```
 
-`readSceneChildren` 同步遍历 children：识别 Kernel 标记、展开 Fragment，并直接调用函数式 Sugar 后继续递归。这个过程不经过 React DOM renderer，所以 Kernel / Sugar 必须是无 hook、无副作用的函数组件；`createInputScene()` 产出唯一的 `InputScene`（嵌入项已绑定 adapter），再交给 Vanilla normalize。
+`readSceneChildren` 同步遍历 children：识别 Kernel 标记、展开 Fragment，并直接调用函数式 Sugar 后继续递归。这个过程不经过 React DOM renderer，所以 Kernel / Sugar 必须是无 hook、无副作用的函数组件；`convertReactToInputScene()` 产出唯一的 `InputScene`（嵌入项已绑定 adapter），再交给 Vanilla normalize。
 
 检查一个 React 元素是否可嵌入时，把 `element.type` 传给 `isEmbeddableMarked`；需要适配器时使用 `resolveInputEmbedAdapter(element.type)`。元素可能不存在时，先判断元素是否存在。
 
@@ -106,7 +106,7 @@ const explicit = (
 
 ### 更新边界
 
-首次渲染通过 Vanilla 同步编译，服务端即可输出 SVG；此时不触发提交回调。客户端提交后，Layout 订阅一个 Vanilla 场景会话。新的 JSX 或 IR 交给同一会话完整替换；替换失败时继续显示最后一次成功结果。
+首次渲染通过 Vanilla 同步编译，服务端只输出带尺寸的宿主，不触发提交回调。客户端提交后，Layout 订阅一个 Vanilla 场景会话。新的 JSX 或 IR 交给同一会话完整替换；替换失败时继续显示最后一次成功结果。
 
 等价的内联扩展数组（例如 `[shape]`）不会触发重新编译：Layout 比较定义的顺序和引用。更换编译参数会用新参数重新编译；更换协调器配置会建立新会话；卸载时释放会话。
 
@@ -122,7 +122,7 @@ const explicit = (
 
 <SourceLinks
   sources={[
-    { label: 'Layout', path: 'packages/kernel/react/src/components/layout/Layout.tsx', startLine: 134 },
+    { label: 'Layout', path: 'packages/kernel/react/src/container/Layout.tsx', startLine: 132 },
     { label: 'SceneRuntime', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: 'SceneReconcilerOptions', path: 'packages/kernel/reconciler/src/reconcile/types.ts' },
   ]}
@@ -134,14 +134,14 @@ const explicit = (
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| 阶段                 | 所有者               | 做什么                                                             |
-| -------------------- | -------------------- | ------------------------------------------------------------------ |
-| Kernel / Sugar JSX   | `@retikz/react`      | 收集 props 与 children；Sugar 先展开为 Kernel                      |
-| `createInputScene()` | `@retikz/react`      | 遍历组件树，生成 `InputScene`，嵌入项在构造时绑定 adapter          |
-| `normalizeScene()`   | `@retikz/vanilla`    | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖 |
-| `IRScene`            | `@retikz/core`       | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM         |
-| `SceneReconciler`    | `@retikz/core`       | 处理 composite，解析 registry、引用、几何、布局、资源与动画        |
-| `CompileResult`      | `@retikz/reconciler` | 一次编译的 Scene 和 artifacts                                      |
+| 阶段                         | 所有者               | 做什么                                                             |
+| ---------------------------- | -------------------- | ------------------------------------------------------------------ |
+| Kernel / Sugar JSX           | `@retikz/react`      | 收集 props 与 children；Sugar 先展开为 Kernel                      |
+| `convertReactToInputScene()` | `@retikz/react`      | 遍历组件树，生成 `InputScene`，嵌入项在构造时绑定 adapter          |
+| `normalizeScene()`           | `@retikz/vanilla`    | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖 |
+| `IRScene`                    | `@retikz/core`       | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM         |
+| `SceneReconciler`            | `@retikz/core`       | 处理 composite，解析 registry、引用、几何、布局、资源与动画        |
+| `CompileResult`              | `@retikz/reconciler` | 一次编译的 Scene 和 artifacts                                      |
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 processing 的 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX collector。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
@@ -151,7 +151,7 @@ const explicit = (
   sources={[
     {
       label: 'React 收集 JSX 为 InputScene',
-      path: 'packages/kernel/react/src/components/layout/input-scene.ts',
+      path: 'packages/kernel/react/src/container/convert.ts',
       startLine: 62,
       endLine: 126,
     },
@@ -161,9 +161,9 @@ const explicit = (
     },
     {
       label: 'Layout 构造 processing source 与 options',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 98,
-      endLine: 133,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 96,
+      endLine: 131,
     },
     {
       label: 'Core IR 编译为 Scene',
@@ -176,10 +176,12 @@ const explicit = (
 
 Scene 已经没有 React 组件语义。Vanilla processing 负责发布当前 revision 的编译结果，`@retikz/react` 只订阅并把这个结果宿主到 React：
 
-| 目标   | `@retikz/vanilla`                                          | `@retikz/react`                                           |
-| ------ | ---------------------------------------------------------- | --------------------------------------------------------- |
-| SVG    | 管理 processing controller、Core Computation 与 Scene 结果 | 用 `ProcessingResultHost` 映射为稳定 SVG 并绑定 hydration |
-| Canvas | 管理 processing controller、Core Computation 与 Scene 结果 | 用 `ProcessingResultHost` 映射为 Canvas 宿主              |
+| 目标   | `@retikz/vanilla`                                          | `@retikz/react`                                                     |
+| ------ | ---------------------------------------------------------- | ------------------------------------------------------------------- |
+| SVG    | 原生 renderer 提交 SVG 子树、绑定事件与动画                | 持有根元素、设置显示尺寸并传入事件与动画配置                        |
+| Canvas | 管理 processing controller、Core Computation 与 Scene 结果 | 提供 canvas 元素，由已有会话提交给与 Vanilla DOM 相同的 Render 后端 |
+
+服务端渲染只输出带尺寸的空宿主；图形在客户端挂载后出现。需要静态 SVG 时，使用 Vanilla 的 `renderToSvg`。
 
 事件函数不进入 IR。React 先收集 JSX 图元事件，再按图元 id 合并显式 `handlers`；同一事件依次调用两者。传入完整 IR 时只使用显式事件表。
 
@@ -187,19 +189,17 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责发布当前 re
   sources={[
     {
       label: 'Layout 将 source 与 options 交给 Vanilla processing',
-      path: 'packages/kernel/react/src/components/layout/Layout.tsx',
-      startLine: 98,
-      endLine: 133,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 96,
+      endLine: 131,
     },
     {
       label: 'React 将 processing result 映射为 SVG 或 Canvas 宿主',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 91,
-      endLine: 170,
+      path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx',
     },
     {
       label: 'JSX handler 运行时旁路',
-      path: 'packages/kernel/react/src/hydration/collect.ts',
+      path: 'packages/kernel/react/src/container/hydration.ts',
       startLine: 53,
       endLine: 94,
     },

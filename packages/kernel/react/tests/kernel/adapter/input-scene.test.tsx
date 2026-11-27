@@ -4,13 +4,13 @@ import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { Node, Path, Scope, Step, Text } from '../../../src';
-import { createInputScene } from '../../../src/components/layout';
 import { Draw, NodeLabel, PathLabel, StepLabel } from '../../../src/components';
+import { convertReactToInputScene } from '../../../src/container';
 import { compileTestResult } from '../../helpers/compilation';
 
 describe('React JSX Input 场景', () => {
   it('节点标签按配置、JSX 的顺序追加，标签文字不进入正文', () => {
-    const source = createInputScene(
+    const source = convertReactToInputScene(
       <>
         <Node text="body" label={{ text: 'first' }}>
           <>
@@ -38,7 +38,7 @@ describe('React JSX Input 场景', () => {
       { type: 'node', label: { text: 'single' } },
     ]);
     expect(() =>
-      createInputScene(
+      convertReactToInputScene(
         <Node text="body">
           <Text>second body</Text>
         </Node>,
@@ -48,7 +48,7 @@ describe('React JSX Input 场景', () => {
 
   it('路径标签不占用步骤序号，且不同于单步标签', () => {
     const { ir } = normalizeScene(
-      createInputScene(
+      convertReactToInputScene(
         <>
           <Draw
             way={[
@@ -83,7 +83,7 @@ describe('React JSX Input 场景', () => {
     });
     expect(ir.children[2]).toEqual({ type: 'path', kind: 'custom', label: { text: 'L' } });
     expect(() =>
-      createInputScene(
+      convertReactToInputScene(
         <Draw
           way={[
             [0, 0],
@@ -95,7 +95,7 @@ describe('React JSX Input 场景', () => {
       ),
     ).toThrow(/way 和 Step/);
     expect(() =>
-      createInputScene(
+      convertReactToInputScene(
         <Path>
           <PathLabel>L</PathLabel>
         </Path>,
@@ -104,7 +104,7 @@ describe('React JSX Input 场景', () => {
   });
 
   it('只在省略 kind 时按实际步骤顺序补上起点和直线', () => {
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <>
         <Path>
           <>
@@ -135,13 +135,13 @@ describe('React JSX Input 场景', () => {
   });
 
   it('JSX 子步骤和 way 两种写法归一为相同的路径', () => {
-    const steps = createInputScene(
+    const steps = convertReactToInputScene(
       <Path>
         <Step to={[0, 0]} />
         <Step to={[100, 0]} />
       </Path>,
     );
-    const shorthand = createInputScene(
+    const shorthand = convertReactToInputScene(
       <Draw
         way={[
           [0, 0],
@@ -154,7 +154,7 @@ describe('React JSX Input 场景', () => {
   it.each(['->', '<-', '<->'] as const)('Path 与 Draw 的 %s 简写统一由 Vanilla 转换', arrow => {
     const endpoints = arrow === '->' ? { end: {} } : arrow === '<-' ? { start: {} } : { start: {}, end: {} };
     const fromPath = normalizeScene(
-      createInputScene(
+      convertReactToInputScene(
         <Path arrow={arrow}>
           <Step kind="move" to={[0, 0]} />
           <Step kind="line" to={[100, 0]} />
@@ -162,7 +162,7 @@ describe('React JSX Input 场景', () => {
       ),
     ).ir;
     const fromDraw = normalizeScene(
-      createInputScene(
+      convertReactToInputScene(
         <Draw
           arrow={arrow}
           way={[
@@ -173,7 +173,7 @@ describe('React JSX Input 场景', () => {
       ),
     ).ir;
     const explicit = normalizeScene(
-      createInputScene(
+      convertReactToInputScene(
         <Draw
           arrow={endpoints}
           way={[
@@ -190,20 +190,20 @@ describe('React JSX Input 场景', () => {
   it('JSX 节点的多行标签归一后符合 IR schema', () => {
     const text = ['first', { text: 'second', fill: '#ff0000' }];
     const label = { text, textAlign: 'end' as const, lineHeight: 24, maxTextWidth: 30, opacity: 0.5 };
-    const input = createInputScene(<Node label={label} />);
+    const input = convertReactToInputScene(<Node label={label} />);
     const ir = normalizeScene(input).ir;
     expect(ir.children[0]).toMatchObject({ label });
     expect(SceneSchema.parse(ir).children[0]).toMatchObject({ label });
   });
   it('JSX 节点归一后保留别名', () => {
-    const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
+    const input = convertReactToInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
     const ir = normalizeScene(input).ir;
 
     expect(ir.children[0]).toMatchObject({ id: 'primary', aliasIds: ['alternate'] });
   });
 
   it('将 Kernel JSX 收集为 Vanilla Input，并由 Vanilla 解析字符串 target', () => {
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <>
         <Node id="source" position={[0, 0]} />
         <Path id="edge">
@@ -228,7 +228,7 @@ describe('React JSX Input 场景', () => {
   });
 
   it('Draw 将 way 转成与显式步骤等价的 Path 输入', () => {
-    const input = createInputScene(<Draw way={['source', 'target']} style={{ stroke: '#2563eb' }} />);
+    const input = convertReactToInputScene(<Draw way={['source', 'target']} style={{ stroke: '#2563eb' }} />);
 
     expect(input.children[0]).not.toHaveProperty('way');
     expect(input.children[0]).toHaveProperty('children');
@@ -248,7 +248,7 @@ describe('React JSX Input 场景', () => {
     const props = {
       arrow: { end: { endpointOverlap: 0.5 } },
     };
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <Path {...props}>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[20, 0]} />
@@ -266,7 +266,7 @@ describe('React JSX Input 场景', () => {
   it('保留 Path 与 Scope 的作者元数据，不写入 IR', () => {
     const scopeAuthoring = Object.freeze({ scope: true });
     const pathAuthoring = Object.freeze({ path: true });
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <Scope authoring={scopeAuthoring}>
         <Path authoring={pathAuthoring}>
           <Step kind="move" to={[0, 0]} />
@@ -285,7 +285,7 @@ describe('React JSX Input 场景', () => {
   });
 
   it('将 StepLabel interrupt 布尔值透传为经 Core schema 验证的 Vanilla IR', () => {
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <Path>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[10, 0]}>
@@ -326,7 +326,7 @@ describe('React JSX Input 场景', () => {
         },
       ],
     };
-    const reactInput = createInputScene(
+    const reactInput = convertReactToInputScene(
       <Path id="edge" label={{ text: 'host', sloped: true }} style={{ stroke: '#13579b' }}>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[100, 0]}>
@@ -347,7 +347,7 @@ describe('React JSX Input 场景', () => {
 });
 
 it('JSX 作用域归一后保留包络形状和子节点', () => {
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <Scope id="group" boundingShape="circle">
       <Node position={[0, 0]} />
     </Scope>,
@@ -365,7 +365,7 @@ it('React 与 Vanilla 保留独立端点箭头和任意位置标记', () => {
   const arrow = { end: { shape: 'circle', endpointOverlap: 0.5 } };
   const marks: NonNullable<IRPath['marks']> = [{ pos: 0, rotate: 45, scale: 2, shape: 'dot', params: { radius: 3 } }];
   const jsx = normalizeScene(
-    createInputScene(
+    convertReactToInputScene(
       <Draw
         way={[
           [0, 0],

@@ -1,5 +1,5 @@
 import type { CoreProviderContribution, IRScene, IRTheme, IRViewBox } from '@retikz/core';
-import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
+import { convertReactToInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
 import type { ScopeStyleProps } from '@retikz/react';
 import type { CompileOptions } from '@retikz/reconciler';
 import { normalizeScene } from '@retikz/vanilla';
@@ -73,7 +73,7 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
   const normalized =
     props.ir === undefined
       ? (() => {
-          const input = createInputScene(childNode);
+          const input = convertReactToInputScene(childNode);
           const runtime = normalizeScene(input);
 
           return {

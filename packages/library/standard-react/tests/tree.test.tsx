@@ -1,4 +1,4 @@
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import { tree } from '@retikz/standard-vanilla/collection';
 import type { InputTree } from '@retikz/standard-vanilla/collection';
 import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
@@ -13,7 +13,7 @@ it('Tree字符串与对象配置的Source及SVG和Vanilla等价', () => {
     { root: {} },
     { root: null },
   ] satisfies Array<InputTree>) {
-    const jsx = createInputScene(<Tree {...props} />);
+    const jsx = convertReactToInputScene(<Tree {...props} />);
     const vanilla = scene({ children: [tree(props)] });
 
     expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);

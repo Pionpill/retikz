@@ -1,4 +1,4 @@
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '@retikz/standard-react/shape';
 import { shape } from '@retikz/standard-vanilla/shape';
 import { normalizeScene, scene } from '@retikz/vanilla';
@@ -14,7 +14,7 @@ it('通过 Path 编写便利，在适配器之间保持整个系列的等效性'
     meta: { origin: 'author' },
     label: { text: 'shape' },
   };
-  const input = createInputScene(
+  const input = convertReactToInputScene(
     <>
       <Ellipse id="e" center="origin" radius={{ x: 20, y: 10 }} {...visual} />
       <Rectangle id="r" corner1="origin" corner2={[40, 20]} {...visual} />
@@ -47,7 +47,7 @@ it('通过 Path 编写便利，在适配器之间保持整个系列的等效性'
 });
 
 it('在 React 和 Vanilla 之间共享 Circle Source 和提供者贡献', () => {
-  const input = createInputScene(<Circle id="c1" center="origin" radius={20} />);
+  const input = convertReactToInputScene(<Circle id="c1" center="origin" radius={20} />);
   const react = normalizeScene(input);
   const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }));
 
@@ -56,7 +56,7 @@ it('在 React 和 Vanilla 之间共享 Circle Source 和提供者贡献', () => 
 });
 
 it('当 React 省略编写 ID 时，不会保留生成的实例 ID', () => {
-  const input = createInputScene(<Circle center={[0, 0]} radius={20} />);
+  const input = convertReactToInputScene(<Circle center={[0, 0]} radius={20} />);
   const result = normalizeScene(input);
 
   expect(result.ir.children[0]).not.toHaveProperty('id');

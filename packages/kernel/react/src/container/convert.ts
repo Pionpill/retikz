@@ -3,16 +3,16 @@ import { embed } from '@retikz/vanilla';
 import type { ReactNode, ReactElement } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import { RetikzReactError, RetikzReactErrorCode } from '../../error';
-import { KernelDisplayName, createInputEmbedProps, getDisplayName, resolveInputEmbedAdapter } from '../../shared';
-import { convertCoordinateProps } from '../Coordinate';
-import type { CoordinateProps } from '../Coordinate';
-import { convertNodeProps } from '../node';
-import type { NodeProps } from '../node';
-import { convertPathProps } from '../path';
-import type { PathProps } from '../path';
-import { convertScopeProps } from '../Scope';
-import type { ScopeProps } from '../Scope';
+import { convertCoordinateProps } from '../components/Coordinate';
+import type { CoordinateProps } from '../components/Coordinate';
+import { convertNodeProps } from '../components/node';
+import type { NodeProps } from '../components/node';
+import { convertPathProps } from '../components/path';
+import type { PathProps } from '../components/path';
+import { convertScopeProps } from '../components/Scope';
+import type { ScopeProps } from '../components/Scope';
+import { RetikzReactError, RetikzReactErrorCode } from '../error';
+import { KernelDisplayName, createInputEmbedProps, getDisplayName, resolveInputEmbedAdapter } from '../shared';
 
 /** 局部 JSX 收集时为匿名嵌入分配稳定 identity 的选项 */
 export type InputSceneCreationOptions = Readonly<{
@@ -117,7 +117,7 @@ const readSceneChildren = (children: ReactNode, context: InputContext): InputSce
 };
 
 /** 收集 JSX children 为唯一 Vanilla InputScene */
-export const createInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): InputScene => {
+export const convertReactToInputScene = (children: ReactNode, options: InputSceneCreationOptions = {}): InputScene => {
   const context: InputContext = {
     ...(options.embedIdPrefix === undefined ? {} : { embedIdPrefix: options.embedIdPrefix }),
     nextAnonymousEmbed: 0,

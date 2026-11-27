@@ -2,7 +2,7 @@ import type { LayoutItemKind } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { InputFlexLayoutItem, InputGridLayoutItem, InputOverlayLayoutItem } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import type { InputChild } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
@@ -55,7 +55,7 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
   const resolveLayoutItemChild = (props: LayoutItemAuthoringProps, embedIdPrefix: string): InputChild => {
     if (props.ir !== undefined) return props.ir;
 
-    const input = createInputScene(props.children, { embedIdPrefix });
+    const input = convertReactToInputScene(props.children, { embedIdPrefix });
     const normalizedChildren = input.children;
     if (normalizedChildren.length !== 1) {
       throw new RetikzLayoutError({

@@ -1,6 +1,6 @@
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { Entity } from '@retikz/graph-react';
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -23,7 +23,7 @@ import CoordinateConversionFlow from '@/modules/docs/contents/kernel/packages/ma
 
 /** 经过 React authoring 与 Vanilla normalize 读取逻辑图的 Source IR */
 const readLogicFigure = (element: ReactNode) => {
-  const input = createInputScene(element);
+  const input = convertReactToInputScene(element);
   return normalizeScene(input).ir.children[0];
 };
 

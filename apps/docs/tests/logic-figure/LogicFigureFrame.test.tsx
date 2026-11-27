@@ -1,5 +1,5 @@
 import { GroupSchema } from '@retikz/graph';
-import { createInputScene, Node } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -11,14 +11,14 @@ import {
 } from '@/modules/docs/components/logic-figure';
 
 const readFrame = (element: ReactNode) => {
-  const input = createInputScene(element);
+  const input = convertReactToInputScene(element);
   const child = normalizeScene(input).ir.children[0];
   return GroupSchema.parse(child);
 };
 
 /** 通过唯一 React-to-Vanilla Input 路径触发 marker 的父级约束 */
 const normalizeReactNode = (element: ReactNode) => {
-  const input = createInputScene(element);
+  const input = convertReactToInputScene(element);
   return normalizeScene(input);
 };
 

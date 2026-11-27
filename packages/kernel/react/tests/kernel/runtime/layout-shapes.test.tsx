@@ -1,11 +1,12 @@
+// @vitest-environment jsdom
 import type { BoundaryDefinition, ClipDefinition, IRScene, ScenePrimitive, ShapeDefinition } from '@retikz/core';
 import { defineBoundary, defineClip, defineShape } from '@retikz/core';
 import { localToWorld, worldToLocal } from '@retikz/math';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { Layout, Node, Path, Step } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 /**
  * <Layout shapes={...}> 自定义 shape 注入透传
@@ -81,7 +82,7 @@ const clippedIr: IRScene = {
 
 describe('<Layout shapes> 自定义 shape 注入', () => {
   it('注入 shapes 后 <Node shape="hexagon"> 渲染出自定义 emit（ellipse）', () => {
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100} compile={{ shapes: [radialShape()] }}>
         <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
       </Layout>,
@@ -92,7 +93,7 @@ describe('<Layout shapes> 自定义 shape 注入', () => {
 
   it('未注入对应 shape 时编译期 throw Unknown shape', () => {
     expect(() =>
-      renderToStaticMarkup(
+      mountedMarkup(
         <Layout width={100} height={100}>
           <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
         </Layout>,
@@ -104,7 +105,7 @@ describe('<Layout shapes> 自定义 shape 注入', () => {
 describe('<Layout 边界> 自定义边界直通', () => {
   it('将边界提供者传递给 SceneReconciler', () => {
     expect(() =>
-      renderToStaticMarkup(
+      mountedMarkup(
         <Layout width={120} height={80} compile={{ boundaries: [fixedBoundary()] }}>
           <Node id="A" position={[0, 0]} boundary="pin" layout={{ minimumSize: 40 }} />
           <Path>
@@ -118,7 +119,7 @@ describe('<Layout 边界> 自定义边界直通', () => {
 
   it('当引用的边界提供者未注册时抛出', () => {
     expect(() =>
-      renderToStaticMarkup(
+      mountedMarkup(
         <Layout width={120} height={80}>
           <Node id="A" position={[0, 0]} boundary="pin" layout={{ minimumSize: 40 }} />
           <Path>
@@ -133,7 +134,7 @@ describe('<Layout 边界> 自定义边界直通', () => {
 
 describe('<Layout 裁剪> 完整的裁剪定义直通', () => {
   it('将一个完整的裁剪注册表转发给静态 Vanilla 处理和 SSR', () => {
-    const svg = renderToStaticMarkup(<Layout ir={clippedIr} compile={{ clips: [customClip()] }} />);
+    const svg = mountedMarkup(<Layout ir={clippedIr} compile={{ clips: [customClip()] }} />);
 
     expect(svg).toContain('<clipPath');
   });

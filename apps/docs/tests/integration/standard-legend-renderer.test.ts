@@ -1,5 +1,5 @@
 import type { IRChild, Scene } from '@retikz/core';
-import { createInputScene, Node } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
@@ -75,7 +75,7 @@ describe('Standard Legend 渲染器边界', () => {
       },
     } satisfies InputLegend;
     const direct = LegendSchema.parse(createLegend(input));
-    const reactInput = createInputScene(
+    const reactInput = convertReactToInputScene(
       createElement(Legend, {
         kind: LegendContentKind.Items,
         contentAlign: 'end',

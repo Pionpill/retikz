@@ -1,4 +1,4 @@
-import { Path, Step, createInputScene } from '@retikz/react';
+import { Path, Step, convertReactToInputScene } from '@retikz/react';
 import { compileToScene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '../src/shape';
 
 const ir = (jsx: ReactNode) => {
-  const input = createInputScene(jsx);
+  const input = convertReactToInputScene(jsx);
   return { children: compileToScene(input).scene };
 };
 

@@ -1,4 +1,4 @@
-import { createInputScene } from '@retikz/react';
+import { convertReactToInputScene } from '@retikz/react';
 import { SceneRuntime } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
@@ -10,7 +10,7 @@ import { renderStackPreview as renderLayout } from '../../src/modules/docs/conte
 
 it('Stack 操作箭头在 SVG 与保留模式更新中可独立切换', () => {
   const input = (incoming: boolean, outgoing: boolean) =>
-    createInputScene(
+    convertReactToInputScene(
       renderLayout({
         direction: 'right',
         border: true,
@@ -77,7 +77,7 @@ it('Stack 预览保留嵌套的 Matrix 和外部单元格引用', () => {
 
 it.each([true, false])('matrix=%s 时 Stack 虚线单元格在保留模式更新中可切换', matrix => {
   const input = (dashed: boolean) =>
-    createInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
+    convertReactToInputScene(renderComposition({ matrix, dashed, connect: true }).props.children);
   const first = input(true);
   const controller = SceneRuntime.fromInput(first);
   try {

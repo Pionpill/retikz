@@ -1,5 +1,5 @@
 import { pathClipProvider } from '@retikz/extension';
-import { createInputScene, Node } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import { createSurface, frameProvider, surfaceProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -9,7 +9,7 @@ import { Frame, Surface } from '../../src/presentation';
 
 /** 以 React 真实 authoring 路径归一化一个 Surface */
 const contribute = ({ children, ...props }: SurfaceProps) => {
-  const input = createInputScene(<Surface {...props}>{children}</Surface>);
+  const input = convertReactToInputScene(<Surface {...props}>{children}</Surface>);
   const normalized = normalizeScene(input);
 
   return {
@@ -42,7 +42,7 @@ describe('<Surface>', () => {
   });
 
   it('按编写顺序保留 Surface 之后的嵌套 Tier-2 根和提供者', () => {
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <Surface id="panel">
         <Frame id="card">
           <Node position={[0, 0]} text="A" />

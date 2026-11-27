@@ -1,10 +1,11 @@
+// @vitest-environment jsdom
 import { defineArrow } from '@retikz/core';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout } from '../../../src';
 import { Path } from '../../../src';
 import { Step } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 const TestOpenArrowDefinition = defineArrow({
   name: 'testOpen',
@@ -30,7 +31,7 @@ const TestOpenArrowDefinition = defineArrow({
 
 describe('Layout 箭头样式输出', () => {
   it('实心箭头保留显式填充颜色', () => {
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100}>
         <Path arrow={{ end: { shape: 'normal', color: 'red' } }}>
           <Step kind="move" to={[0, 0]} />
@@ -43,7 +44,7 @@ describe('Layout 箭头样式输出', () => {
   });
 
   it('自定义空心箭头保留定义输出的无填充语义', () => {
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100} compile={{ arrows: [TestOpenArrowDefinition] }}>
         <Path arrow={{ end: { shape: 'testOpen', fill: 'red' } }}>
           <Step kind="move" to={[0, 0]} />
@@ -58,7 +59,7 @@ describe('Layout 箭头样式输出', () => {
   });
 
   it('箭头 scale 应用于最终 SVG 变换', () => {
-    const svg = renderToStaticMarkup(
+    const svg = mountedMarkup(
       <Layout width={100} height={100}>
         <Path arrow={{ end: { shape: 'normal', scale: 2 } }}>
           <Step kind="move" to={[0, 0]} />

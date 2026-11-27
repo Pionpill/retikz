@@ -33,6 +33,8 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 通过 `onArtifacts` 读取 Composite 返回的领域产物，例如 FlexLayout 的容器与子项布局。产物随编译自动收集，回调在 React commit 后通知同次结果；后续更新不会改变此前收到的快照。
 
+更换 `onArtifacts` 或 `onCompileResult` 回调时，新回调会收到当前结果，不会因此重新编译。若不希望父组件重渲染时重复通知，请传入稳定的函数引用。
+
 <ComponentPreview files="layout-artifacts" size="xs" />
 
 示例在图外显示 Composite 产物数量和 FlexLayout 的领域值。字段及坐标语义由对应组件定义；普通 Node 不提供独立布局产物。

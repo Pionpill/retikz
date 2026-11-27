@@ -10,7 +10,7 @@ import {
 } from '@retikz/graph';
 import type { InputGraph } from '@retikz/graph-vanilla';
 import { graph, normalizeGraph, relation } from '@retikz/graph-vanilla';
-import { createInputScene, Node, Step, Text } from '@retikz/react';
+import { convertReactToInputScene, Node, Step, Text } from '@retikz/react';
 import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, compileToScene } from '@retikz/vanilla';
 import type { FC } from 'react';
@@ -36,7 +36,7 @@ import { collectEntityInput, collectRelationInput, graphLayoutHostPropsOf } from
 
 describe('Group React 编写', () => {
   it('生成相同的 Group Source IR，同时接受任意 React 子项', () => {
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       <Group
         id="runtime"
         caption={{ title: { text: 'Runtime' } }}
@@ -284,7 +284,7 @@ const WrappedRoute: FC = () =>
   );
 
 const normalizeReact = (element: ReturnType<typeof createElement>) => {
-  const input = createInputScene(element);
+  const input = convertReactToInputScene(element);
   return normalizeScene(input);
 };
 
@@ -731,7 +731,7 @@ describe('Graph Definition 选项等价性', () => {
       source: { id: 'a' },
       target: { id: 'b' },
     };
-    const react = createInputScene(
+    const react = convertReactToInputScene(
       <Graph relationKinds={[kind]}>
         <Node id="a" position={[0, 0]} />
         <Node id="b" position={[100, 0]} />
@@ -799,7 +799,7 @@ describe('Graph Definition 选项等价性', () => {
       relationPredicates: [],
       graphThemeDefinitions: [],
     } as const;
-    const input = createInputScene(
+    const input = convertReactToInputScene(
       createElement(
         Fragment,
         null,
