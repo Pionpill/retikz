@@ -1,10 +1,9 @@
-import { createInputScene } from '@retikz/react';
-import { queue, queueInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
-import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
+import { convertReactToInputScene } from '@retikz/react';
+import { queue } from '@retikz/standard-vanilla/collection';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import { Queue, QueueItem, Matrix, ArrayItem } from '../src/collection';
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 it('JSX与Vanilla的样式、空格、进入箭头和容器配置等价', () => {
   const props = {
@@ -12,20 +11,16 @@ it('JSX与Vanilla的样式、空格、进入箭头和容器配置等价', () => 
     border: { style: { dashPattern: [4, 2] } },
     arrow: { input: { style: { stroke: 'blue' }, arrowDetail: { shape: 'openStealth' } }, output: false },
   };
-  const jsx = createInputScene(
+  const jsx = convertReactToInputScene(
     <Queue {...props}>
       <QueueItem text="A" />
       <QueueItem id="top" />
     </Queue>,
   );
   const vanilla = scene({ children: [queue({ ...props, items: [{ content: 'A' }, { id: 'top' }] })] });
-  const options = { adapters: synchronousAdapters(jsx.adapters) };
-  expect(normalizeScene(jsx.scene, options).ir).toEqual(
-    normalizeScene(vanilla, { adapters: [queueInputEmbedAdapter] }).ir,
-  );
-  expect(renderToSvgString(jsx.scene, options)).toEqual(
-    renderToSvgString(vanilla, { adapters: [queueInputEmbedAdapter] }),
-  );
+
+  expect(normalizeScene(jsx).ir).toEqual(normalizeScene(vanilla).ir);
+  expect(renderToSvg(compileToScene(jsx).scene)).toEqual(renderToSvg(compileToScene(vanilla).scene));
 });
 it('嵌套Matrix及JSON内容使用相同自动依赖链', () => {
   for (const element of [
@@ -38,13 +33,13 @@ it('嵌套Matrix及JSON内容使用相同自动依赖链', () => {
       </QueueItem>
     </Queue>,
   ]) {
-    const jsx = createInputScene(element);
-    expect(renderToSvgString(jsx.scene, { adapters: synchronousAdapters(jsx.adapters) })).toContain('<path');
+    const jsx = convertReactToInputScene(element);
+    expect(renderToSvg(compileToScene(jsx).scene)).toContain('<path');
   }
 });
 it('其他容器marker不能冒充QueueItem', () => {
   expect(() =>
-    createInputScene(
+    convertReactToInputScene(
       <Queue>
         <ArrayItem />
       </Queue>,

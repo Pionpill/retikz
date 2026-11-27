@@ -2,13 +2,13 @@
 import type { IRScene } from '@retikz/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mountCanvas } from '../../src/dom';
+import { mountSceneView } from '../../src/dom';
 
 /*
- * @retikz/vanilla mountCanvas（无框架 canvas 直挂，jsdom 环境）
+ * @retikz/vanilla mount（无框架 canvas 直挂，jsdom 环境）
  * @description jsdom 的 `<canvas>.getContext('2d')` 默认返回 null（无真实 2D backend），故 spy
  *   `HTMLCanvasElement.prototype.getContext` 返回一个「录制型」proxy context 充当原生 canvas 原语——
- *   只提供 canvas API、不替换被测的 mountCanvas 挂载 / dpr / 尺寸逻辑（仍真实受测，对齐 builder-canvas.test 写法）
+ *   只提供 canvas API、不替换被测的 mount 挂载 / dpr / 尺寸逻辑（仍真实受测，对齐 builder-canvas.test 写法）
  */
 
 /** 录制型 fake 2d context：记录调用名，供断言 drawScene 链路被走（setTransform 等） */
@@ -67,18 +67,8 @@ const idIr: IRScene = {
   ],
 };
 
-describe('@retikz/vanilla mountCanvas', () => {
-  it.each(['static', 'retained'] as const)('%s Canvas 宿主保留默认字体', mode => {
-    const container = document.createElement('div');
-    const view =
-      mode === 'static'
-        ? mountCanvas(container, idIr, { defaultFontFamily: 'serif', runtime: { mode } })
-        : mountCanvas(container, idIr, { defaultFontFamily: 'serif', runtime: { mode } });
-    view.update(idIr);
-    expect(view.root.style.fontFamily).toBe('serif');
-    view.dispose();
-  });
-  it.each(['static', 'retained'] as const)('%s 默认 CSS 尺寸独立于 DPR，单轴保持比例', mode => {
+describe('@retikz/vanilla mount', () => {
+  it('默认 CSS 尺寸独立于 DPR，单轴保持比例', () => {
     const ir: IRScene = {
       type: 'scene',
       version: 1,
@@ -86,35 +76,36 @@ describe('@retikz/vanilla mountCanvas', () => {
       viewBox: { x: -20, y: -10, width: 240, height: 120 },
     };
     const container = document.createElement('div');
-    const view =
-      mode === 'static'
-        ? mountCanvas(container, ir, { runtime: { mode } })
-        : mountCanvas(container, ir, { runtime: { mode } });
+    const next: IRScene = { ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } };
+    const view = mountSceneView(container, ir, { renderer: 'canvas' });
 
     expect(view.root.style.width).toBe('240px');
     expect(view.root.style.height).toBe('120px');
     expect(view.root.width).toBe(480);
 
-    view.update({ ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } });
+    view.replace(next);
 
     expect(view.root.style.width).toBe('300px');
     expect(view.root.width).toBe(600);
 
     view.dispose();
-    const scaled =
-      mode === 'static'
-        ? mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } })
-        : mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } });
+    const scaled = mountSceneView(container, ir, { renderer: 'canvas', width: 480 });
 
     expect(scaled.root.style.height).toBe('240px');
     expect(scaled.root.height).toBe(480);
 
     scaled.dispose();
+    const responsive = mountSceneView(container, ir, { renderer: 'canvas', width: '50%' });
+    expect(responsive.root.style.width).toBe('50%');
+    expect(responsive.root.style.height).toBe('auto');
+    expect(responsive.root.width).toBe(480);
+    expect(responsive.root.height).toBe(240);
+    responsive.dispose();
   });
 
   it('mount-canvas-builds-dom：把含 id 的 IR 挂成真实 <canvas> DOM', () => {
     const container = document.createElement('div');
-    const view = mountCanvas(container, idIr);
+    const view = mountSceneView(container, idIr, { renderer: 'canvas' });
     const canvas = container.querySelector('canvas');
 
     expect(canvas).toBeInstanceOf(HTMLCanvasElement);
@@ -123,7 +114,7 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-bitmap-dpr：名义尺寸 × dpr 开位图（dpr=2 → 位图 = 2×CSS）', () => {
     const container = document.createElement('div');
-    const view = mountCanvas(container, idIr, { output: { width: 200, height: 150 } });
+    const view = mountSceneView(container, idIr, { renderer: 'canvas', width: 200, height: 150 });
 
     // 名义 200×150、dpr=2 → 位图 400×300
     expect(view.root.width).toBe(400);
@@ -134,14 +125,14 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-draws-scene：渲染链路被走（drawScene 的 setTransform 被调）', () => {
     const container = document.createElement('div');
-    mountCanvas(container, idIr, { output: { width: 100, height: 100 } });
+    mountSceneView(container, idIr, { renderer: 'canvas', width: 100, height: 100 });
 
     expect(recorded).toContain('setTransform');
   });
 
   it('mount-canvas-fallback-size：未给数值尺寸 → 位图回退内容边界 × dpr、且为正整数', () => {
     const container = document.createElement('div');
-    const view = mountCanvas(container, idIr);
+    const view = mountSceneView(container, idIr, { renderer: 'canvas' });
 
     expect(view.root.width).toBeGreaterThan(0);
     expect(view.root.height).toBeGreaterThan(0);
@@ -151,7 +142,7 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-dispose：dispose 后 canvas 移除、再调不抛', () => {
     const container = document.createElement('div');
-    const view = mountCanvas(container, idIr);
+    const view = mountSceneView(container, idIr, { renderer: 'canvas' });
 
     expect(container.querySelector('canvas')).not.toBeNull();
 
@@ -159,9 +150,5 @@ describe('@retikz/vanilla mountCanvas', () => {
 
     expect(container.querySelector('canvas')).toBeNull();
     expect(() => view.dispose()).not.toThrow();
-  });
-
-  it('mount-canvas-null-container：非 Element 容器 → 可诊断 throw', () => {
-    expect(() => mountCanvas(null as never, idIr)).toThrow(/container/i);
   });
 });

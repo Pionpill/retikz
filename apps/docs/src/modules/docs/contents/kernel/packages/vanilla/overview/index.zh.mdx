@@ -5,39 +5,83 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 `@retikz/vanilla` 是所有框架适配器共用的 API 基础包。它用普通 TypeScript 数据组织 `InputScene`，将其归一为 Core `IRScene`，再运行共享的 processing；React、Vue 等框架包只需要负责各自的输入收集和宿主接线。
 
+Vanilla 工厂的选项类型由包根导出：`node(options)` 用 `NodeOptions`，`coordinate(options)` 用 `CoordinateOptions`，`path(options)` 用 `PathOptions`。`scope(options, children)` 的 `ScopeOptions` 不含子图元；`scene(input)` 可以接收 `SceneOptions` 或直接接收子图元数组。
+
 包根可安全用于 SSR、构建脚本或其它框架。默认文字测量器在实际测量时探测浏览器 Canvas；浏览器 SVG / Canvas 挂载位于 `@retikz/vanilla/dom` 子入口。IR、schema、几何与编译规则属于 `@retikz/core`，后端输出属于 `@retikz/render`。
 
-应用从包根调用 `createProcessingController`、`prepareStaticProcessing` 或 `compileToScene`。自定义编译驱动通过 `VanillaCompileDriver` 及其输入、会话和输出契约接入；输入准备、runtime metadata 快照和驱动执行／提交 helper 由包内处理，不作为包根 API。
+应用从包根调用 `SceneRuntime` 或 `compileToScene`。
+
+持续会话的诊断通过 `runtime.diagnostics()` 读取。
+
+单次编译和持续更新共用输入准备。单次编译直接返回 `CompileResult`；持续模式下，只读属性 `runtime.current` 指向最近一次成功提交的 `ReconcilerResult` 快照，订阅回调收到的也是同一个对象。用 `snapshot.compilation.result` 读取本帧编译产物，增量更新时把快照本身作为 `expected` 传回。订阅回调读取本次快照；若要据此更新同一会话，应等本轮通知结束后再提交。预编译的 Scene 直接交给 Render，不创建编译会话。
+
+已有编译好的 Scene 时，直接用 `renderToSvg(scene)` 导出 SVG。这个函数只读取场景，不会再次编译。如需单独声明尺寸或动画配置的类型，可从包导出的 `RenderToStringOptions` 取 `NonNullable<RenderToStringOptions['output']>` 或 `NonNullable<RenderToStringOptions['animation']>`。
 
 ## 一次性编译
 
-将 Core IR 或 Vanilla InputScene 交给 `compileToScene` 即可取得 Scene 和 artifacts，无需创建或释放会话。配置继续使用 `options.compile`。需要异步作者准备时改用 `compileToSceneAsync`，并提供具备 prepare 能力的 adapter。
+将 Core IR 或 Vanilla InputScene 交给 `compileToScene` 即可取得 Scene 和 artifacts，无需创建或释放会话。编译配置放在 `options.compile`。
 
 ```ts
-import { compileToScene, compileToSceneAsync } from '@retikz/vanilla';
+import { compileToScene } from '@retikz/vanilla';
 
 const result = compileToScene(ir);
 const configured = compileToScene(ir, { compile: { padding: 10 } });
-const prepared = await compileToSceneAsync(input, { adapters });
 
 console.log(result.scene, result.artifacts);
 ```
 
-两个入口返回现有 ProcessingResult，静态 revision 为 0。需要后续更新与订阅时使用 controller；只想将 typed Input 组装成 Core IR 时使用 `normalizeXxx`。
+单图编译直接返回 `CompileResult`，从中读取 Scene 和 artifacts；层栈由独立的 `compileLayers` 返回具名结果列表。需要后续更新与订阅时使用 `SceneRuntime`；只想将 typed Input 组装成 Core IR 时使用 `normalizeXxx`。
+
+## 持续处理一张图
+
+已有 IR 时，用 `new SceneRuntime(ir, options)` 建立会话。作者输入则用 `SceneRuntime.fromInput(input, options)`，由它归一化输入并绑定本帧组件依赖和实例数据。
+
+```ts
+import { SceneRuntime } from '@retikz/vanilla';
+
+const runtime = SceneRuntime.fromInput(input);
+try {
+  runtime.replace(nextInput);
+  const svg = runtime.toSvgString();
+} finally {
+  runtime.dispose();
+}
+```
+
+完整替换可以在作者输入与 IR 之间切换，不推导 diff。增量模式下，先用 `expected = runtime.current` 取得当前版本，通过 `runtime.getScopeId(path, expected)` 寻址，再用 `runtime.update(batch, expected)` 提交。旧版本会被拒绝。导出只读取最后一次成功提交的帧。
+
+同一 `replace(source)` 入口接收完整 IR 或作者输入，默认使用会话的基础编译配置，不沿用上一帧的作者绑定。若仅为本次替换指定编译配置，用 `replace(source, compile)`。
+
+如果自行对接渲染宿主，可在构造时传入 `createTarget`，让会话在首次提交时创建并复用渲染目标。仅事件处理器等宿主状态变化时，调用 `updateTarget()` 重新提交已编译结果，无需替换场景。
 
 ## 默认文字测量
 
 `compile.measureText` 显式提供时优先使用；否则由 Vanilla 按需使用 Canvas 2D，环境或上下文不可用时使用 Core 的估算器。实际测量异常和非法指标仍会报错。React 的 `Layout` 复用同一路径。
 
-`defaultFontFamily` 设置文字未指定字体族时的测量与宿主显示字体；React 对应 `Layout.style.fontFamily`。浏览器测量在两者均缺省时使用页面 `body` 的计算字体，最终使用 `sans-serif`。SVG 导出、SVG 挂载与 Canvas 挂载都接收该宿主默认值。已有 Scene 不重新度量；字体加载不会自动触发重编译。详见[文字度量](/kernel/components/runtime-mechanics/text-metrics)。
+文字没有显式字体族时，默认浏览器测量器读取页面 `body` 的计算字体，取不到时使用 `sans-serif`。宿主 CSS 只影响显示，不会改变已有 Scene 的几何。详见[文字度量](/kernel/components/runtime-mechanics/text-metrics)。
 
-## 异步作者输入准备
+## 输入就绪后再提交
 
-内部的 `prepareProcessingInputAsync` 先遍历完整作者树，调用 adapter.prepare 完成无计算预检，再运行各 preparation.execute 并归一化。嵌套输入由 context.prepareChildren 登记；不得在准备阶段提前执行 children。同步 adapter 明确提供 lower；异步 adapter 必须提供 prepare，宿主不会调用 lower 猜测支持。
+应用先等待数据，再构造输入并调用 `compileToScene` 或单图会话的 `replace`。提交顺序就是更新顺序；是否忽略较晚返回的旧请求由应用决定。嵌入 adapter 的 `lower` 同步返回节点、依赖及按实例绑定的运行时输入，后者不写入 JSON IR。
 
-一次性编译使用 `compileToSceneAsync(input, options?)`；需要控制发布时使用 `prepareStaticProcessingAsync` 的 commit / discard。交互宿主使用 `createProcessingControllerAsync`，等待 update 的 committed / discarded 结果。signal 取消与新请求使旧结果失效，失败保留已提交结果。Core 编译和 renderer 仍同步，Promise 只发生在作者准备边界。
+例如，外接执行器的 Plot 可以和普通节点在同一次更新中提交：
 
-prepared runtime input 通过 contribution.runtimeInputs 按真实 Source 位置绑定，不进入 JSON IR。转交复合 child 时使用共享 opaque child transport，不依赖 id、dataset 名称或对象引用猜测实例。常用领域宿主已接好此边界；应用通常只需使用相应 async 入口。
+```ts
+import { preparePlotData } from '@retikz/plot';
+import { plotInputEmbedAdapter } from '@retikz/plot-vanilla';
+import { embed, node, scene } from '@retikz/vanilla';
+
+const task = await preparePlotData(spec, { dataBindings, dataTransformExecutor });
+const preparedData = await task.execute();
+runtime.replace(
+  scene({
+    children: [
+      node({ id: 'origin', position: [0, 0] }),
+      embed({ adapter: plotInputEmbedAdapter, props: { spec, preparedData } }),
+    ],
+  }),
+);
+```
 
 ## 安装与使用
 
@@ -46,30 +90,27 @@ pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { layer, node, path, renderToSvgString, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { compileToScene, node, path, renderToSvg, scene } from '@retikz/vanilla';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({
-  id: 'flow',
-  layers: [
-    layer({
-      id: 'main',
-      children: [
-        node({ id: 'a', position: [0, 0], text: 'A' }),
-        node({ id: 'b', position: [120, 0], text: 'B' }),
-        path({ id: 'edge', way: ['a', 'b'], arrow: { end: {} } }),
-      ],
-    }),
+  children: [
+    node({ id: 'a', position: [0, 0], text: 'A' }),
+    node({ id: 'b', position: [120, 0], text: 'B' }),
+    path({ id: 'edge', way: ['a', 'b'], arrow: { end: {} } }),
   ],
 });
 
-const svg = renderToSvgString(input);
-const view = mount(document.querySelector('#diagram')!, input);
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
+const view = mountSceneView(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvgString` 可安全用于 SSR、构建期生成或保存 SVG；`mount` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `update`、交互水合、动画控制与释放。
+`renderToSvg` 可安全用于 SSR、构建期生成或保存 SVG；`mountSceneView` 用于浏览器宿主，默认创建 SVG，也可以通过 `renderer: 'canvas'` 切换到 Canvas。返回的 `view` 负责后续 `replace`、交互水合、动画控制与释放。
 
-`scene({ theme: { name, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化复制 Theme 对象，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
+未指定动画开关或静态截帧时间时，已挂载的视图会跟随系统减少动态效果偏好的变化，只更新渲染目标，不重新编译场景。释放视图时会取消订阅。
+
+`scene({ theme: { name, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化沿用 Theme 引用，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
 
 ## 输入归一与 processing
 
@@ -77,17 +118,17 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 直接写入 children 的 Node、Path、Scope 对象必须声明 `type`。使用 `node()`、`path()`、`scope()` 或对应 JSX 组件时，入口会提供类别，不需要重复填写。
 
-Vanilla 的路径配置必须在 `way` 与 `children` 中选择一项。运行时若同时收到两者，以显式 `children` 为准；空步骤数组也不会回退到 `way`。
+Vanilla 的路径配置必须在 `way` 与 `children` 中选择一项。`way` 检查算子和目标的顺序；显式 `children` 只展开简写，不按步数拒绝路径。短路径的几何诊断由 Core 编译器处理，与是否提供 `authoring` 无关。字符串相对偏移的两个分量都必须是有限数。三段折线（`-|-` 或 `|-|`）可用 `fraction` 指定中段位置。
 
-Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position })`、`path({ id, way })`、`coordinate({ id, position })` 和 `layer({ id, children })` 都从配置读取身份；是否必须提供 `id` 仍由对应输入契约决定。
+Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position })`、`path({ id, way })`、`coordinate({ id, position })` 和 `layer({ name, scene })` 都从配置读取身份；是否必须提供 `id` 仍由对应输入契约决定。
 
 领域 builder 同样直接接收配置，例如 `shape.circle({ id, center, radius })`、`entity({ id, role, position })`。已有领域 `id` 的输入会复用该值作为 embed 身份；匿名输入不因此获得可引用的图元 ID。Layout 输入没有领域 `id`，直接使用 `flexLayout({ children })` 等入口。
 
-通用嵌入使用 `embed({ kind, props })` 的对象结构，还可传入 `id` 与 `authoring` 字段。Plot 与 Table 使用 `embedPlot(source, datasets, lowerOptions?)`、`embedTable(spec, options?)`，无需额外传入 embed ID。
+通用嵌入使用 `embed({ adapter, props })` 工厂绑定 adapter 与 props，还可传入 `id` 与 `authoring` 字段。Plot 与 Table 使用 `embedPlot(source, datasets, lowerOptions?)`、`embedTable(spec, options?)`，无需额外传入 embed ID。
 
 ### 为什么需要 InputScene
 
-直接构造 `@retikz/core` IR 是可行的，但应用经常需要更便于书写的 Path、Scope、Layer、Tier 2 embed 与运行时 metadata。`scene`、`layer`、`node`、`path`、`scope` 与 `embed` 用普通数据构造这些作者输入，不要求 JSX、React runtime 或组件生命周期。
+直接构造 `@retikz/core` IR 是可行的，但应用经常需要更便于书写的 Path、Scope、Layer、Tier 2 embed 与作者载荷。`scene`、`layer`、`node`、`path`、`scope` 与 `embed` 用普通数据构造这些作者输入，不要求 JSX、React runtime 或组件生命周期。
 
 `InputScene` 不是第二套图形语义：`normalizeScene()` 只在 Vanilla 集中处理输入简写、作者来源与 embed 下沉，并产生唯一的 Core `IRScene`。最终 IR 保持 JSON 可序列化；`authoring` 与 `embed.props` 是否可序列化由调用方和对应的领域 adapter 决定。
 
@@ -97,19 +138,19 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 
 <ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
 
-| 输入             | 所有者            | processing 如何处理                                     |
-| ---------------- | ----------------- | ------------------------------------------------------- |
-| `InputScene`     | `@retikz/vanilla` | normalize 输入、下沉 embed、收集贡献与 runtime metadata |
-| Core `IRScene`   | `@retikz/core`    | 跳过 Input 归一，直接准备 Core 编译                     |
-| 已编译的 `Scene` | `@retikz/core`    | 跳过归一与编译，只能由 DOM 子入口进行 static 完整重绘   |
+| 输入             | 所有者            | processing 如何处理                            |
+| ---------------- | ----------------- | ---------------------------------------------- |
+| `InputScene`     | `@retikz/vanilla` | normalize 输入、下沉 embed、收集贡献与作者来源 |
+| Core `IRScene`   | `@retikz/core`    | 跳过 Input 归一，直接准备 Core 编译            |
+| 已编译的 `Scene` | `@retikz/core`    | 跳过归一与编译，直接交给 Render 绘制           |
 
-`InputScene` 先由 `normalizeScene()` 生成 Core Source IR、Composite dependency contributions、作者来源与 metadata；内部的 `prepareProcessingInput()` 再合并唯一的 Core resolver 选项。`createProcessingController()` 在 retained 模式持有 SceneReconciler，`prepareStaticProcessing()` 使用临时的非增量协调器完成一次编译并释放实例。
+输入为 `InputScene` 时，`SceneRuntime` 将作者简写归一为 IR，解析嵌入组件的依赖，并将实例输入绑定到本次 IR。输入为 `IRScene` 时，会话直接把它交给协调器。`compileToScene()` 创建同样的会话，读取首帧编译结果后释放它。
 
 <SourceLinks
   sources={[
     {
-      label: 'Input helper 与 scene() 构造',
-      path: 'packages/kernel/vanilla/src/normalize/helpers.ts',
+      label: '作者输入的构造函数',
+      path: 'packages/kernel/vanilla/src/normalize/factory.ts',
     },
     {
       label: 'InputScene 与归一化结果契约',
@@ -121,53 +162,72 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
     },
     {
       label: 'processing 输入准备',
-      path: 'packages/kernel/vanilla/src/processing/prepare.ts',
+      path: 'packages/kernel/vanilla/src/runtime/runtime.ts',
     },
   ]}
 />
 
 ## 执行与 DOM 边界
 
-| API                 | 用途                                 | 返回                         |
-| ------------------- | ------------------------------------ | ---------------------------- |
-| `renderToSvgString` | SSR / 构建期产出 `<svg>` 字符串      | `string`                     |
-| `mount`             | 按 `renderer` 挂载 SVG 或 Canvas     | `VanillaView` / `CanvasView` |
-| `mountSvg`          | 显式挂载 SVG DOM                     | `VanillaView`                |
-| `mountCanvas`       | 显式挂载 Canvas                      | `CanvasView`                 |
-| `hydrate`           | 对 SSR / 已有 SVG 根节点绑定 handler | `HydrationHandle`            |
+| API              | 用途                             | 返回                                                        |
+| ---------------- | -------------------------------- | ----------------------------------------------------------- |
+| `renderToSvg`    | SSR / 构建期产出 `<svg>` 字符串  | `string`                                                    |
+| `mountSceneView` | 按 `renderer` 挂载 SVG 或 Canvas | `SceneView<SVGSVGElement>` / `SceneView<HTMLCanvasElement>` |
 
-后四项都从 `@retikz/vanilla/dom` 导入。默认情况下，`InputScene` 与 `IRScene` 创建 `VanillaViewMode.Retained` view：`update(next, options?)` 通过同一个 processing transaction 原子发布 Scene、artifacts、只读图层、runtime metadata、事件与动画。失败 transaction 不发布新 revision；若 rollback 自身失败，view 进入 broken 状态，必须 dispose 后 remount。
+DOM 挂载入口从 `@retikz/vanilla/dom` 导入。`mountSceneView(container, source)` 直接挂载 IR；作者输入只归一化一次，并保留本帧的嵌入定义与实例数据。默认使用 SVG，传入 `{ renderer: 'canvas' }` 可选择 Canvas。用 `view.replace(source, options?)` 替换场景。成功时原子发布场景、产物与渲染配置；失败不发布新帧，若回滚失败则需要释放并重新挂载。
 
-显式传 `runtime: { mode: 'static' }` 时，`InputScene` 或 `IRScene` 的每次 `update()` 都会完整归一、编译与重绘，不创建 Session、Snapshot、Patch、transaction 或 rollback。预编译 `Scene` 也总是 static，只接受下一份 `Scene`。
+若后端在运行时才确定，可以传入 `MountOptions` 变量；此时根元素类型为 `SVGSVGElement | HTMLCanvasElement`。用 `view.diagnostics()` 读取并清空诊断；返回值是 `ReadonlyArray<unknown>`，可能含回调抛出的原始值，处理前应先判型。
 
-`mode` 与 `updateStrategy` 在 mount 时固定。`VanillaRetainedRuntimeOptions` 允许注入 `rendererFactory`；这是 DOM retained 后端的可选扩展点，static 模式不能传它。需要改变 renderer、DPR、compile topology 或 retained 策略时，先 dispose，再 remount。
+两个后端通过 `animate`、`snapshotAt` 更新动画。从 `view.compileResult.artifacts` 读取最近成功提交的编译产物。用 `view.hydrate({ handlers })` 绑定事件，事件上下文跟随当前场景。视图方法通过实例调用；如需传递清理回调，使用 `() => view.dispose()`，不要直接传 `view.dispose`。
+
+`updateStrategy` 和可选的 `rendererFactory` 在挂载时确定。要更换渲染器、DPR、编译拓扑或更新策略，先释放视图，再重新挂载。
+
+DOM 挂载与 React Layout 共用 `SceneViewOptions`。例如 `{ width: "100%", compile: { padding: 12 }, handlers }` 在两端含义相同。协调器默认完整编译；使用 `reconciler` 显式选择增量会话。初始 handlers 从首帧生效，后续可通过 hydrate 增加独立注册。
 
 <SourceLinks
   sources={[
     {
-      label: 'SSR 与预编译 Scene 的一次性分流',
-      path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
+      label: '将已编译的 Scene 导出为 SVG',
+      path: 'packages/kernel/vanilla/src/runtime/svg.ts',
     },
     {
       label: 'DOM 统一 mount 分派',
       path: 'packages/kernel/vanilla/src/dom/mount.ts',
     },
     {
-      label: 'DOM retained processing controller',
-      path: 'packages/kernel/vanilla/src/dom/retained.ts',
+      label: 'DOM 视图',
+      path: 'packages/kernel/vanilla/src/dom/view.ts',
     },
   ]}
 />
 
 ## 分层与嵌入
 
-`scene({ children })` 使用 id 为 `default` 的隐式 Layer。需要明确绘制顺序、稳定 Layer id 或缓存提示时，再用 `layers` 与 `layer()`。`zIndex` 只决定 Layer stack 排序，相同值保持声明顺序；`cache` 只进入 `InputRuntimeMeta`，由 DOM retained renderer 保守折叠为 Render cache policy，不进入 Core IR。
+`scene(children)` 创建单图输入，不会创建图层。已有 Core IR 时使用 `layer({ name, scene: ir })`。作者输入使用 `layerFromInput({ name, scene: input })`，创建时归一化一次，保留嵌入定义与实例数据；换层不会改变匿名嵌入的身份，adapter 收到的身份路径只包含场景内的节点。使用 `compileLayers(layers)` 则始终得到具名结果列表，包括空列表或只有一层的情况。background、main、overlay 的默认层序分别为 0、10、100；自定义名称默认 10。相同层序保留声明顺序，元素不能跨层引用或越层绘制。
 
-Tier 2 能力通过 `embed({ kind, id, props })` 接入。Vanilla 不解析组件，也不执行 hooks；它按 `kind` 查找调用方注入的 `InputEmbedAdapter`，将已类型化 props 下沉为 Core child 与 Composite dependency contribution。
+各层继承层栈的 `compile` 和 `reconciler` 配置，可通过 `layer.config` 覆盖。背景层默认采用全量编译。`LayerStack` 管理图层名称、层序和会话生命周期；`stack.get(name)` 返回本层实际的 `SceneRuntime`，可直接替换内容、提交增量更新、读取诊断或导出 SVG。
+
+```ts
+import { LayerStack } from '@retikz/vanilla';
+
+const stack = new LayerStack(layers, options);
+try {
+  const overlay = stack.get('overlay');
+  overlay.replace(nextInput);
+  const svg = overlay.toSvgString();
+  stack.setLayerOrder('overlay', 120);
+} finally {
+  stack.dispose();
+}
+```
+
+`stack.current` 是按层序排列的具名结果；`stack.subscribe(listener)` 也能收到通过子会话直接提交的更新。用 `stack.replaceLayer(inputLayer)` 添加或替换完整图层声明，用 `stack.replace(layers)` 替换整栈。生效配置改变时会重建目标会话，移除或重建后应重新按名获取，不要自行销毁借用的会话。渲染入口仍只接收单图，不自动合成层栈。
+
+Tier 2 能力通过 `embed({ adapter, id, props })` 接入。Vanilla 不解析组件，也不执行 hooks；它直接调用节点绑定的 `InputEmbedAdapter`，将已类型化 props 下沉为 Core child 与 Composite dependency contribution。
 
 ```ts
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-import { embed, layer, node, renderToSvgString, scene } from '@retikz/vanilla';
+import { compileLayers, embed, layerFromInput, node, scene } from '@retikz/vanilla';
 
 type BadgeProps = { label: string };
 
@@ -179,26 +239,30 @@ const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
   }),
 };
 
-const input = scene({
-  layers: [layer({ id: 'content', children: [embed({ kind: 'badge', id: 'sales', props: { label: 'Sales' } })] })],
-});
+const layers = [
+  layerFromInput({
+    name: 'content',
+    scene: scene([embed({ adapter: BadgeInputEmbedAdapter, id: 'sales', props: { label: 'Sales' } })]),
+  }),
+];
 
-const svg = renderToSvgString(input, { adapters: [BadgeInputEmbedAdapter] });
+const [{ name, result }] = compileLayers(layers);
+console.log(name, result.scene);
 ```
 
-`normalizeScene()` 从包根导出；`adapters` 是 render / mount / processing 选项的顶层字段，不放在 `compile` 内。需要检查归一结果时，可直接调用 `normalizeScene(input, { adapters })`，读取 `ir`、`contributions`、`runtimeMeta` 与 `authoringSites`。
+`normalizeScene()` 从包根导出；宿主不再需要注册 adapter。需要检查归一结果时，可从 `normalizeScene(input)` 返回的单图结果中读取 `ir`、`contributions`、`runtimeInputs` 与 `authoringSites`。 未提供 `authoring` 的节点不会生成来源记录；adapter 显式贡献的记录仍会保留。
 
-adapter、Composite definition 和 compile topology 在 retained mount 生命周期内固定。领域 adapter 可以在同一输入位置处理新的 props；需要改变 adapter 集合、Composite schema、definition 数量或执行分支时，dispose 后 remount。
+调用方须在使用期间保持传入的编译与渲染配置、Composite 定义及已注册的事件表稳定；原地修改不受支持，Vanilla 不保证隔离其影响。领域 adapter 可以在同一输入位置处理新的 props；需要改变 Composite schema、definition 数量或执行分支时，dispose 后 remount。
 
 ## 职责边界
 
-| 能力            | `@retikz/vanilla` 负责什么                                | 能力真源 / 边界                |
-| --------------- | --------------------------------------------------------- | ------------------------------ |
-| 无框架输入      | 构造 InputScene、Layer、embed 与 Core 图元输入            | `@retikz/core` IR              |
-| 输入归一        | 将 Input 下沉为 IR，收集 adapter contribution 与 metadata | `@retikz/core` compile 契约    |
-| 共享 processing | 准备输入、管理协调器与处理结果                            | `@retikz/reconciler`           |
-| DOM 宿主        | 在 `/dom` 输出 SVG / Canvas、更新、水合与动画生命周期     | `@retikz/render` 后端执行      |
-| Tier 2 嵌入     | 按 `kind` 调用 Input adapter 并聚合 lowering contribution | 各领域包拥有 props 与 lowering |
+| 能力            | `@retikz/vanilla` 负责什么                               | 能力真源 / 边界                |
+| --------------- | -------------------------------------------------------- | ------------------------------ |
+| 无框架输入      | 构造 InputScene、Layer、embed 与 Core 图元输入           | `@retikz/core` IR              |
+| 输入归一        | 将 Input 下沉为 IR，收集 adapter contribution 与作者来源 | `@retikz/core` compile 契约    |
+| 共享 processing | 准备输入、管理协调器与处理结果                           | `@retikz/reconciler`           |
+| DOM 宿主        | 在 `/dom` 输出 SVG / Canvas、更新、水合与动画生命周期    | `@retikz/render` 后端执行      |
+| Tier 2 嵌入     | 调用节点绑定的 adapter 并聚合 lowering contribution      | 各领域包拥有 props 与 lowering |
 
 React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX；其它框架同样应复用本包的 Input 与 processing。需要 SSR 字符串或直接 DOM / Canvas 挂载时，直接使用本包的对应入口。
 
@@ -206,30 +270,23 @@ React 应用使用 [`@retikz/react`](/kernel/packages/react/overview) 收集 JSX
 
 | API                                  | 类型          | 说明                                                     |
 | ------------------------------------ | ------------- | -------------------------------------------------------- |
-| `scene` / `layer`                    | Input helper  | 构造 Scene 与具名 Layer                                  |
+| `scene` / `layer` / `layerFromInput` | Input helper  | 构造 Scene 与具名 Layer                                  |
 | `node` / `coordinate` / `path`       | Input helper  | 构造 Core 图元或作者侧 Path 输入                         |
 | `scope` / `embed`                    | Input helper  | 构造作用域与 Tier 2 embed 输入                           |
-| `InputLayerCache`                    | const object  | Layer cache 提示                                         |
+| `BuiltinLayerName`                   | const object  | 内置图层名称                                             |
 | `InputScene` / `InputChild`          | type          | 框架无关的作者输入根与子项                               |
 | `InputLayer` / `InputNode`           | type          | Layer 与 Node 输入                                       |
 | `InputPath` / `InputScope`           | type          | 可带作者侧语法糖或载荷的路径和作用域输入                 |
 | `InputEmbed`                         | type          | Tier 2 embed 输入                                        |
 | `InputEmbedAdapter`                  | type          | 将 `InputEmbed` 下沉为 Core contribution                 |
-| `isInputScene` / `normalizeScene`    | normalization | 判别并归一 InputScene                                    |
-| `SceneNormalizationResult`           | type          | IR、contributions、metadata 与作者来源                   |
-| `ProcessingSource`                   | type          | 可进入 processing 的 InputScene 或 IRScene               |
-| `ProcessingOptions`                  | type          | compile、adapter、driver 与 retained 更新策略            |
-| `ProcessingResult`                   | type          | 同 revision 的 Scene、artifacts、图层与 metadata         |
-| `createProcessingController`         | processing    | 无框架 retained processing controller                    |
+| `isInputScene` / `normalizeScene`    | normalization | 区分已类型化的 InputScene / IRScene，并归一作者输入      |
+| `SceneNormalizationResult`           | type          | IR、contributions、实例输入 与作者来源                   |
+| `ProcessOptions`                     | type          | compile 与 session 更新策略                              |
+| `SceneRuntime`                       | processing    | 无框架 session processing controller                     |
 | `compileToScene`                     | processing    | 一次性同步编译 InputScene 或 Core IR                     |
-| `compileToSceneAsync`                | processing    | 异步准备作者输入后完成一次编译                           |
-| `prepareStaticProcessing`            | processing    | 一次无生命周期 processing                                |
-| `renderToSvgString`                  | SSR           | 渲染 InputScene、IRScene 或 Scene 为 SVG 字符串          |
-| `mount` / `mountSvg` / `mountCanvas` | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
-| `VanillaRuntimeOptions`              | type          | InputScene / IRScene 的 retained 或 static runtime 配置  |
-| `VanillaRetainedRuntimeOptions`      | type          | retained 模式、更新策略与可选 renderer factory           |
-| `VanillaStaticRuntimeOptions`        | type          | 只允许 `mode: 'static'` 的封闭配置                       |
-| `RetainedVanillaView`                | runtime       | IRScene / InputScene 的事务式 retained view              |
-| `StaticVanillaView`                  | runtime       | Scene、IRScene 或 InputScene 的完整重绘 view             |
+| `renderToSvg`                        | SSR           | 将已编译的 Scene 序列化为 SVG 字符串                     |
+| `mountSceneView`                     | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
+| `SceneViewOptions`                   | type          | Vanilla DOM 与 React 共用的编译、协调器、显示与事件配置  |
+| `SceneView`                          | runtime       | IRScene / InputScene 的事务式 session view               |
 | `RetikzVanillaError`                 | error         | Vanilla 唯一错误类，通过 code、details 与 cause 区分失败 |
-| `RetikzVanillaErrorCode`             | const object  | normalize、processing、runtime、DOM 与 driver 稳定错误码 |
+| `RetikzVanillaErrorCode`             | const object  | normalize、processing、runtime、与 DOM 稳定错误码        |

@@ -1,22 +1,36 @@
-import { Coordinate, Draw, EdgeLabel, Layout, Node, Path, Scope, Step, Text } from '@retikz/react';
+import {
+  Coordinate,
+  Draw,
+  StepLabel,
+  Layout,
+  Node,
+  NodeLabel,
+  Path,
+  PathLabel,
+  Scope,
+  Step,
+  Text,
+} from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react/presentation';
 import { Arc, Circle, Ellipse, Rectangle, Polygon, Sector, Star } from '@retikz/standard-react/shape';
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
 import type { FC, ReactElement, ReactNode } from 'react';
-import { createElement } from 'react';
+import { createElement, isValidElement } from 'react';
 
 const JsxParser = Parser.extend(jsx());
 
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
-  Layout,
+  Layout: Layout as unknown as FC<Record<string, unknown>>,
   Node,
-  Path,
+  Path: Path as unknown as FC<Record<string, unknown>>,
   Step: Step as unknown as FC<Record<string, unknown>>,
   Text: Text as unknown as FC<Record<string, unknown>>,
   Coordinate: Coordinate as unknown as FC<Record<string, unknown>>,
   Draw: Draw as unknown as FC<Record<string, unknown>>,
-  EdgeLabel: EdgeLabel as unknown as FC<Record<string, unknown>>,
+  NodeLabel: NodeLabel as unknown as FC<Record<string, unknown>>,
+  PathLabel: PathLabel as unknown as FC<Record<string, unknown>>,
+  StepLabel: StepLabel as unknown as FC<Record<string, unknown>>,
   Scope,
   Circle: Circle as unknown as FC<Record<string, unknown>>,
   Ellipse: Ellipse as unknown as FC<Record<string, unknown>>,
@@ -85,6 +99,27 @@ const walkJsxElement = (node: AstNode, key?: number): ReactElement => {
     .map((child, index) => walkChild(child, index))
     .filter((child): child is ReactNode => child !== null);
 
+  // JSX 子元素覆盖同名属性，与 createElement 的行为一致
+  const content = children.length ? children : props.children;
+  const hasContentOtherThan = (child: unknown, marker: typeof NodeLabel | typeof PathLabel): boolean => {
+    if (Array.isArray(child)) return child.some(item => hasContentOtherThan(item, marker));
+    return child != null && typeof child !== 'boolean' && !(isValidElement(child) && child.type === marker);
+  };
+  if (
+    (Component === Node || Component === FrameTitle || Component === FrameDescription) &&
+    props.text !== undefined &&
+    hasContentOtherThan(content, NodeLabel)
+  )
+    throw new Error(`${componentName} 不能同时指定 text 和 children 正文`);
+  if (Component === Path) {
+    const hasSteps = hasContentOtherThan(content, PathLabel);
+    if ('way' in props) throw new Error('Path 不支持 way，请使用 Draw');
+    if (!hasSteps && (props.kind === undefined || props.kind === 'stroke')) throw new Error('普通 Path 必须指定 Step');
+  }
+  if (Component === Draw) {
+    if (!Array.isArray(props.way)) throw new Error('Draw 必须指定 way');
+    if (hasContentOtherThan(content, PathLabel)) throw new Error('Draw 只接受 PathLabel 子元素');
+  }
   return createElement(Component, props, ...children);
 };
 

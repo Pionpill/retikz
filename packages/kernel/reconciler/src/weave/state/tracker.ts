@@ -11,17 +11,17 @@ export class WeaveTracker {
 
   /** 本批已失效条目，用于传播去重与阻止缓存复用，不是待执行队列 */
   private readonly dirtyEntries = new Set<WeaveEntry>();
-  /** 仅可能受上游影响的条目；读取结果未变时不进入领域计算 */
-  private readonly checkedEntries = new Set<WeaveEntry>();
+  /** 本批请求检查的条目，既包括直接失效，也包括仅需核对依赖读取的条目 */
+  private readonly checkRequests = new Set<WeaveEntry>();
 
   /** 仅回收本批新增但未提交的身份 */
   private readonly inserted = new Set<WeaveEntry>();
   /** 提交成功后释放被移除的绑定 */
   private readonly removed = new Set<WeaveEntry>();
 
-  /** 自身输入或可见绑定确实变化的条目 */
-  get requests(): ReadonlySet<WeaveEntry> {
-    return this.checkedEntries;
+  /** 供调度器选择本批需要检查的条目 */
+  get requestedEntries(): ReadonlySet<WeaveEntry> {
+    return this.checkRequests;
   }
 
   constructor(
@@ -38,12 +38,12 @@ export class WeaveTracker {
 
   /** 判断条目是否因自身变化或上游影响被本批选中 */
   isEntryAffected(entry: WeaveEntry): boolean {
-    return this.dirtyEntries.has(entry) || this.checkedEntries.has(entry);
+    return this.dirtyEntries.has(entry) || this.checkRequests.has(entry);
   }
 
   /** 没有自身输入或继承变化，可以通过实际读取结果确认旧贡献 */
   canCheckEntry(entry: WeaveEntry): boolean {
-    return !this.dirtyEntries.has(entry) && this.checkedEntries.has(entry);
+    return !this.dirtyEntries.has(entry) && this.checkRequests.has(entry);
   }
 
   /** 名称声明变化同时唤醒未命中读取，不能只沿已有生产者边传播 */
@@ -54,7 +54,7 @@ export class WeaveTracker {
       for (const entry of readers.get(name) ?? []) {
         if (checked.has(entry)) continue;
         checked.add(entry);
-        if (changed(entry)) this.checkEntry(entry);
+        if (changed(entry)) this.requestEntryCheck(entry);
       }
   }
 
@@ -62,13 +62,12 @@ export class WeaveTracker {
   invalidateEntry(entry: WeaveEntry): void {
     if (this.dirtyEntries.has(entry)) return;
     this.dirtyEntries.add(entry);
-    this.checkEntry(entry);
+    this.requestEntryCheck(entry);
   }
 
-  /** 登记名称变化，不提前扩散消费闭包 */
-  private checkEntry(entry: WeaveEntry): void {
-    if (this.checkedEntries.has(entry)) return;
-    this.checkedEntries.add(entry);
+  /** 登记待检查条目，不立即执行检查或扩散消费依赖 */
+  private requestEntryCheck(entry: WeaveEntry): void {
+    this.checkRequests.add(entry);
   }
 
   /** 根据最新读取更新条目的双向依赖、名称订阅及读取与诊断记录 */
@@ -79,6 +78,8 @@ export class WeaveTracker {
     append = false,
   ): void {
     const oldRecord = this.transaction.readState(this.root).records.get(entry);
+    // ⚡新条目没有读取和诊断时，不创建空记录或改写依赖图
+    if (oldRecord === undefined && compileReads.length === 0 && diagnostics.length === 0) return;
     const previous = append ? oldRecord : undefined;
     const reads = [...(previous?.reads ?? []), ...compileReads];
     const sameReads =
@@ -164,7 +165,7 @@ export class WeaveTracker {
     const state = this.transaction.readState(entry);
     this.removed.add(entry);
     this.dirtyEntries.delete(entry);
-    this.checkedEntries.delete(entry);
+    this.checkRequests.delete(entry);
     for (const read of this.transaction.readState(this.root).records.get(entry)?.reads ?? [])
       this.setSubscription(read.name, entry, false);
     for (const producer of state.dependencies.keys())

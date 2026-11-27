@@ -60,8 +60,8 @@ export const compareReferenceGeometry = (
     previous.shape.definition === current.shape.definition &&
     previous.boundary.definition === current.boundary.definition &&
     previous.boundary.isShape === current.boundary.isShape &&
-    compareProperties(previous.geometry.rect, current.geometry.rect) &&
-    compareProperties(previous.geometry.margin, current.geometry.margin) &&
+    jsonStructuralEquals(previous.geometry.rect, current.geometry.rect) &&
+    jsonStructuralEquals(previous.geometry.margin, current.geometry.margin) &&
     jsonStructuralEquals(previous.shape.params, current.shape.params) &&
     jsonStructuralEquals(previous.boundary.params, current.boundary.params)
   );

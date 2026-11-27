@@ -1,4 +1,3 @@
-import type { IRChild } from '@retikz/core';
 import { BuiltinCompileWarningCode, projectScopeCompileLayouts } from '@retikz/core';
 import { compareProperties } from '@retikz/foundation';
 import type { PropertyPath } from '@retikz/foundation';
@@ -9,7 +8,6 @@ import type {
   CompileRuntime,
   SubtreeCompileContext,
   SubtreeCompileState,
-  SubtreeCompileRuntime,
 } from '../../compile';
 import {
   bindScopeOutputAnimations,
@@ -26,18 +24,44 @@ import type { WeaveTransaction } from '../state';
 import type { WeaveTaskAddress } from './task';
 import type { WeaveAssembledOutput, WeaveElementExecution, WeaveExecutionContext, WeaveUpdateRequest } from './types';
 
+/** 创建单个输出块的局部收集容器 */
+export const createWeaveOutputState = (): SubtreeCompileState => ({
+  primitives: [],
+  paths: [],
+  geometries: [],
+  publications: [],
+  bounds: [],
+  allocations: [],
+  alignmentGuides: [],
+  artifacts: [],
+});
+
+/** 按声明顺序发布已完成的局部贡献 */
+export const appendWeaveOutput = (
+  destination: SubtreeCompileState,
+  contribution: WeaveAssembledOutput,
+  includeLayouts = true,
+) => {
+  destination.primitives.push(...contribution.primitives);
+  if (includeLayouts) destination.geometries.push(...contribution.geometries);
+  destination.publications.push(...contribution.publications);
+  destination.bounds.push(...contribution.bounds);
+  destination.allocations.push(...contribution.allocations);
+  destination.alignmentGuides.push(...contribution.alignmentGuides);
+  destination.artifacts.push(...contribution.artifacts);
+};
+
 /** 本批输出组装所需的执行状态与阶段调度能力 */
 type WeaveOutputFlowContext = {
   runtime: CompileRuntime;
   transaction: WeaveTransaction;
   paths: ReadonlyMap<WeaveEntry, PropertyPath>;
-  pending: Map<string, WeaveUpdateRequest>;
+  pending: Map<WeaveEntry, WeaveUpdateRequest>;
   executions: Map<WeaveEntry, WeaveElementExecution>;
   assembled: Map<WeaveEntry, WeaveAssembledOutput>;
   changedOutputs: Set<WeaveScopeEntry>;
   rootExecutor: CompileElementExecutor;
   recordComputed: WeaveExecutionContext['recordComputed'];
-  keyOf: (entry: WeaveEntry) => string;
   prepareAddress: (entry: WeaveEntry) => WeaveTaskAddress;
   outputAddress: (entry: WeaveEntry) => WeaveTaskAddress;
   requireTask: (address: WeaveTaskAddress) => void;
@@ -59,7 +83,6 @@ export const createWeaveOutputFlow = ({
   changedOutputs,
   rootExecutor,
   recordComputed,
-  keyOf,
   prepareAddress,
   outputAddress,
   requireTask,
@@ -72,7 +95,7 @@ export const createWeaveOutputFlow = ({
   const tracker = runtime.state.execution.provenanceTracker;
   /** ⚡清洁贡献直接物化输出，不进入元素执行器或候选写入 */
   const outputOf = (entry: WeaveEntry): WeaveAssembledOutput => {
-    if (pending.has(keyOf(entry))) requireTask(prepareAddress(entry));
+    if (pending.size !== 0 && pending.has(entry)) requireTask(prepareAddress(entry));
     const execution = executions.get(entry);
     if (execution !== undefined) {
       requireTask(outputAddress(entry));
@@ -85,18 +108,27 @@ export const createWeaveOutputFlow = ({
     }
     const cached = assembled.get(entry);
     if (cached !== undefined) return cached;
-    const state = transaction.readState(entry);
     if (entry.type !== 'scope') {
+      const state = transaction.readState(entry);
       const contribution = state.contribution!;
       for (const warning of contribution.diagnostics)
         if (warning.code !== BuiltinCompileWarningCode.DuplicateNodeId)
           runtime.state.workspace.diagnosticCollector.collect(warning);
+      // ⚡无来源、资源和图元时，直接返回原贡献；布局、分配、辅助线和产物仍由父级收集
+      if (
+        tracker === undefined &&
+        contribution.diagnostics.length === 0 &&
+        contribution.output.primitives.length === 0 &&
+        contribution.resources.paints.length === 0 &&
+        contribution.resources.clips.length === 0
+      )
+        return contribution.output;
       const parent = state.parent.type === 'root' ? tracker?.root : ownerOf(state.parent);
       const owner =
         parent === undefined
           ? undefined
           : tracker?.createOwner(
-              state.origin.own as IRChild,
+              state.origin.own,
               paths.get(entry)!.at(-1) as number,
               parent,
               false,
@@ -107,9 +139,11 @@ export const createWeaveOutputFlow = ({
       return result;
     }
     const scope = transaction.readState(entry);
-    const childState = emptyOutput();
-    for (const child of scope.children) appendState(childState, outputOf(child));
-    const result = emptyOutput();
+    const childState = createWeaveOutputState();
+    // ⚡具名 Scope 只投影自己的包络，输出收集无需再复制子布局
+    const includeLayouts = scope.origin.own.id === undefined && !contextOf(scope.parent).skipGeometries;
+    for (const child of scope.children) appendWeaveOutput(childState, outputOf(child), includeLayouts);
+    const result = createWeaveOutputState();
     importSceneResources(
       scope.compile?.resources ?? { paints: [], clips: [] },
       runtime.state.workspace.paintRegistry,
@@ -155,48 +189,35 @@ export const createWeaveOutputFlow = ({
     assembled.set(entry, result);
     return result;
   };
-  const emptyOutput = (): SubtreeCompileState => ({
-    primitives: [],
-    paths: [],
-    geometries: [],
-    publications: [],
-    bounds: [],
-    allocations: [],
-    alignmentGuides: [],
-    artifacts: [],
-  });
+
   /** 包络读取清洁布局，不提前物化绘制或来源所有者 */
-  const layoutOf = (entry: WeaveEntry): WeaveAssembledOutput => {
+  const layoutOf = (entry: WeaveEntry, includeLayouts = true): WeaveAssembledOutput => {
     if (entry.type !== 'scope') return transaction.readState(entry).contribution!.output;
     const state = transaction.readState(entry);
-    const children = emptyOutput();
+    const children = createWeaveOutputState();
     for (const child of state.children) {
       if (child.type === 'path') continue;
       ensure(child);
       if (child.type === 'scope') requireProjection(child);
-      appendState(children, executions.get(child)?.frame.state ?? layoutOf(child));
+      appendWeaveOutput(
+        children,
+        executions.get(child)?.frame.state ?? layoutOf(child, includeLayouts),
+        includeLayouts,
+      );
     }
-    const result = emptyOutput();
+    const result = createWeaveOutputState();
     const compiled = state.compile!.value;
-    result.geometries.push(
-      ...projectScopeCompileLayouts(
-        state.origin.own,
-        { shape: compiled.shape, boundary: compiled.boundary, geometry: compiled.layout.overall.geometry },
-        children.geometries,
-        compiled.layout.overall.transforms,
-      ),
-    );
+    if (includeLayouts)
+      result.geometries.push(
+        ...projectScopeCompileLayouts(
+          state.origin.own,
+          { shape: compiled.shape, boundary: compiled.boundary, geometry: compiled.layout.overall.geometry },
+          children.geometries,
+          compiled.layout.overall.transforms,
+        ),
+      );
     result.primitives.push(...children.primitives);
     return result;
-  };
-  const appendState = (destination: SubtreeCompileState, contribution: WeaveAssembledOutput) => {
-    destination.primitives.push(...contribution.primitives);
-    destination.geometries.push(...contribution.geometries);
-    destination.publications.push(...contribution.publications);
-    destination.bounds.push(...contribution.bounds);
-    destination.allocations.push(...contribution.allocations);
-    destination.alignmentGuides.push(...contribution.alignmentGuides);
-    destination.artifacts.push(...contribution.artifacts);
   };
 
   /** 按声明顺序聚合局部产物，不进行领域计算或发现环境 */
@@ -204,10 +225,11 @@ export const createWeaveOutputFlow = ({
     destination: SubtreeCompileState,
     execution: WeaveElementExecution,
     output: CompileElementExecutor['output'],
+    includeLayouts: boolean,
   ) => {
     const state = execution.frame.state;
     destination.primitives.push(...state.primitives);
-    destination.geometries.push(...state.geometries);
+    if (includeLayouts) destination.geometries.push(...state.geometries);
     destination.publications.push(...state.publications);
     destination.bounds.push(...state.bounds);
     destination.allocations.push(...state.allocations);
@@ -221,10 +243,32 @@ export const createWeaveOutputFlow = ({
   };
 
   /** 汇集声明重复诊断与根输出，不执行元素计算 */
-  const collectRootOutput = (root: WeaveRoot, rootFrame: SubtreeCompileRuntime) => {
+  const collectDeclarationsIfChanged = (root: WeaveRoot, indexesChanged: boolean) => {
+    // 之前没有重名时，只需核对本批实际发布的名称及其出现次数；几何和来源位置不影响唯一性
+    if (!indexesChanged && root.current?.uniqueDeclarations) {
+      let unchanged = true;
+      for (const [entry, execution] of executions) {
+        if (entry.type === 'scope') continue;
+        const previous = entry.current?.contribution?.bindings;
+        if (
+          previous?.length !== execution.bindings.length ||
+          execution.bindings.some(
+            (binding, i) => binding.id !== previous[i].id || binding.irPaths.length !== previous[i].irPaths.length,
+          )
+        ) {
+          unchanged = false;
+          break;
+        }
+      }
+      if (unchanged) return;
+    }
+    let unique = true;
     const diagnosticNamespace = new NamespaceStack({
       rootIdentity: runtime.state.execution.namespaceStack.identity,
-      onDuplicate: info => runtime.state.workspace.diagnosticCollector.collect(createDuplicateWarning(info)),
+      onDuplicate: info => {
+        unique = false;
+        runtime.state.workspace.diagnosticCollector.collect(createDuplicateWarning(info));
+      },
     });
     const collectDeclarations = (container: WeaveRoot | WeaveScopeEntry) => {
       for (const entry of transaction.readState(container).children) {
@@ -244,7 +288,7 @@ export const createWeaveOutputFlow = ({
       }
     };
     collectDeclarations(root);
-    for (const entry of transaction.readState(root).children) appendState(rootFrame.state, outputOf(entry));
+    transaction.editState(root).uniqueDeclarations = unique;
   };
-  return { outputOf, layoutOf, appendState, append, collectRootOutput };
+  return { outputOf, layoutOf, append, collectDeclarationsIfChanged };
 };

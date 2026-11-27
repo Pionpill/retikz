@@ -120,7 +120,7 @@ After layout returns, FlexLayout translates each child into place; Surface then 
 
 ## Compilation output
 
-For explicit type annotations, the type parameter of `SceneReconciler<TComposite>` and `CompileOptions<TComposite>` denotes a Composite Definition element type or union; the `composites` field remains a readonly array. Two definitions can be represented by `typeof firstDefinition | typeof secondDefinition`, though inference from the supplied array usually suffices. `SceneCompilationSnapshot<TComposite>` derives the artifact union from these definitions; a session with no supplied definitions defaults to `never`.
+Use `SceneReconciler` for a session type annotation; its type parameter defaults to `AnyCompositeDefinition`. To retain specific definition types, use `SceneReconciler<TComposite>` or `CompileOptions<TComposite>`, where `TComposite` is the element type of the readonly `composites` array, such as `typeof firstDefinition | typeof secondDefinition`. The constructor can usually infer this type from the supplied array, and `SceneCompilationSnapshot<TComposite>` uses it to derive the artifact union.
 
 Once Plot has a size, its scales and coordinates map the three records to point positions, connecting them in ascending x order and producing Core Scope, Node, and Path declarations. It compiles these through Core and returns the selected child layout result. The title Node follows Core's text and node compilation path as well.
 

@@ -63,7 +63,7 @@ export type ScopeClipPreviewValues = {
 export const ScopeClipPreview = (values: ScopeClipPreviewValues) => {
   return (
     <Layout
-      extensions={{
+      compile={{
         clips: [
           circleClipDefinition,
           ellipseClipDefinition,

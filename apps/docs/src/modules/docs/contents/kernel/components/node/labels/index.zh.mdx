@@ -46,10 +46,10 @@ export default () => <Layout ir={ir} />;
 
 ```ts
 import { node, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({ children: [node({ position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } })] });
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>
@@ -57,7 +57,7 @@ const view = mount(document.getElementById('diagram')!, input);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,
@@ -70,6 +70,17 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
+JSX 也可用 `NodeLabel` 声明标签。配置标签排在前面，子标签按书写顺序追加；标签不参与节点正文。
+
+```tsx
+import { Node, NodeLabel } from '@retikz/react';
+
+<Node text="正文" label={{ text: 'A' }}>
+  <NodeLabel>B</NodeLabel>
+  <NodeLabel>C</NodeLabel>
+</Node>;
+```
+
 ## 添加标签
 
 `label` 接受一个对象或对象数组。先选择附着位置，再按需调整样式：
@@ -77,7 +88,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 每个标签的 `text` 与路径标签共用 Core 文本块：字符串中的 `\n` 表示换行，也可传入非空行数组，如 `text: ['第一行', { text: '第二行', fill: 'red' }]`。混排行写成 `text: [{ segments: [{ text: '说明 ' }, { tex: 'x' }] }]`。多行共同占用一个标签视觉盒，位置、旋转和引线作用于整块；`label` 对象数组则表示多个独立标签。
 
 - `position` 默认 `'top'`，支持 `'top'`、`'top-right'`、`'right'`、`'bottom-right'`、`'bottom'`、`'bottom-left'`、`'left'`、`'top-left'` 八个方向
-- 还可写中心 `'center'`、角度 `30`，或边界比例 `{ boundary: 'right', fraction: 0.25 }`；中心标签不做重叠避让
+- 还可写中心 `'center'`、角度 `30`，或边界比例 `{ side: 'right', fraction: 0.25 }`；中心标签不做重叠避让
 - `placement` 默认 `'outside'`，写 `'inside'` 可放在边框内侧
 - `font` / `textColor` 优先使用标签显式值，再使用 `Scope.defaults.node.label`，仍未提供的值从节点继承
 - `opacity` 为 0..1，与节点整体透明度相乘；省略的因子按 1 处理。行和片段透明度继续相乘，显式 0 会保留
@@ -117,9 +128,9 @@ import { Node } from '@retikz/react';
 
 ## 间距与内外侧
 
-`distance` 是节点边界与**旋转后标签视觉框**之间沿摆放方向的净距，省略时使用 `<Layout labelDistance>`（默认 `12`）；写 `0` 时视觉框恰好贴住边界。`placement: 'inside'` 会把方向转向节点内部，并在边界内侧保留同样的净距；矩形节点还可以写 `position: { boundary, fraction }`，把标签附着到某条边界的比例位置上。`position: 'center'` 始终使用最终节点矩形中心，会忽略 `placement` 与 `distance`。
+`distance` 是节点边界与**旋转后标签视觉框**之间沿摆放方向的净距，省略时使用 `<Layout labelDistance>`（默认 `12`）；写 `0` 时视觉框恰好贴住边界。`placement: 'inside'` 会把方向转向节点内部，并在边界内侧保留同样的净距；矩形节点还可以写 `position: { side, fraction }`，把标签附着到某条边界的比例位置上。`position: 'center'` 始终使用最终节点矩形中心，会忽略 `placement` 与 `distance`。
 
-- `boundary` 接 `'top'` / `'right'` / `'bottom'` / `'left'`
+- `side` 接 `'top'` / `'right'` / `'bottom'` / `'left'`
 - `fraction` 是边界上的 0..1 比例位置，缺省 `0.5`
 - `placement: 'inside'` 不能和 `pin` 同时使用；需要引线时请保持外侧标签
 
@@ -187,7 +198,7 @@ import { Node } from '@retikz/react';
 
 - 命名方位：\`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`。命名方向从节点边界附着；\`'center'\` 固定最终节点矩形中心，并忽略 \`placement\` 与 \`distance\`
 - 角度：\`number\`，按节点中心向该角度的射线附着标签
-- 边界比例：\`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`。附着到指定边，\`fraction\` 缺省为 \`0.5\`，范围为 \`0..1\``,
+- 边界比例：\`{ side: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`。附着到指定边，\`fraction\` 缺省为 \`0.5\`，范围为 \`0..1\``,
 },
 {
   name: 'IRNodeLabel.placement',

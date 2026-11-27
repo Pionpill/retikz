@@ -1,7 +1,8 @@
 import { pathClipProvider } from '@retikz/extension';
 import type { IRStack, IRCell } from '@retikz/standard/collection';
 import { createStack, stackProvider } from '@retikz/standard/collection';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { standardStackEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -38,7 +39,7 @@ export type InputStack = Omit<IRStack, 'namespace' | 'type' | 'items' | 'data' |
   );
 
 /** 将 Stack 输入与嵌套内容交给根级 traversal */
-export const stackInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStack> = {
+export const stackInputEmbedAdapter: InputEmbedAdapter<InputStack> = {
   kind: standardStackEmbedKind,
   lower: (props, context) => {
     if (props.skeleton !== undefined)
@@ -77,9 +78,9 @@ export const stackInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStack> = 
  * @param input 使用显式单元格、JSON 数组或示意骨架的 Stack 输入
  * @returns 持有原始 input 引用的 embed；内容归一与校验在后续 adapter 和编译阶段执行
  */
-export const stack = (input: InputStack): InputEmbed<InputStack> => ({
-  type: 'embed',
-  kind: standardStackEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const stack = (input: InputStack): InputEmbed<InputStack> =>
+  embed({
+    adapter: stackInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

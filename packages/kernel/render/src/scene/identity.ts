@@ -79,11 +79,6 @@ export const createPrimitiveIdentityIndex = (
   return result;
 };
 
-type IdentityTrieNode = Readonly<{
-  terminal: boolean;
-  children: ReadonlyMap<string, IdentityTrieNode>;
-}>;
-
 type MutableIdentityTrieNode = {
   terminal: boolean;
   children: Map<string, MutableIdentityTrieNode>;
@@ -115,30 +110,6 @@ const identityError = (owner: string, cause?: unknown): RetikzRenderError =>
 const copyIdentity = (identity: SceneIdentity): SceneIdentity =>
   Object.freeze({ owner: identity.owner, path: Object.freeze([...identity.path]) });
 
-const comparePaths = (left: SceneIdentity, right: SceneIdentity): number => {
-  const length = Math.min(left.path.length, right.path.length);
-
-  for (let index = 0; index < length; index += 1) {
-    const leftSegment = left.path[index];
-    const rightSegment = right.path[index];
-    if (leftSegment < rightSegment) return -1;
-    if (leftSegment > rightSegment) return 1;
-  }
-
-  return left.path.length - right.path.length;
-};
-
-const findTrieNode = (root: IdentityTrieNode, path: ReadonlyArray<string>): IdentityTrieNode | undefined => {
-  let current: IdentityTrieNode | undefined = root;
-
-  for (const segment of path) {
-    if (current === undefined) return undefined;
-    current = current.children.get(segment);
-  }
-
-  return current;
-};
-
 /**
  * 创建并冻结一个 Runtime identity
  * @param owner 所属来源的非空键
@@ -162,25 +133,14 @@ export const sceneIdentityEquals = (left: SceneIdentity, right: SceneIdentity): 
   left.path.length === right.path.length &&
   left.path.every((segment, index) => segment === right.path[index]);
 
-/**
- * 创建复制输入、验证 Source/唯一性并稳定排序的 identity lookup
- * @param owner 该查询表绑定的非空来源键
- * @param identities 属于同一来源且不重复的合法身份
- * @returns 复制并冻结身份后的查询表；values 按路径顺序返回副本
- * @throws {RetikzRenderError} owner 为空、身份归属不匹配或路径重复时抛出 SceneIdentityInvalid
- */
-export const createSceneIdentityLookup = (
-  owner: string,
-  identities: ReadonlyArray<SceneIdentity>,
-): SceneIdentityLookup => {
+/** 按同一 owner 校验路径唯一性，重复时报告冻结的身份副本 */
+export const assertUniqueSceneIdentities = (owner: string, identities: ReadonlyArray<SceneIdentity>): void => {
   assertNonEmptyString(owner, 'Runtime identity lookup owner', () => identityError(owner, owner));
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };
-  const copied: Array<SceneIdentity> = [];
 
-  for (const oriIdentity of identities) {
-    if (oriIdentity.owner !== owner) throw identityError(owner, oriIdentity);
+  for (const identity of identities) {
+    if (identity.owner !== owner) throw identityError(owner, identity);
 
-    const identity = copyIdentity(oriIdentity);
     let current = root;
 
     for (const segment of identity.path) {
@@ -193,34 +153,11 @@ export const createSceneIdentityLookup = (
       }
     }
 
-    if (current.terminal) throw identityError(owner, identity);
+    if (current.terminal) throw identityError(owner, copyIdentity(identity));
 
     current.terminal = true;
-    copied.push(identity);
   }
-
-  copied.sort(comparePaths);
-  const values = Object.freeze(copied);
-  const immutableRoot = root as IdentityTrieNode;
-
-  return Object.freeze({
-    owner,
-    size: values.length,
-    has: identity => {
-      if (identity.owner !== owner) throw identityError(owner, identity);
-      return findTrieNode(immutableRoot, identity.path)?.terminal === true;
-    },
-    values: () => Object.freeze([...values]),
-  });
 };
 
 /** 跨提交稳定的 Scene 图元身份 */
 export type SceneIdentity = Readonly<{ owner: string; path: ReadonlyArray<string> }>;
-
-/** 经过唯一性校验的图元身份查询 */
-export type SceneIdentityLookup = Readonly<{
-  owner: string;
-  size: number;
-  has: (identity: SceneIdentity) => boolean;
-  values: () => ReadonlyArray<SceneIdentity>;
-}>;

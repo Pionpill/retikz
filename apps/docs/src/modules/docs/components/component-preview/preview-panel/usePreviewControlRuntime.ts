@@ -1,13 +1,14 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import type { RefObject } from 'react';
 import { useState } from 'react';
 
-import type { PreviewControlRuntime, PreviewControlState, RendererMode } from '../types';
+import type { PreviewControlRuntime, PreviewControlState } from '../types';
 
 export type UsePreviewControlRuntimeOptions = {
   /** 由 Card 宿主持有并注入的业务控件状态 */
   controlState: PreviewControlState;
   /** 当前面板渲染模式。 */
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   /** 当前面板渲染区域 ref。 */
   renderPaneRef: RefObject<HTMLElement | null>;
   /** 面板是否处于 hover 状态。 */

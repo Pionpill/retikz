@@ -29,12 +29,12 @@ export class WeaveTaskQueue {
 
   /** 通知一个尚未完成的阶段，相同通知不产生第二份执行记录 */
   request(address: WeaveTaskAddress): void {
-    this.record(address);
+    this.ensureTaskRecord(address);
   }
 
   /** 已完成阶段的输入确实再次改变时，重新加入检查队列 */
   invalidate(address: WeaveTaskAddress): void {
-    const record = this.record(address);
+    const record = this.ensureTaskRecord(address);
     if (record.state === 'running') this.fail('invalidated-running', address);
     if (record.state === 'complete') {
       record.state = 'pending';
@@ -44,7 +44,7 @@ export class WeaveTaskQueue {
 
   /** 在读取点完成生产者；调用方负责判断该阶段是否能复用有效结果 */
   require(address: WeaveTaskAddress, execute?: () => void): void {
-    const record = this.record(address);
+    const record = this.ensureTaskRecord(address);
     if (record.state === 'complete') return;
     if (record.state === 'running') this.fail('cycle', address);
     record.state = 'running';
@@ -78,7 +78,8 @@ export class WeaveTaskQueue {
     }
   }
 
-  private record(address: WeaveTaskAddress): WeaveTaskRecord {
+  /** 首次登记时加入就绪队列，后续复用同一阶段记录 */
+  private ensureTaskRecord(address: WeaveTaskAddress): WeaveTaskRecord {
     if (this.failure !== undefined) throw this.failure;
     let phases = this.tasks.get(address.entry);
     if (phases === undefined) this.tasks.set(address.entry, (phases = new Map()));

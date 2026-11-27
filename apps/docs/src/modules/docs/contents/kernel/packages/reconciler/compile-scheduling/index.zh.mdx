@@ -1,0 +1,87 @@
+---
+title: 执行 / 编译调度
+description: 跟随一次完整编译，看 Reconciler 如何组织 Core 的计算、为前向引用保留绘制位置，并将子树产物组装成整图快照
+---
+
+[Core 的编译流程](/kernel/packages/core/compilation)解释了节点边界和路径端点怎样算出来。把连接 A、B 的路径写在两个节点之前，会遇到一个执行问题：读到路径时，端点还算不出来；等端点算出来时，路径仍要画在节点下面。本篇跟随一次完整编译，从会话收到声明读到快照返回，看 Reconciler 怎样同时满足这两个顺序。
+
+<ComponentAlert
+  type="tip"
+  title="阅读约定"
+  description="除非特别说明，执行篇均以全量编译为准。涉及增量编译的差异会单独标明，具体的更新与复用机制将在 Weave 篇展开。"
+/>
+
+## 整体流程
+
+一次全量编译从会话收到场景声明开始。Reconciler 先为这次编译准备执行环境，再由执行器遍历声明树，在所需数据就绪时调用 Core 计算各个元素。例如，节点的边界可供查询后，执行器就能安排路径计算连接端点。等整棵树的图元和可见边界都就绪，Reconciler 将它们组装成 Scene，随编译快照一起交回会话。
+
+<ComponentPreview files="scheduling-overview" size="sm" hideCode type="flow" />
+
+会话接收根声明和编译选项，调用 <ApiSourceLink label="createCompileRuntime" path="packages/kernel/reconciler/src/reconcile/reconciler.ts" startLine={58}>`createCompileRuntime`</ApiSourceLink> 准备这次计算要用的能力与工作区，例如名称查询、资源登记和诊断收集。接着进入 <ApiSourceLink label="compileScene" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={69}>`compileScene`</ApiSourceLink>：它把根的子项交给子树执行器，再把根声明、同一个运行环境和绘制结果交给整图组装函数。会话从这个入口取回快照；具体何时计算一个元素，由执行器安排。
+
+## 声明顺序与求值顺序
+
+下图沿用 Core 的例子：根的三个子项依次是路径、节点 A、节点 B，没有额外设置绘制层级。两节点中心分别为 [0, 0] 和 [180, 0]，宽度均为 60。路径只声明了两个名字，图中却从 A 的右边界 [30, 0] 连到 B 的左边界 [150, 0]。
+
+<ComponentPreview
+  files={[
+    '/kernel/packages/core/compilation/compilation-example',
+    '/kernel/packages/core/compilation/compilation-example.data',
+  ]}
+  size="xs"
+  hideCode
+  type="illustration"
+/>
+
+遍历从根的子项开始。<ApiSourceLink label="compileRootChildren" path="packages/kernel/reconciler/src/compile/execution/subtree/element.ts" startLine={95}>`compileRootChildren`</ApiSourceLink> 为根的子项建立执行帧，按声明顺序访问它们。跟踪同一份图元列表，可以看到三次变化：
+
+| 时机      | 执行器的动作                                                                                                                                                                                                                                          | 图元列表（简写） |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| 读到路径  | <ApiSourceLink label="queuePathChild" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={46}>`queuePathChild`</ApiSourceLink> 加入待计算路径，保留引用求值所需的上下文，在输出列表记下原位                               | 占位             |
+| 读到 A、B | 调用 Core 计算节点；<ApiSourceLink label="assembleNode" path="packages/kernel/reconciler/src/compile/execution/leaf/node.ts" startLine={28}>`assembleNode`</ApiSourceLink> 将节点图元放入列表，并在当前命名空间登记可查询的节点几何                   | 占位、A、B       |
+| 子树收尾  | <ApiSourceLink label="flushPendingPathEmissions" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={86}>`flushPendingPathEmissions`</ApiSourceLink> 使路径能够按名称读取两端的几何，调用 Core 计算路径，将图元回填到原位 | 路径、A、B       |
+
+把同样的三个声明放进一个 Scope：`children` 保存原始声明，子执行帧的 `state.paths` 保存待计算的路径任务，`state.primitives` 保存按绘制顺序排列的输出。下图只展开一个任务和两个节点的相关字段。
+
+<ComponentPreview files="scope-storage" size="xl" hideCode type="illustration" />
+
+① 入队时，`PendingPathEmission.placeholderSlot` 同时引用输出数组和其中的占位对象 P。② 处理 Node 时，A、B 的图元写入这个数组，它们的几何则按名称登记在运行环境的 `namespaceStack` 中。③ Scope 收尾时，flush 读取待处理任务，按 A、B 查询几何，算出路径图元，沿任务保存的引用替换 P。图中右侧上下两个数组是同一数组回填前后的状态。
+
+占位只存在于编译过程中。若直接把最后算出的路径追加到列表末尾，它就会画在两个节点之上。原位回填让计算可以等依赖就绪，同时保留同一层级内的声明顺序；显式设置了 `zIndex` 的图元仍按层级排序。
+
+## Scope 如何调度子树
+
+上图把路径、A 和 B 放进了同一个 Scope。与直接遍历根子项相比，这里多了一层依赖：Scope 需要子项的布局来确定自身的边界和变换，而待处理路径又需要这些变换才能在正确的位置连接 A、B。执行器遇到 Scope 时，把它交给 <ApiSourceLink label="visitScope" path="packages/kernel/reconciler/src/compile/execution/scope/visit.ts" startLine={303}>`visitScope`</ApiSourceLink>，按下面的顺序完成这一层：
+
+1. **进入 Scope，访问子项。** 子执行帧接收当前的继承配置和变换上下文。路径在这一帧中排队并占位，A、B 则完成布局并登记几何。遇到嵌套 Scope 时，执行器同样先处理它的子树。
+2. **确定 Scope 布局，再回填路径。** 子项遍历返回后，Reconciler 调用 Core 的 `compileScope` 计算 Scope 布局。随后用确定的变换更新已登记的几何和待处理路径的变换链，再回填本层的路径。这样，即使 Scope 改变了子项的位置，连线也能使用更新后的端点。
+3. **退出 Scope，将结果交给父层。** 路径在本层的名称仍可查询时完成计算。执行器随后退出作用域，将这一层的绘制输出和可见边界汇入父执行帧，父层继续处理后面的兄弟元素。
+
+这里关注的是 Reconciler 何时调用各阶段；Scope 的边界和变换怎样算出，见 [Core 的 Scope 编译](/kernel/packages/core/scope-compilation)。
+
+## 从子树到整图快照
+
+路径回填后，根只交付已排序的图元、可见边界和 Composite 领域产物，不组装供父布局测量与重放使用的数据。<ApiSourceLink label="finalizeSceneCompilation" path="packages/kernel/reconciler/src/compile/execution/scene.ts" startLine={20}>`finalizeSceneCompilation`</ApiSourceLink> 用这些结果完成整图：声明提供了 `viewBox` 时采用指定范围，否则用可见边界和留白计算布局；有画笔或裁剪资源时，从同一工作区取出并附到 Scene 上。此时不需要再遍历一次节点和路径。
+
+调用方从挂载结果的 `compilation.result.scene` 取得可供渲染的 Scene。领域产物保存在同一结果的 `artifacts` 中；诊断和可选的来源记录属于编译快照。这样，渲染器可以只消费绘制数据，需要追踪问题的工具也能读取同一次编译的记录。
+
+## 完整实现流程
+
+沿下图追踪路径在本次挂载中的一生：它先取得一个输出位置，稍后才取得连接端点。
+
+<ComponentPreview files="path-scheduling" size="md" hideCode type="flow" />
+
+读源码时从 `compileScene` 进入 `assembleCompileSubtree`：先沿子项遍历找到占位和几何登记，再沿执行器的 `finish` 找到路径回填与排序，最后回到 `finalizeSceneCompilation` 看整图如何收尾。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '编译流程', description: '对照 Core 的解析与计算阶段', url: '/kernel/packages/core/compilation' },
+    {
+      title: '编译核心的编译输出',
+      description: '查看 Scene、图元和资源的契约',
+      url: '/kernel/packages/core/compilation-output',
+    },
+  ]}
+/>

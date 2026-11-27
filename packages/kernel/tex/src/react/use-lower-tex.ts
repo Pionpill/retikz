@@ -78,9 +78,9 @@ const getOrCreateEngineEntry = (extensions: Array<MathJaxExtension>, engineKey: 
  *
  * const Formula: FC = () => {
  *   const lowerTexState = useLowerTex({ profile: MathJaxProfile.Math });
- *   if (lowerTexState.status !== 'ready') return <Layout />;
+ *   if (lowerTexState.status !== 'ready') return <Layout>{null}</Layout>;
  *
- *   return <Layout lowerTex={lowerTexState.lowerTex}>{'$x^2$'}</Layout>;
+ *   return <Layout compile={{ lowerTex: lowerTexState.lowerTex }}>{'$x^2$'}</Layout>;
  * };
  * ```
  */
@@ -91,7 +91,6 @@ export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexSt
   const extensions = resolveMathJaxExtensions(options);
   const engineKey = formatEngineCacheKey(extensions);
   const diagnosticRef = useRef(options?.onDiagnostic);
-  const requestRef = useRef(0);
   const [stateEntry, setStateEntry] = useState<TexLoweringStateEntry>(() => ({
     key: engineKey,
     state: { status: 'loading' },
@@ -99,14 +98,13 @@ export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexSt
   diagnosticRef.current = options?.onDiagnostic;
 
   useEffect(() => {
-    const requestToken = ++requestRef.current;
     let isEffectActive = true;
     setStateEntry({ key: engineKey, state: { status: 'loading' } });
 
     const engineEntry = getOrCreateEngineEntry(extensions, engineKey);
     void engineEntry.promise
       .then(engine => {
-        if (!isEffectActive || requestRef.current !== requestToken) return;
+        if (!isEffectActive) return;
 
         const forwardDiagnostic: NonNullable<MathJaxLowerTexOptions['onDiagnostic']> = diagnostic => {
           diagnosticRef.current?.(diagnostic);
@@ -118,7 +116,7 @@ export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexSt
         });
       })
       .catch(error => {
-        if (!isEffectActive || requestRef.current !== requestToken) return;
+        if (!isEffectActive) return;
 
         const diagnostic: TexLoweringDiagnostic = {
           kind: 'engine-error',

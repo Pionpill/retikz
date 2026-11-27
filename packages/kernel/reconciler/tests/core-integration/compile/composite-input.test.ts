@@ -57,6 +57,34 @@ const container = defineComposite({
 });
 
 describe('复合实例运行时输入', () => {
+  it('按作者位置替换声明并重绑，失败后仍使用最后提交的输入', () => {
+    const input = { namespace: 'fixture', type: 'prepared' };
+    const source = sceneOf([input]);
+    const options = {
+      composites: [prepared],
+      compositeInputs: createCompositeInputBindings(source, [{ path: ['children', 0], input: 'initial' }]),
+    };
+    const session = new SceneReconciler(options, { mode: 'incremental' });
+    try {
+      session.mount(source);
+      const target = { kind: 'child' as const, index: 0, scopeId: session.getScopeId() };
+      const updated = session.update({
+        operations: [{ kind: 'update', target, input, bindings: [{ path: [], input: 'new' }] }],
+      });
+      expect(JSON.stringify(updated.compilation.result.scene)).toContain('new');
+      expect(() =>
+        session.update({
+          operations: [{ kind: 'update', target, input, bindings: [{ path: ['missing'], input: 'invalid' }] }],
+        }),
+      ).toThrow();
+      expect(session.read()).toBe(updated);
+      expect(
+        JSON.stringify(session.update({ operations: [{ kind: 'update', target, input }] }).compilation.result.scene),
+      ).toContain('unbound');
+    } finally {
+      session.dispose();
+    }
+  });
   it('分离相同的匿名源而不序列化运行时输入', () => {
     const source = sceneOf([leaf(), leaf()]);
     const original = JSON.stringify(source);

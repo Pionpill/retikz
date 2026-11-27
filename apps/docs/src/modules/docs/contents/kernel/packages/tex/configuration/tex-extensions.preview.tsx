@@ -24,7 +24,7 @@ const renderTexExtensions = (values: TexExtensionsPreviewValues, lowerTex?: TexL
   ];
 
   return (
-    <Layout lowerTex={lowerTex}>
+    <Layout compile={{ lowerTex }}>
       <Node
         position={[0, -25]}
         text={extensionStatus}

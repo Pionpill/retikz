@@ -66,15 +66,15 @@ const ir: IRScene = {
   ],
 };
 
-export const Example = () => <Layout ir={ir} extensions={{ composites: [flexLayoutDefinition] }} />;
+export const Example = () => <Layout ir={ir} compile={{ composites: [flexLayoutDefinition] }} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { scene, renderToSvgString } from '@retikz/vanilla';
-import { flexLayout, flexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
+import { flexLayout } from '@retikz/layout-vanilla';
 
 const input = scene({
   children: [
@@ -88,7 +88,8 @@ const input = scene({
   ],
 });
 
-console.log(renderToSvgString(input, { adapters: [flexLayoutInputEmbedAdapter] }));
+const compileResult = compileToScene(input);
+console.log(renderToSvg(compileResult.scene));
 ```
 
 </DocTab>
@@ -96,7 +97,7 @@ console.log(renderToSvgString(input, { adapters: [flexLayoutInputEmbedAdapter] }
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 import { flexLayoutDefinition } from '@retikz/layout';
 
 const ir: IRScene = {
@@ -115,7 +116,7 @@ const ir: IRScene = {
   ],
 };
 
-console.log(renderToSvgString(ir, { compile: { composites: [flexLayoutDefinition] } }));
+console.log(renderToSvg(compileToScene(ir, { compile: { composites: [flexLayoutDefinition] } }).scene));
 ```
 
 </DocTab>

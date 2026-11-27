@@ -39,7 +39,7 @@ describe('解析/资源绘制', () => {
     const resolved = resolvePaint({ kind: 'pattern', shape: 'lines' }, patternContext());
 
     expect(typeof resolved).toBe('object');
-    expect(resolved).toMatchObject({ kind: 'paint', pattern: { name: 'lines', size: 8 } });
+    expect(resolved).toMatchObject({ kind: 'paint', spec: { shape: 'lines' }, pattern: { size: 8 } });
   });
 
   it('绑定自定义模式并在解析中应用形状/样式优先级', () => {
@@ -62,8 +62,8 @@ describe('解析/资源绘制', () => {
 
     expect(resolved).toMatchObject({
       kind: 'paint',
+      spec: { shape: 'custom' },
       pattern: {
-        name: 'custom',
         style: {
           base: { color: '#123456', dashPattern: [7, 2] },
           horizontalStyle: { color: '#123456', dashPattern: [1, 2] },
@@ -168,7 +168,7 @@ describe('解析/资源裁剪', () => {
       { clipRegistry: resolveClipRegistry([polygon]), irPath: ['children', 0, 'clip'] },
     );
 
-    expect(resolved.kind).toBe('polygon');
+    expect(resolved.spec.kind).toBe('polygon');
     expect(resolved.params).toEqual({
       kind: 'polygon',
       params: {
@@ -222,7 +222,7 @@ describe('解析/资源裁剪', () => {
 
     const nested = resolution.resolve({ kind: 'leaf', params: { radius: 2 } });
 
-    expect(nested.kind).toBe('leaf');
+    expect(nested.spec.kind).toBe('leaf');
     expect(nested.definition).toBe(leaf);
 
     const scene = compileTestResult(

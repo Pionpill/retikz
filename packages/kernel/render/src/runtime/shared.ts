@@ -2,9 +2,8 @@ import type { PropertyPath } from '@retikz/foundation';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationController } from '../hydration';
-import { recoverHydrationSetupFailure } from '../hydration/setup-failure';
 import type { SceneIdentity } from '../scene';
-import { createSceneIdentityLookup, sceneIdentityEquals } from '../scene';
+import { assertUniqueSceneIdentities, sceneIdentityEquals } from '../scene';
 
 /** 判断动态值是否为普通对象 */
 const isPlainObject = (value: object): boolean => {
@@ -48,10 +47,9 @@ export const createSceneIdentityMap = <TValue>(
     byOwner.set(identity.owner, identities);
   }
 
-  for (const [owner, identities] of byOwner) createSceneIdentityLookup(owner, identities);
+  for (const [owner, identities] of byOwner) assertUniqueSceneIdentities(owner, identities);
 
   const locate = (identity: SceneIdentity, create: boolean): SceneIdentityMapNode<TValue> | undefined => {
-    sceneIdentityEquals(identity, identity);
     const existingRoot = roots.get(identity.owner);
     let current: SceneIdentityMapNode<TValue>;
     if (existingRoot === undefined) {
@@ -142,8 +140,8 @@ export const createSemanticOwnerPublicIdMap = (
 /** 按 effective public id 聚合完整 topology primitive paths */
 export const createPublicIdPrimitivePathMap = (
   topology: ReadonlyArray<Readonly<{ semanticOwner: SceneIdentity; primitivePath: PropertyPath; publicId?: string }>>,
+  publicIdByOwner: SceneIdentityMap<string>,
 ): ReadonlyMap<string, ReadonlyArray<PropertyPath>> => {
-  const publicIdByOwner = createSemanticOwnerPublicIdMap(topology);
   const pathsByPublicId = new Map<string, Array<PropertyPath>>();
 
   for (const node of topology) {
@@ -155,74 +153,7 @@ export const createPublicIdPrimitivePathMap = (
     pathsByPublicId.set(publicId, paths);
   }
 
-  return new Map(Array.from(pathsByPublicId, ([publicId, paths]) => [publicId, Object.freeze(paths.slice())] as const));
-};
-
-/**
- * 复制并递归冻结 JSON-like 容器，函数与非普通对象保留稳定 identity
- * @template T 输入与复制结果共享的结构类型；非普通对象保持原引用
- */
-export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<object>()): T => {
-  if (typeof value !== 'object' || value === null) return value;
-  if (!Array.isArray(value) && !isPlainObject(value)) return value;
-  if (ancestors.has(value))
-    throw new RetikzRenderError(
-      RetikzRenderErrorCode.Runtime,
-      'Render runtime config must not contain cyclic plain data',
-    );
-
-  ancestors.add(value);
-  let copied: unknown;
-  if (Array.isArray(value)) {
-    const keys = Reflect.ownKeys(value);
-    if (keys.length !== value.length + 1 || keys.some(key => typeof key !== 'string')) {
-      throw new RetikzRenderError(
-        RetikzRenderErrorCode.Runtime,
-        'Render runtime config arrays must be dense data-property arrays',
-      );
-    }
-
-    const array: Array<unknown> = [];
-
-    for (let index = 0; index < value.length; index += 1) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
-      if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-        throw new RetikzRenderError(
-          RetikzRenderErrorCode.Runtime,
-          'Render runtime config arrays must be dense data-property arrays',
-        );
-      }
-
-      array.push(cloneAndFreezeRuntimeValue(descriptor.value, ancestors));
-    }
-
-    copied = array;
-  } else {
-    const record = Object.create(null) as Record<PropertyKey, unknown>;
-
-    for (const key of Reflect.ownKeys(value)) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, key);
-      if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-        throw new RetikzRenderError(
-          RetikzRenderErrorCode.Runtime,
-          'Render runtime config objects must contain enumerable data properties',
-        );
-      }
-
-      Object.defineProperty(record, key, {
-        value: cloneAndFreezeRuntimeValue(descriptor.value, ancestors),
-        enumerable: true,
-        configurable: false,
-        writable: false,
-      });
-    }
-
-    copied = record;
-  }
-
-  ancestors.delete(value);
-
-  return Object.freeze(copied) as T;
+  return new Map(Array.from(pathsByPublicId, ([publicId, paths]) => [publicId, Object.freeze(paths)] as const));
 };
 
 /** 比较 Runtime public DTO；函数与非普通对象按 identity 比较 */
@@ -297,5 +228,3 @@ export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
 
   return Object.freeze({ dispose, disposePending });
 };
-
-export { recoverHydrationSetupFailure };

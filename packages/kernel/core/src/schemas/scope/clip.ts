@@ -19,14 +19,14 @@ export const ClipFillRuleSchema = zodEnum(ClipFillRule).describe('Fill rule used
 
 /** 校验作用域局部坐标中的矩形裁剪区域；零宽或零高表示空区域 */
 export const RectClipSchema = strictObject({
-  kind: literal('rect').describe('Discriminator for rectangular clip regions.'),
+  kind: literal('rect'),
   params: strictObject({
     x: number().describe('Rect left-top x in scope-local coords.'),
     y: number().describe('Rect left-top y in scope-local coords.'),
     width: NonNegativeNumberSchema.describe('Rect width in user units; zero produces an empty clip region.'),
     height: NonNegativeNumberSchema.describe('Rect height in user units; zero produces an empty clip region.'),
-  }).describe('Parameters owned by this clip kind.'),
-}).describe('Rectangular clip region.');
+  }).describe('Rectangle in scope-local coordinates.'),
+});
 
 /** 校验自定义裁剪数据，内置矩形须使用矩形 schema */
 const CustomClipSchema = strictObject({
@@ -42,12 +42,10 @@ const CustomClipSchema = strictObject({
       });
     }
   })
-  .describe('Custom clip spec. Its kind must be registered through CompileOptions.clips.');
+  .describe('Custom clip selected by its registered kind.');
 
 /** 校验内置矩形或按 kind 注册的自定义裁剪描述 */
-export const ClipSchema = union([RectClipSchema, CustomClipSchema]).describe(
-  'Clip region for `Scope.clip`: built-in rect or a JSON-safe custom object registered by kind.',
-);
+export const ClipSchema = union([RectClipSchema, CustomClipSchema]);
 
 /** 矩形裁切 IR 类型 */
 export type IRRectClip = ZodInfer<typeof RectClipSchema>;

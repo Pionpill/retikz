@@ -1,5 +1,5 @@
 import type { HydrationEventProps, NodeProps, ReactInputEmbedContext } from '@retikz/react';
-import { createInputScene, Node, withInputEmbedAdapters } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import type { InputFrame, InputFrameHeaders } from '@retikz/standard-vanilla/presentation';
 import { frameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import type { InputFrameConfig } from '@retikz/standard/presentation';
@@ -16,11 +16,16 @@ export type FrameProps = Omit<InputFrameConfig, 'children' | 'title' | 'descript
   children: ReactNode;
 };
 
+/** 按正文来源分支移除标题不使用的位置与事件字段 */
+type FrameHeaderProps<TNode extends NodeProps> = TNode extends NodeProps
+  ? Omit<TNode, 'position' | keyof HydrationEventProps>
+  : never;
+
 /** Frame 主标题接受的 JSON-safe Node authoring 字段 */
-export type FrameTitleProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameTitleProps = FrameHeaderProps<NodeProps>;
 
 /** Frame 辅助说明接受的 JSON-safe Node authoring 字段 */
-export type FrameDescriptionProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
+export type FrameDescriptionProps = FrameHeaderProps<NodeProps>;
 
 type FrameParts = {
   body: Array<ReactNode>;
@@ -33,13 +38,13 @@ const convertHeaderProps = (
   props: FrameTitleProps | FrameDescriptionProps,
   kind: 'title' | 'description',
 ): InputNode => {
-  const input = createInputScene(createElement(Node, { ...props, position: [0, 0] }));
-  const children = input.scene.children;
-  if (children === undefined || children.length !== 1) {
+  const input = convertReactToInputScene(createElement(Node, { ...props, position: [0, 0] }));
+  const children = input.children;
+  if (children.length !== 1) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
       message: `Frame ${kind} must contain exactly one Core Node authoring input.`,
-      details: { childCount: children?.length ?? 0, kind },
+      details: { childCount: children.length, kind },
     });
   }
 
@@ -115,15 +120,8 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
 
   const { children, ...input } = props as FrameProps;
   const parts = readFrameParts(children);
-  const bodyInput = createInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
-  const childrenInput = bodyInput.scene.children;
-  if (childrenInput === undefined) {
-    throw new RetikzStandardError({
-      code: RetikzStandardErrorCode.AuthoringInvalid,
-      message: 'Frame body must use direct child authoring.',
-      details: { component: 'Frame' },
-    });
-  }
+  const bodyInput = convertReactToInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
+  const childrenInput = bodyInput.children;
 
   const headers: InputFrameHeaders = {
     ...(parts.title === undefined ? {} : { title: parts.title }),
@@ -135,7 +133,7 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
     ...(Object.keys(headers).length === 0 ? {} : { headers }),
   };
 
-  return withInputEmbedAdapters(inputProps, bodyInput.adapters);
+  return inputProps;
 };
 
 const FrameComponent: FC<FrameProps> = () => null;

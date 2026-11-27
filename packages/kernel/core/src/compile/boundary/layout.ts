@@ -10,7 +10,7 @@ import type { CanonicalNodeBoundary } from '../../resolve';
 import {
   boundaryKey,
   guardProviderOutput,
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
@@ -39,14 +39,14 @@ const snapshotConnectionEnvelope = (
   const path = irPath ?? [];
   const { halfWidth, halfHeight } = envelope;
   if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth <= 0 || halfHeight <= 0) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${formatPropertyPath(path)}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
     );
   }
 
   const tolerance = Number.EPSILON * Math.max(1, halfWidth, halfHeight) * 8;
   if (kind === 'circle' && Math.abs(halfWidth - halfHeight) > tolerance) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Shape '${shapeName}' returned an invalid circle connection envelope at ${formatPropertyPath(path)}: half-axes must be equal, received [${halfWidth}, ${halfHeight}]`,
     );
   }
@@ -104,7 +104,7 @@ const snapshotBoundaryRect = (providerName: string, value: CenteredBox, irPath?:
     width <= 0 ||
     height <= 0
   ) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Boundary '${providerName}' resolved an invalid rect at ${formatPropertyPath(irPath ?? [])}: expected finite positive width and height`,
     );
   }

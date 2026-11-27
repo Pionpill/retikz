@@ -1,14 +1,17 @@
-import type { AnyPathDefinition } from '../contract';
+import type { AnyPathDefinition, PathDefinitionCompileContext } from '../contract';
 import { definePath } from '../contract';
 import type { IRPathBase } from '../schemas';
 import { BuiltinPath, StrokePathSchema } from '../schemas';
 import { createProviderRegistry } from './registry';
 
+/** 内置描边只原样返回宿主结果，不向扩展暴露其中的可变对象 */
+export const compileBuiltinStroke = (context: PathDefinitionCompileContext) => context.emitStroke();
+
 /** 标准描边 path：复用 core 的 stroke emission */
 const strokePath = definePath<IRPathBase>({
   name: BuiltinPath.Stroke,
   schema: StrokePathSchema,
-  compile: context => context.emitStroke(),
+  compile: compileBuiltinStroke,
 });
 
 /** 内置 path provider 注册项 */

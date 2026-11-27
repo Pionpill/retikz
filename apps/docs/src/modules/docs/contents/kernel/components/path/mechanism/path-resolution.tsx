@@ -21,7 +21,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
         id="steps"
         label={{
           text: t.steps,
-          position: { boundary: 'bottom', fraction: 0 },
+          position: { side: 'bottom', fraction: 0 },
           align: 'start',
           distance: 6,
           opacity: 0.8,
@@ -39,7 +39,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
         position={[0, 180]}
         label={{
           text: t.commands,
-          position: { boundary: 'bottom', fraction: 0 },
+          position: { side: 'bottom', fraction: 0 },
           align: 'start',
           distance: 6,
           opacity: 0.8,
@@ -65,7 +65,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
         position={[300, 375]}
         label={{
           text: t.record,
-          position: { boundary: 'bottom', fraction: 0 },
+          position: { side: 'bottom', fraction: 0 },
           align: 'start',
           distance: 6,
           opacity: 0.8,

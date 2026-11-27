@@ -39,10 +39,10 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../core/src/error
 import { BUILTIN_SHAPES } from '../../../../core/src/providers/shape/shape';
 import { isLayoutProbeRecoverableError } from '../../../../core/src/resolve';
 import { cloneAndFreezeJson } from '../../../../core/src/shared';
+import { compileScene } from '../../../src/compile';
 import * as compileProvenance from '../../../src/compile/provenance/tracker';
 import { createExecutionInvariantError, createCompileRuntime, NamespaceStack } from '../../../src/compile/runtime';
 import { wrapLayoutProbeError } from '../../../src/compile/shared';
-import { compileScene } from '../../../src/full';
 import { compileTestResult } from '../../helpers/compilation';
 import { pathArrows } from '../../helpers/path-arrows';
 
@@ -981,32 +981,6 @@ describe('布局感知的复契约束和边界', () => {
 
     expect(() =>
       compileTestResult(sceneOf({ namespace: 'test', type: 'invalidLayoutChildDiscriminatorParent' }), {
-        composites: [parent],
-      }),
-    ).toThrow(RetikzCoreError);
-  });
-
-  it('在可恢复调度边界之前拒绝访问器支持的 layoutChild 输入', () => {
-    const hostileChild: Record<string, unknown> = { id: 'point', position: [0, 0] };
-    Object.defineProperty(hostileChild, 'type', {
-      enumerable: true,
-      get: () => 'coordinate',
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'hostileLayoutChildParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: literal('test'),
-        type: literal('hostileLayoutChildParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild(hostileChild as IRChild, naturalLayoutProposal);
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileTestResult(sceneOf({ namespace: 'test', type: 'hostileLayoutChildParent' }), {
         composites: [parent],
       }),
     ).toThrow(RetikzCoreError);

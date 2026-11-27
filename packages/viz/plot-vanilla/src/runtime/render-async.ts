@@ -1,11 +1,9 @@
 import type { DataInputBindings, DataTransformExecutor } from '@retikz/data';
-import type { IRPlot, PreparedPlotData } from '@retikz/plot';
-import { lowerPlotWithLineage } from '@retikz/plot';
-import { embed, compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
+import type { IRPlot } from '@retikz/plot';
+import { lowerPlotWithLineage, preparePlotData } from '@retikz/plot';
+import { embed, compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 import { plotInputEmbedAdapter } from '../adapter';
-import { RetikzPlotVanillaError } from '../error';
-import type { InputPlotEmbed } from '../spec';
 import type { PlotRenderLineageOptions, PlotRenderLineageResult, PlotRenderOptions } from './render-plot';
 
 /**
@@ -53,7 +51,7 @@ type AsyncPlotRenderer = {
   ): Promise<string>;
 };
 
-/** 通过共享 Vanilla 作者准备运行 Plot，返回同一数据准备结果的 SVG 与可选链路 */
+/** 等待 Plot 数据计算后同步绘图，返回同一数据准备结果的 SVG 与可选链路 */
 const renderPlotAsyncImpl = async <TSource = never>(
   spec: IRPlot,
   dataBindings: DataInputBindings<TSource>,
@@ -61,40 +59,27 @@ const renderPlotAsyncImpl = async <TSource = never>(
 ): Promise<string | PlotRenderLineageResult> => {
   const { dataTransformExecutor, signal, ...lowerOptions } = options;
   const { lineage: optionsLineage, theme, themeDefinitions, layout } = lowerOptions;
-  const props: InputPlotEmbed<TSource> = { spec, dataBindings, dataTransformExecutor, lowerOptions };
-  let preparedData: PreparedPlotData | undefined;
   const lineage = optionsLineage === undefined || optionsLineage === false ? undefined : (optionsLineage.data ?? {});
-  const adapter = {
-    kind: plotInputEmbedAdapter.kind,
-    prepare: async (_props: never, context: Parameters<typeof plotInputEmbedAdapter.prepare>[1]) => {
-      const prepared = await plotInputEmbedAdapter.prepare(props, context, lineage);
-      return {
-        execute: async () => {
-          const contribution = await prepared.execute();
-          preparedData = contribution.runtimeInputs[0].input;
-          return contribution;
-        },
-      };
-    },
-  };
-
-  const result = await compileToSceneAsync(
+  const preparation = await preparePlotData(
+    spec,
+    { dataBindings, dataTransformExecutor, signal, lineage },
+    lowerOptions,
+  );
+  const preparedData = await preparation.execute();
+  const result = compileToScene(
     scene({
       ...(theme === undefined ? {} : { theme }),
-      children: [embed({ kind: adapter.kind, props })],
+      children: [embed({ adapter: plotInputEmbedAdapter, props: { spec, preparedData, lowerOptions } })],
     }),
     {
-      adapters: [adapter],
-      signal,
       compile: { themeDefinitions },
     },
   );
 
-  const svg = renderToSvgString(result.scene, {
+  const svg = renderToSvg(result.scene, {
     output: { width: layout?.width, height: layout?.height },
   });
   if (optionsLineage === undefined || optionsLineage === false) return svg;
-  if (preparedData === undefined) throw new RetikzPlotVanillaError('Plot async result is missing its prepared data');
 
   return {
     svg,

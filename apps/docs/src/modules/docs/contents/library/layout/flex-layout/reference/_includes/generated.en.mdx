@@ -22,7 +22,7 @@ The remaining members are inherited from `InputFlexLayoutConfig`, with `'childre
 
 | Member                | Type        | Default | Description                                                                    |
 | --------------------- | ----------- | ------- | ------------------------------------------------------------------------------ |
-| `readonly authoring?` | `unknown`   | —       | Opaque authoring data interpreted by an optional compilation driver            |
+| `readonly authoring?` | `unknown`   | —       | Opaque authoring data retained during normalization                            |
 | `readonly children?`  | `ReactNode` | `[]`    | Direct children must be flex layout items; omission creates an empty container |
 
 </ApiTable>
@@ -114,7 +114,7 @@ export type FlexLayoutItemProps = Omit<InputFlexLayoutItemConfig, 'child' | 'key
 
 ## Direct calls
 
-#### <ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={55}>flexLayout</ApiSourceLink> / <ApiSourceLink label={"InputFlexLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={27}>InputFlexLayout</ApiSourceLink>
+#### <ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={36}>flexLayout</ApiSourceLink> / <ApiSourceLink label={"InputFlexLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={27}>InputFlexLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -128,7 +128,7 @@ The remaining members are inherited from `InputFlexLayoutConfig`, with `'childre
 | ------------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------- |
 | `children?`              | `ReadonlyArray<InputFlexLayoutItem>` | `[]`    | Authored direct items; omission is treated as an empty list                      |
 | `input` (Parameter)      | `InputFlexLayout`                    | —       | Container and item input; the input object reference is retained                 |
-| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data for the compilation driver; omitted input adds no authoring data     |
+| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data retained during normalization; omitted input adds no authoring data  |
 | Returns                  | `InputEmbed<InputFlexLayout>`        | —       | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
 
 </ApiTable>
@@ -184,19 +184,10 @@ export type InputFlexLayoutItem = InputLayoutItem<InputFlexLayoutItemConfig>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"flexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={12}>flexLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"flexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={13}>flexLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const flexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputFlexLayout>, 'prepare'>>;
-```
-
-#### <ApiSourceLink label={"layoutInputEmbedAdapters"} path={"packages/library/layout-vanilla/src/preset/index.ts"} startLine={8}>layoutInputEmbedAdapters</ApiSourceLink>
-
-```ts
-export const layoutInputEmbedAdapters: ReadonlyArray<
-  AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'lower' | 'prepare'>>
-> = Object.freeze([flexLayoutInputEmbedAdapter, gridLayoutInputEmbedAdapter, overlayLayoutInputEmbedAdapter]);
+export declare const flexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout>;
 ```
 
 #### <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/composite.ts"} startLine={30}>createFlexLayout</ApiSourceLink> / <ApiSourceLink label={"InputFlexLayoutConfig"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={25}>InputFlexLayoutConfig</ApiSourceLink>

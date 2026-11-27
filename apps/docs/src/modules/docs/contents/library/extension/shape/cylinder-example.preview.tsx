@@ -9,7 +9,7 @@ export type CylinderExamplePreviewValues = {
 
 /** 绘制示例图形 */
 export const renderCylinderExamplePreview = (values: CylinderExamplePreviewValues) => (
-  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} extensions={{ shapes: [cylinderShapeDefinition] }}>
+  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} compile={{ shapes: [cylinderShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'cylinder', params: { axis: values.axis, capDepth: values.capDepth } }}

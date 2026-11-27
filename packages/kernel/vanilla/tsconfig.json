@@ -3,6 +3,6 @@
   "compilerOptions": {
     "lib": ["ESNext", "DOM"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "tests/**/*.ts", "vite.config.ts", "benchmarks/**/*.ts", "vitest*.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

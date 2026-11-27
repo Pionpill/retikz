@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, IRChild } from '@retikz/core';
-import { projectPublishedReference, selectCompositeInputScope } from '@retikz/core';
-import { compareProperties, createIdAllocator } from '@retikz/foundation';
+import { projectPublishedReference } from '@retikz/core';
+import { createIdAllocator } from '@retikz/foundation';
 
 import {
   assembleCompileSubtree,
@@ -10,24 +10,20 @@ import {
   CompileElementExecutor,
   createExecutionInvariantError,
   finalizeSceneCompilation,
-  prepareScopeExecution,
   queuePathChild,
 } from '../../compile';
 import type { CompileNamespaceKey, CompileOwnerKey } from '../../compile';
 import { captureWeaveContribution, materializeWeaveContribution, materializeWeaveOutput } from '../contribution';
-import {
-  executeWeaveCoordinate,
-  executeWeaveNode,
-  executeWeavePath,
-  executeWeaveScope,
-  resolveWeaveScope,
-} from '../element';
+import { executeWeaveCoordinate, executeWeaveNode, executeWeavePath } from '../element';
 import type { WeaveEntry, WeaveReferenceRead, WeaveRoot, WeaveScopeEntry } from '../shared';
 import { matchWeaveReferences } from '../shared';
 import { createWeaveBindingFlow } from './binding';
 import { createWeaveDependencyFlow } from './dependency';
-import { createWeaveOutputFlow } from './output';
+import { createCompositeElementDispatcher, createWeaveCompositeStage } from './dispatcher';
+import { appendWeaveOutput, createWeaveOutputFlow } from './output';
 import { WeaveTaskQueue } from './queue';
+import { collectWeaveRootBlocks } from './root-output';
+import { prepareScheduledScope, projectScheduledScope, publishScheduledScope } from './scope';
 import type { WeaveTaskAddress } from './task';
 import type {
   WeaveAssembledOutput,
@@ -43,16 +39,6 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
 ) => {
   const { source, runtime, recordComputed, writeContribution, root, transaction, paths, names } = executionContext;
   const { canReuse, retained, pending } = selection;
-  // ⚡本次执行期间路径已固定，复用任务键以避免深 Scope 调度重复序列化
-  const keys = new Map<WeaveEntry, string>();
-  const keyOf = (entry: WeaveEntry) => {
-    let key = keys.get(entry);
-    if (key === undefined) {
-      key = JSON.stringify(paths.get(entry));
-      keys.set(entry, key);
-    }
-    return key;
-  };
   const executions = new Map<WeaveEntry, WeaveElementExecution>();
   const namespaces = new Map<WeaveRoot | WeaveScopeEntry, CompileNamespaceKey>();
   const owners = new Map<WeaveScopeEntry, CompileOwnerKey>();
@@ -64,8 +50,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     compileSubtree: assembleCompileSubtree,
     // ⚡Scene 根输出不消费父布局占位，跳过逐层传播；独立 Composite 测量仍按需开启
     skipAllocation: true,
+    skipRootGeometries: true,
   });
-  const rootFrame = rootExecutor.createRootRuntime();
+  const initialFrame = rootExecutor.createRootRuntime();
+  const rootFrame = { ...initialFrame, context: { ...initialFrame.context, compositeInput: undefined } };
 
   const prepareAddress = (entry: WeaveEntry): WeaveTaskAddress => {
     switch (entry.type) {
@@ -81,20 +69,20 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
   };
   const outputAddress = (entry: WeaveEntry): WeaveTaskAddress => ({ entry, phase: 'output' });
   const consume = (entry: WeaveEntry) => {
-    pending.get(keyOf(entry))?.consume();
-    pending.delete(keyOf(entry));
+    pending.get(entry)?.consume();
+    pending.delete(entry);
   };
   const assembled = new Map<WeaveEntry, WeaveAssembledOutput>();
   /** 子输出可见性变化只更新祖先分组输出，不失效子布局 */
   const changedOutputs = new Set<WeaveScopeEntry>();
   const { ancestorsOf, notify, ensureDependencies, ensure, requireProjection, notifyConsumers } =
     createWeaveDependencyFlow({
+      root,
       transaction,
       pending,
       executions,
       assembled,
       changedOutputs,
-      keyOf,
       prepareAddress,
       outputAddress,
       requestTask: address => queue.request(address),
@@ -115,10 +103,9 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     requireTask: address => queue.require(address),
     prepareAddress,
     pending,
-    keyOf,
     scopeIds,
   });
-  const { outputOf, layoutOf, appendState, append, collectRootOutput } = createWeaveOutputFlow({
+  const { outputOf, layoutOf, append, collectDeclarationsIfChanged } = createWeaveOutputFlow({
     runtime,
     transaction,
     paths,
@@ -128,7 +115,6 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     changedOutputs,
     rootExecutor,
     recordComputed,
-    keyOf,
     prepareAddress,
     outputAddress,
     requireTask: address => queue.require(address),
@@ -142,6 +128,18 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
   const executeComposite = (entry: Extract<WeaveEntry, { type: 'composite' }>, execution: WeaveElementExecution) => {
     const state = transaction.readState(entry);
     const path = paths.get(entry)!;
+    const previous = entry.current;
+    const compatible =
+      canReuse(entry) &&
+      previous?.origin.own.namespace === state.origin.own.namespace &&
+      previous.origin.own.type === state.origin.own.type;
+    const candidate = transaction.editState(entry);
+    candidate.memo = compatible ? previous.memo : undefined;
+    // 仅从兼容实例的已提交阶段读取旧记录；本轮记录写入候选状态，回滚不影响旧记录
+    const current = compatible ? previous.stage : undefined;
+    const next = createWeaveCompositeStage();
+    candidate.stage = next;
+    execution.executor.output.compositeDispatcher = createCompositeElementDispatcher(current, next);
     const reads: Array<WeaveReferenceRead> = [];
     execution.reads = reads;
     execution.retained = undefined;
@@ -156,6 +154,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
               path.at(-1) as number,
               execution.frame,
               state.parent.type === 'root',
+              undefined,
+              undefined,
+              { source: state.origin.own, sourcePath: path, bindings: state.bindings ?? [] },
+              candidate,
             );
           }),
       ),
@@ -186,7 +188,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
               parent === undefined
                 ? undefined
                 : tracker?.createOwner(state.origin.own, index, parent, false, namespaceOf(entry));
-            appendState(
+            appendWeaveOutput(
               execution.frame.state,
               materializeWeaveOutput(
                 execution.runtime,
@@ -218,40 +220,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
       }
       if (entry.type === 'scope') {
         requireProjection(entry);
-        const steps = execution.scope!;
-        // 包络已完成；此后只替换输出收集，不改变其布局事实
-        steps.childFrame.state.primitives.length = 0;
-        steps.childFrame.state.bounds.length = 0;
-        steps.childFrame.state.allocations.length = 0;
-        steps.childFrame.state.alignmentGuides.length = 0;
-        for (const child of transaction.readState(entry).children) {
-          const childState = outputOf(child);
-          steps.childFrame.state.primitives.push(...childState.primitives);
-          steps.childFrame.state.bounds.push(...childState.bounds);
-          steps.childFrame.state.allocations.push(...childState.allocations);
-          steps.childFrame.state.alignmentGuides.push(...childState.alignmentGuides);
-          for (const primitive of childState.primitives) {
-            if (primitive.type === 'path-placeholder') continue;
-            const zIndex = rootExecutor.output.zIndexMap.get(primitive);
-            if (zIndex !== undefined) execution.executor.output.zIndexMap.set(primitive, zIndex);
-          }
-        }
-        steps.paths();
-        steps.dispose();
-        const warnings = runtime.state.workspace.diagnosticCollector.warnings;
-        const warningCount = warnings.length;
-        steps.publish();
-        const outputDiagnostics = warnings.slice(warningCount);
-        const result = execution.scopeResult!;
-        const state = transaction.editState(entry);
-        state.resolve = result.resolve;
-        state.compile = { ...result.compile, value: steps.compiled, outputDiagnostics };
-        recordComputed(
-          entry,
-          { ...result.compile, outputDiagnostics, value: steps.compiled },
-          result.reused,
-          result.referenceReads,
-        );
+        publishScheduledScope(entry, execution, executionContext, rootExecutor, outputOf);
       }
       if (entry.type === 'path' && execution.retained === undefined) {
         const namespace = execution.runtime.state.execution.namespaceStack;
@@ -280,7 +249,10 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
           (name, referenceEntry, kind) => reads.push({ name, entry: referenceEntry, kind, readiness: 'output' }),
           () => execution.executor.finish(execution.frame.state),
         );
-      } else execution.executor.finish(execution.frame.state);
+      } else if (entry.type !== 'node' || execution.frame.state.primitives.length > 1) {
+        // ⚡Node 不排队延迟路径；至多一个图元无需排序，贡献捕获直接使用已组装的状态
+        execution.executor.finish(execution.frame.state);
+      }
       if (entry.type !== 'scope' && execution.retained === undefined) {
         writeContribution(
           entry,
@@ -296,6 +268,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
                 }
               : transaction.readState(entry).compile!.resources,
             { sourcePath: path, expansionPath: [] },
+            entry.type !== 'composite',
             execution.semanticOwner,
           ),
           execution.reads ?? transaction.readState(entry).referenceReads,
@@ -312,21 +285,12 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
         if (child.type === 'path') continue;
         if (child.type === 'scope') requireProjection(child);
         else ensure(child);
-        if (executions.has(child)) append(steps.childFrame.state, executions.get(child)!, execution.executor.output);
-        else appendState(steps.childFrame.state, layoutOf(child));
+        const includeLayouts = !steps.childFrame.context.skipGeometries;
+        if (executions.has(child))
+          append(steps.childFrame.state, executions.get(child)!, execution.executor.output, includeLayouts);
+        else appendWeaveOutput(steps.childFrame.state, layoutOf(child, includeLayouts), includeLayouts);
       }
-      const state = transaction.readState(entry);
-      const result = executeWeaveScope(
-        execution.runtime,
-        state.origin.own,
-        execution.frame.context,
-        steps,
-        execution.scopeDiagnostics ?? [],
-        execution.scopeReads ?? [],
-        canReuse(entry) ? state : undefined,
-      );
-      execution.scopeResult = result;
-      steps.project(result.compile.value);
+      projectScheduledScope(entry, execution, transaction, canReuse);
       return;
     }
     ensureDependencies(entry);
@@ -334,62 +298,12 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     const { executor, frame } = execution;
     const state = transaction.readState(entry);
     if (entry.type === 'scope') {
-      const own = transaction.readState(entry).origin.own;
-      const owner = ownerOf(entry);
-      const scopeFrame = {
-        ...frame,
-        context: {
-          ...frame.context,
-          compositeInput:
-            frame.context.compositeInput === undefined
-              ? undefined
-              : selectCompositeInputScope(frame.context.compositeInput, ['children', index]),
-        },
-      };
-      const warningCount = runtime.state.workspace.diagnosticCollector.warnings.length;
-      const canon = resolveWeaveScope(
-        execution.runtime,
-        own,
-        path,
-        scopeFrame.context,
-        canReuse(entry) ? transaction.readState(entry) : undefined,
-      );
-      const scopeReads: Array<WeaveReferenceRead> = [];
-      execution.scopeReads = scopeReads;
-      execution.scope = execution.runtime.state.execution.namespaceStack.observeReferences(
-        (name, referenceEntry, kind) => scopeReads.push({ name, entry: referenceEntry, kind, readiness: 'prepare' }),
-        () =>
-          prepareScopeExecution(
-            execution.runtime,
-            executor.output,
-            {
-              compileChildren: () => {
-                throw createExecutionInvariantError('Authored Scope cannot traverse children during update');
-              },
-            },
-            { ...own, children: [] },
-            index,
-            scopeFrame,
-            { semanticOwner: owner, resolvedScope: canon },
-          ),
-      );
-      execution.scopeDiagnostics = runtime.state.workspace.diagnosticCollector.warnings.slice(warningCount);
-      if (
-        !contextMatches(entry, false, false) ||
-        !compareProperties(entry.current?.resolve?.value.inheritance, execution.scope.childFrame.context.inheritance, {
-          depth: 2,
-        }) ||
-        !compareProperties(
-          entry.current?.compile?.context.preparation.preliminaryTransforms,
-          execution.scope.preparation.preliminaryTransforms,
-          { depth: 2 },
-        )
-      ) {
+      if (prepareScheduledScope(entry, execution, executionContext, ownerOf, canReuse, contextMatches)) {
         for (const child of transaction.readState(entry).children) notify(child);
       }
       return;
     }
-    let contribution = retained.get(keyOf(entry)) ?? pending.get(keyOf(entry))?.check;
+    let contribution = retained.get(entry) ?? pending.get(entry)?.check;
     const namespace = execution.runtime.state.execution.namespaceStack;
     if (contribution !== undefined && !contextMatches(entry, entry.type === 'path')) contribution = undefined;
     if (contribution !== undefined) {
@@ -434,7 +348,7 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
           execution.runtime.state.execution.withWarningOccurrence(occurrence, () => {
             if (contribution !== undefined) {
               execution.retained = contribution;
-              appendState(
+              appendWeaveOutput(
                 frame.state,
                 materializeWeaveContribution(execution.runtime, executor.output, contribution, execution.semanticOwner),
               );
@@ -493,14 +407,17 @@ export const executeWeaveCompilation = <TComposite extends AnyCompositeDefinitio
     execution.bindingsReady = true;
   }, notifyConsumers);
 
-  for (const { entry } of pending.values()) {
+  for (const entry of pending.keys()) {
     queue.request(prepareAddress(entry));
     queue.request(outputAddress(entry));
   }
   queue.flush();
   for (const entry of executions.keys()) queue.require(outputAddress(entry));
   queue.flush();
-  collectRootOutput(root, rootFrame);
+  collectDeclarationsIfChanged(root, executionContext.indexesChanged);
+  const blocks = collectWeaveRootBlocks(executionContext, executions.keys(), rootFrame.state, entry =>
+    appendWeaveOutput(rootFrame.state, outputOf(entry)),
+  );
   if (pending.size !== 0) throw createExecutionInvariantError('Weave computations did not reach output readiness');
-  return finalizeSceneCompilation<TComposite>(source, runtime, rootExecutor.finish(rootFrame.state));
+  return finalizeSceneCompilation<TComposite>(source, runtime, blocks ?? rootExecutor.finishDrawing(rootFrame.state));
 };

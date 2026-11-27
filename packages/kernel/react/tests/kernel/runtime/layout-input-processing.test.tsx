@@ -1,12 +1,8 @@
 // @vitest-environment jsdom
 
+import type { IRScene } from '@retikz/core';
 import { defineTheme, ThemeMode } from '@retikz/core';
-import type {
-  InputEmbedAdapter,
-  ProcessingController,
-  VanillaCompileDriver,
-  VanillaCompileDriverSession,
-} from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import * as vanilla from '@retikz/vanilla';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -15,43 +11,6 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node, Scope } from '../../../src';
-
-const testTheme = defineTheme({
-  name: 'academic',
-  resolve: () => ({
-    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
-    categorical: ['#112233'],
-  }),
-});
-
-/** 创建记录完整帧提交的 Vanilla compile driver */
-const createCommitTrackingCompileDriver = (): Readonly<{
-  driver: VanillaCompileDriver;
-  commit: ReturnType<typeof vi.fn>;
-}> => {
-  const sessions = new WeakMap<object, VanillaCompileDriverSession>();
-  const commit = vi.fn();
-  const driver: VanillaCompileDriver = {
-    create: input => {
-      const existing = sessions.get(input.instance);
-      if (existing !== undefined) return existing;
-
-      const session: VanillaCompileDriverSession = {
-        resolve: output => ({
-          primary: output.result,
-          layers: [],
-          diagnostics: [],
-        }),
-        commit,
-      };
-      sessions.set(input.instance, session);
-
-      return session;
-    },
-  };
-
-  return Object.freeze({ driver, commit });
-};
 
 describe('<Layout> 的 Vanilla Input processing', () => {
   beforeEach(() => {
@@ -64,13 +23,13 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     document.body.replaceChildren();
   });
 
-  it('将 JSX children 作为 InputScene 交给 static processing', async () => {
+  it('将 JSX children 作为 InputScene 交给 Vanilla 编译', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
-        <Layout runtime={{ mode: 'static' }}>
+        <Layout>
           <Node id="input-node" position={[0, 0]} />
         </Layout>,
       ),
@@ -81,12 +40,12 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('static processing 只在 React 提交后通知 compile driver', async () => {
-    const { driver, commit } = createCommitTrackingCompileDriver();
+  it('只在 React 提交后通知编译结果', async () => {
+    const commit = vi.fn();
 
     renderToStaticMarkup(
-      <Layout compileDriver={driver} runtime={{ mode: 'static' }}>
-        <Node id="static-commit-node" position={[0, 0]} />
+      <Layout onCompileResult={commit}>
+        <Node id="commit-node" position={[0, 0]} />
       </Layout>,
     );
 
@@ -96,8 +55,8 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     const root = createRoot(container);
     await act(() =>
       root.render(
-        <Layout compileDriver={driver} runtime={{ mode: 'static' }}>
-          <Node id="static-commit-node" position={[0, 0]} />
+        <Layout onCompileResult={commit}>
+          <Node id="commit-node" position={[0, 0]} />
         </Layout>,
       ),
     );
@@ -107,45 +66,56 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('retained 初次挂载只提交 controller 的成功结果', async () => {
-    const { driver, commit } = createCommitTrackingCompileDriver();
-    const container = document.createElement('div');
-    const root = createRoot(container);
-
-    await act(() =>
+  it('透传协调器选项，等价配置不重建会话，更换模式释放旧会话', async () => {
+    const trace = vi.fn();
+    const notify = vi.fn();
+    const ir: IRScene = { type: 'scene', version: 1, children: [] };
+    const theme = defineTheme({ name: 'academic', resolve: () => ({}) });
+    const root = createRoot(document.createElement('div'));
+    const render = (mode: 'full' | 'incremental') =>
       root.render(
-        <Layout compileDriver={driver}>
-          <Node id="retained-commit-node" position={[0, 0]} />
-        </Layout>,
-      ),
-    );
+        <Layout
+          ir={ir}
+          reconciler={{ mode, trace }}
+          compile={{ themeDefinitions: [theme] }}
+          onCompileResult={notify}
+        />,
+      );
 
-    expect(commit).toHaveBeenCalledTimes(1);
+    await act(() => render('full'));
+    await act(() => render('full'));
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(trace).not.toHaveBeenCalledWith(expect.objectContaining({ phase: 'unmount' }));
 
+    await act(() => render('incremental'));
+    expect(notify).toHaveBeenCalledTimes(2);
+    expect(trace).toHaveBeenCalledWith(expect.objectContaining({ phase: 'unmount' }));
+    trace.mockClear();
     await act(() => root.unmount());
+    expect(trace).toHaveBeenCalledWith(expect.objectContaining({ phase: 'unmount' }));
   });
 
-  it('Strict Effects 不提交被丢弃的 retained fallback', async () => {
-    const { driver, commit } = createCommitTrackingCompileDriver();
+  it('Strict Effects 不提交被丢弃的首帧', async () => {
+    const commit = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
         <StrictMode>
-          <Layout compileDriver={driver}>
+          <Layout onCompileResult={commit}>
             <Node id="strict-commit-node" position={[0, 0]} />
           </Layout>
         </StrictMode>,
       ),
     );
 
-    expect(commit).toHaveBeenCalledTimes(2);
+    expect(commit).toHaveBeenCalledOnce();
 
     await act(() => root.unmount());
   });
 
-  it('retained processing 在 Strict Effects 重放后仍保持可订阅', async () => {
+  it('Layout 在 Strict Effects 重放后仍保持可订阅', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -164,70 +134,55 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('retained processing 将 JSX source 更新推入同一 Vanilla controller', async () => {
-    const instances: Array<object> = [];
-    const sessions = new WeakMap<object, VanillaCompileDriverSession>();
-    const compileDriver: VanillaCompileDriver = {
-      create: input => {
-        instances.push(input.instance);
-        const existing = sessions.get(input.instance);
-        if (existing !== undefined) return existing;
-
-        const session: VanillaCompileDriverSession = {
-          resolve: output => ({
-            primary: output.result,
-            layers: [],
-            diagnostics: [],
-          }),
-        };
-        sessions.set(input.instance, session);
-
-        return session;
-      },
-    };
+  it('Layout 将 JSX source 更新推入同一 Vanilla controller', async () => {
+    const mount = vi.spyOn(vanilla.SceneRuntime, 'fromInput');
+    const replace = vi.spyOn(vanilla.SceneRuntime.prototype, 'replace');
     const container = document.createElement('div');
     const root = createRoot(container);
 
     await act(() =>
       root.render(
-        <Layout compileDriver={compileDriver}>
+        <Layout>
           <Node id="first" position={[0, 0]} />
         </Layout>,
       ),
     );
+    const initialSessions = mount.mock.results.map(result => result.value);
     await act(() =>
       root.render(
-        <Layout compileDriver={compileDriver}>
+        <Layout>
           <Node id="second" position={[20, 0]} />
         </Layout>,
       ),
     );
 
-    expect(instances).toHaveLength(3);
-    expect(instances[2]).toBe(instances[1]);
+    expect(mount).toHaveBeenCalledTimes(initialSessions.length);
+    expect(replace).toHaveBeenCalledOnce();
+    expect(initialSessions).toContain(replace.mock.contexts[0]);
     expect(container.querySelector('[data-retikz-id="second"]')).not.toBeNull();
 
     await act(() => root.unmount());
   });
 
-  it('将 Vanilla controller 的结构化诊断转发给 runtime.onDiagnostic', async () => {
+  it('将 Vanilla controller 的结构化诊断转发给 onDiagnostic', async () => {
     const diagnostic = Object.freeze({
       code: 'RUNTIME_TEST_DIAGNOSTIC',
       phase: 'run' as const,
       severity: 'warning' as const,
       message: 'test diagnostic',
     });
-    const controller = vanilla.createProcessingController({
-      children: [{ type: 'node', id: 'diagnostic-node', position: [0, 0] }],
-    });
     const diagnostics = vi.fn(() => Object.freeze([diagnostic]));
-    const observedController: ProcessingController = Object.freeze({ ...controller, diagnostics });
-    vi.spyOn(vanilla, 'createProcessingController').mockReturnValue(observedController);
+    const fromInput = vanilla.SceneRuntime.fromInput;
+    vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockImplementation((...args) => {
+      const controller = fromInput(...args);
+      vi.spyOn(controller, 'diagnostics').mockImplementation(diagnostics);
+      return controller;
+    });
     const onDiagnostic = vi.fn();
     const container = document.createElement('div');
     const root = createRoot(container);
 
-    await act(() => root.render(<Layout runtime={{ onDiagnostic }} />));
+    await act(() => root.render(<Layout onDiagnostic={onDiagnostic}>{null}</Layout>));
 
     expect(onDiagnostic).toHaveBeenCalledWith(diagnostic);
     expect(diagnostics).toHaveBeenCalledTimes(1);
@@ -236,16 +191,13 @@ describe('<Layout> 的 Vanilla Input processing', () => {
   });
 
   it('Strict Effects 重放后在最终卸载时释放 Vanilla controller', async () => {
-    vi.useFakeTimers();
-    const createController = vanilla.createProcessingController;
-    const controllers: Array<Readonly<{ controller: ProcessingController; dispose: ReturnType<typeof vi.fn> }>> = [];
-    vi.spyOn(vanilla, 'createProcessingController').mockImplementation((source, options) => {
+    const createController = vanilla.SceneRuntime.fromInput;
+    const disposers: Array<ReturnType<typeof vi.fn>> = [];
+    vi.spyOn(vanilla.SceneRuntime, 'fromInput').mockImplementation((source, options) => {
       const controller = createController(source, options);
-      const dispose = vi.fn(controller.dispose);
-      const observedController: ProcessingController = Object.freeze({ ...controller, dispose });
-      controllers.push(Object.freeze({ controller: observedController, dispose }));
+      disposers.push(vi.spyOn(controller, 'dispose'));
 
-      return observedController;
+      return controller;
     });
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -260,15 +212,15 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
 
-    expect(controllers).toHaveLength(2);
+    // 首帧编译和 Strict Effects 丢弃的会话已释放
+    expect(disposers.filter(dispose => dispose.mock.calls.length === 0)).toHaveLength(1);
 
     await act(() => root.unmount());
-    await act(() => vi.runAllTimers());
 
-    for (const controller of controllers) expect(controller.dispose).toHaveBeenCalledTimes(1);
+    for (const dispose of disposers) expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it('retained source update 失败时保留最后成功宿主帧', async () => {
+  it('source update 失败时保留最后成功宿主帧', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
@@ -301,7 +253,9 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     await act(() => root.unmount());
   });
 
-  it('仅通过 Vanilla processing 将嵌入式 Scope Theme 交给 React bridge', async () => {
+  it('Scope 主题由 Core 解析，embed 只收到作者位置', async () => {
+    const resolveTheme = vi.fn(() => ({}));
+    const testTheme = defineTheme({ name: 'academic', resolve: resolveTheme });
     const receiveContext = vi.fn();
     const adapter: InputEmbedAdapter = {
       kind: 'ThemeProbe',
@@ -322,7 +276,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     await act(() =>
       root.render(
-        <Layout theme={{ name: 'academic', mode: ThemeMode.Light }} extensions={{ themeDefinitions: [testTheme] }}>
+        <Layout theme={{ name: 'academic', mode: ThemeMode.Light }} compile={{ themeDefinitions: [testTheme] }}>
           <Scope theme={{ mode: ThemeMode.Dark }}>
             <ThemeProbe />
           </Scope>
@@ -330,12 +284,12 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
 
-    expect(receiveContext).toHaveBeenCalledWith(
-      expect.objectContaining({
-        theme: expect.objectContaining({ name: 'academic', mode: ThemeMode.Dark }),
-        themeDefinitions: [testTheme],
-      }),
-    );
+    expect(resolveTheme).toHaveBeenCalledWith({ mode: ThemeMode.Dark });
+    expect(receiveContext).toHaveBeenCalled();
+    for (const [context] of receiveContext.mock.calls) {
+      expect(context).not.toHaveProperty('theme');
+      expect(context).not.toHaveProperty('themeDefinitions');
+    }
 
     await act(() => root.unmount());
   });

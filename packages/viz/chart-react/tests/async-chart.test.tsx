@@ -1,3 +1,7 @@
+import { prepareChartData } from '@retikz/chart';
+import { normalizeScatterChart } from '@retikz/chart-vanilla/point';
+import { createScatterChartProviderContribution } from '@retikz/chart/point';
+
 // @vitest-environment jsdom
 import type { DataTransformImplementationProvider } from '@retikz/data';
 import { createDataTransformExecutor } from '@retikz/data';
@@ -36,16 +40,23 @@ describe('Chart 客户端准备', () => {
         },
       }),
     };
-    const chart = (
-      <ScatterChart
-        data={{
-          reference: 'native',
-          model: [
-            { name: 'x', type: 'continuous' },
-            { name: 'y', type: 'continuous' },
-          ],
-        }}
-        dataBindings={{
+    const spec = normalizeScatterChart({
+      data: {
+        reference: 'native',
+        model: [
+          { name: 'x', type: 'continuous' },
+          { name: 'y', type: 'continuous' },
+        ],
+      },
+      dataExecution: { mode: 'external', external: 'fixture' },
+      title: 'Native output',
+      plotExtension: { transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }] },
+      encodings: { x: 'x', y: 'ratio' },
+    });
+    const task = await prepareChartData(
+      spec,
+      {
+        dataBindings: {
           native: {
             kind: 'source',
             source: {
@@ -55,24 +66,26 @@ describe('Chart 客户端准备', () => {
               ],
             },
           },
-        }}
-        dataTransformExecutor={createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] })}
-        dataExecution={{ mode: 'external', external: 'fixture' }}
-        presentation={{ title: { text: 'Native output' } }}
-        plotExtension={{ transform: [{ operation: { kind: 'normalize', params: { field: 'y', as: 'ratio' } } }] }}
-        recipe={{
-          encodings: {
-            x: 'x',
-            y: 'ratio',
-          },
-        }}
+        },
+        dataTransformExecutor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }),
+      },
+      createScatterChartProviderContribution(),
+    );
+    const chart = (
+      <ScatterChart
+        data={spec.data}
+        preparedData={await task.execute()}
+        dataExecution={spec.dataExecution}
+        presentation={spec.presentation}
+        plotExtension={spec.plotExtension}
+        recipe={spec.recipe}
       />
     );
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
     await act(async () => {
-      root.render(embedded ? <Layout runtime={{ preparation: 'async' }}>{chart}</Layout> : chart);
+      root.render(embedded ? <Layout>{chart}</Layout> : chart);
       await Promise.resolve();
     });
 

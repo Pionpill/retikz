@@ -5,12 +5,14 @@ keywords: 'Inspector、sourcePath、InspectorDefinition、inspect、IRChild'
 
 # ADR-021：将 Inspector 抽离为可选扩展包
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-08-06
 - 接受日期：2026-08-07
 - 关联：[Standard Layout Inspector ADR-012](../../../../library/_notes/decisions/standard/_v0.1/012-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-013](../../../../library/_notes/decisions/standard/_v0.1/013-layout-inspector-visual-semantics.md)
 
-> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。仅保留可选包、统一扩展与普通只读层原则。
+> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。当时保留的可选包、统一扩展与只读层后续亦已退役。
+
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
 
 ## 背景与目标
 
@@ -60,7 +62,7 @@ Path 的 scene/subtree 选择按 ADR-039 与其它 Inspector 一致，不保留�
 
 Render 只认识普通 Scene 图层：每项包含 key、scene 与 transform。主图单独决定 camera、fit、viewBox、布局、交互身份和增量 patch；辅助层不参与 viewport、hit-test、pointer、hydration、animation 或主图身份
 
-SVG、Canvas、SSR 和 retained renderer 先处理 primary，再按顺序处理 layers。每层资源隔离，key 在帧内唯一。retained 后端以同一个 prepared token 提交或回滚整帧；任一辅助层失败不能提交新的 primary
+SVG、Canvas、SSR 和 renderer 先处理 primary，再按顺序处理 layers。每层资源隔离，key 在帧内唯一。session 后端以同一个 prepared token 提交或回滚整帧；任一辅助层失败不能提交新的 primary
 
 Inspect 将 plane entry 映射为普通只读层。local 片段使用 observation transform，scene 片段使用单位矩阵，具体坐标契约见 ADR-039。辅助 Scene 在交付前移除公共 id、meta 和 animation，保留内部资源引用
 
@@ -68,7 +70,7 @@ Inspect 将 plane entry 映射为普通只读层。local 片段使用 observatio
 
 InspectionDiagnostic 记录 selection、subject、inspect、output 或 fragment 的 origin。selection 保留 rule index 和合法 target；其余阶段保留 Inspector key、owner、occurrence，输出阶段再记录 outputIndex。Core warning 的 code、message、path 作为 cause 保留，不伪装成 primary warning
 
-非致命辅助警告进入独立 diagnostics；ADR-039 的部分几何缺失可以警告并继续绘制其它支持项。非法选择、契约、回调和片段编译仍原子失败，retained 宿主保留上一 committed frame
+非致命辅助警告进入独立 diagnostics；ADR-039 的部分几何缺失可以警告并继续绘制其它支持项。非法选择、契约、回调和片段编译仍原子失败，session 宿主保留上一 committed frame
 
 相同 Source、definitions、选择和宿主参数产生同序结果。色彩与内置几何选项遵循 ADR-039 和当前 Core categorical / semantic 色板，不维护独立色值副本。开关 Inspect 不改变 primary Scene、artifacts、spatial handles、资源或命中结果
 

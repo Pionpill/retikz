@@ -1,16 +1,8 @@
 import { point } from '@retikz/math';
 
-import type { Transform } from '../../../contract';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import { FoldStepVia } from '../../../schemas';
-import type { PathTargetView, PathTargetContext } from '../types';
-
-/** 使用 resolving phase 绑定的 target view 获取局部参考点 */
-export const pointOfTarget = (
-  target: IRTarget,
-  targetView: PathTargetView,
-  scopeChain: ReadonlyArray<Transform>,
-): IRPosition | null => targetView.pointOfTarget(target, scopeChain);
+import type { PathTargetContext } from '../types';
 
 /** 使用 toward 计算 resolving phase 绑定的 target 裁剪点 */
 export const clipTarget = (

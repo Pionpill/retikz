@@ -277,8 +277,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: SvgPrimitiveBuildContext): Svg
       const clipRefUrl = context.clipRefUrl ?? ((id: string) => `url(#${id})`);
       const clipPath = p.clipRef !== undefined ? clipRefUrl(p.clipRef) : undefined;
 
-      // 防御：跳过 undefined 子槽位（非法 Scene 不致抛）
-      const children = p.children.filter((c): c is ScenePrimitive => Boolean(c)).map(c => buildPrim(c, context));
+      const children = buildPrimitiveNodes(p.children, context);
 
       return {
         tag: 'g',
@@ -332,9 +331,22 @@ export const buildPrim = (p: ScenePrimitive, context: SvgPrimitiveBuildContext =
   if (p.animations?.length && context.hostId !== undefined && (context.isResourceContent || p.id === undefined)) {
     node.attrs['data-retikz-animation-owner'] = context.hostId;
   }
-  const animationPrimitive = context.isResourceContent || p.id === undefined ? { ...p, id: context.hostId } : p;
-  const decorated = context.decorate ? context.decorate(node, animationPrimitive) : node;
+  const decorated = context.decorate
+    ? context.decorate(node, context.isResourceContent || p.id === undefined ? { ...p, id: context.hostId } : p)
+    : node;
   if (p.pointerEvents === 'none') decorated.attrs['pointer-events'] = 'none';
 
   return decorated;
+};
+
+/** 为场景和组构造紧凑的 SVG 子节点列表，沿用跳过空槽位的行为 */
+export const buildPrimitiveNodes = (
+  primitives: ReadonlyArray<ScenePrimitive | undefined>,
+  context: SvgPrimitiveBuildContext,
+): Array<SvgNode> => {
+  const nodes: Array<SvgNode> = [];
+  for (const primitive of primitives) {
+    if (primitive) nodes.push(buildPrim(primitive, context));
+  }
+  return nodes;
 };

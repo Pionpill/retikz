@@ -24,13 +24,25 @@ import type {
 } from '../../src/modules/docs/components/component-preview/types';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
-const Demo: FC = () => <Layout width={40} height={20} />;
+const Demo: FC = () => (
+  <Layout width={40} height={20}>
+    {null}
+  </Layout>
+);
 
-const WrappedLayout: FC = () => <Layout width={40} height={20} />;
+const WrappedLayout: FC = () => (
+  <Layout width={40} height={20}>
+    {null}
+  </Layout>
+);
 
 const WrappedDemo: FC = () => <WrappedLayout />;
 
-const ExplicitSvgDemo: FC = () => <Layout width={40} height={20} renderer="svg" />;
+const ExplicitSvgDemo: FC = () => (
+  <Layout width={40} height={20} renderer="svg">
+    {null}
+  </Layout>
+);
 
 const SingleHookDemo: FC = () => {
   const [first] = useState('single');

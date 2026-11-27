@@ -12,6 +12,7 @@ import type { CompositeArtifactOf } from '../shared';
 import { orderCompileWarnings } from '../shared';
 import type { SceneCompilationSnapshot } from '../types';
 import type { SubtreeCompilation } from './subtree';
+import { assembleCompileSubtree, CompileElementExecutor } from './subtree';
 
 /** Scene 自动边界的默认留白 */
 const DEFAULT_LAYOUT_PADDING = 10;
@@ -20,7 +21,7 @@ const DEFAULT_LAYOUT_PADDING = 10;
 export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefinition>(
   root: IRScene,
   runtime: CompileRuntime,
-  subtree: SubtreeCompilation,
+  subtree: Pick<SubtreeCompilation, 'primitives' | 'visualBounds' | 'artifacts'>,
 ): SceneCompilationSnapshot<TComposite> => {
   const { paintRegistry, clipRegistry, diagnosticCollector } = runtime.state.workspace;
   const primitives = subtree.primitives;
@@ -62,4 +63,16 @@ export const finalizeSceneCompilation = <TComposite extends AnyCompositeDefiniti
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     ...(provenance === undefined ? {} : { provenance }),
   });
+};
+
+/** 非增量 Scene 的完整遍历与快照组装，不保留跨批计算状态 */
+export const compileScene = <TComposite extends AnyCompositeDefinition>(
+  root: IRScene,
+  runtime: CompileRuntime,
+): SceneCompilationSnapshot<TComposite> => {
+  const executor = new CompileElementExecutor(root.children, runtime, {
+    skipRootGeometries: true,
+    compileSubtree: assembleCompileSubtree,
+  });
+  return finalizeSceneCompilation<TComposite>(root, runtime, executor.finishDrawing(executor.compileRootChildren()));
 };

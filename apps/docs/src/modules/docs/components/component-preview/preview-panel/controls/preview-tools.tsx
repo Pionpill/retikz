@@ -1,9 +1,10 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import { Download, Hand, Maximize2, PanelsTopLeft, Presentation, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 import type { Lang } from '@/i18n';
 
 import { SIZE_KEYS } from '../../constants';
-import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from '../../types';
+import type { PreviewControlSlot, SizeKey, Transform } from '../../types';
 import { downloadPreviewImage } from '../commands';
 import {
   PreviewToolbar,
@@ -47,7 +48,7 @@ export type BuildPreviewToolSlotsOptions = {
   /** 下载文件名。 */
   name: string;
   /** 当前渲染模式。 */
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   /** 当前内容是否锁定渲染模式。 */
   rendererModeFixed?: boolean;
   /** 切换渲染模式。 */

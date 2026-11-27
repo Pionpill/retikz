@@ -13,7 +13,7 @@ keywords: 'Table、DetailTable、ManualTable、React、Vanilla、composites、on
 
 只有 `@retikz/table` IR 与 lowering，用户仍需手动包 Scene、注册 composites 和调用 renderer。alpha.1 必须同时验证 React 与 Vanilla，避免后续 adapter 为便利性私自发明另一套 Table schema。
 
-Kernel `@retikz/vanilla` 已把主作者模型收敛为 plain spec，并提供 `figure/layer/embed`、`VanillaTier2Adapter`、统一 `mount().update()` 与 `renderToSvgString()`。Table 不能只复制旧的 Plot builder + SSR 入口，否则无法进入 Vanilla 的稳定 identity、layer metadata 与未来增量优化边界。
+Kernel `@retikz/vanilla` 已把主作者模型收敛为 plain spec，并提供 `figure/layer/embed`、`VanillaTier2Adapter`、统一 `mountSceneView().update()` 与 `renderToSvg()`。Table 不能只复制旧的 Plot builder + SSR 入口，否则无法进入 Vanilla 的稳定 identity、layer metadata 与未来增量优化边界。
 
 ## 决策：共享 plain authoring，React 分离组件，Vanilla 接入 Tier 2 runtime
 
@@ -212,8 +212,8 @@ const tableFigure = figure({
   ],
 });
 
-const view = mount(container, tableFigure, { adapters: [adapter] });
-view.update(
+const view = mountSceneView(container, tableFigure, { adapters: [adapter] });
+view.replace(
   figure({
     layers: [layer('content', [embedTable('sales-panel', spec, { data: { sales: nextRows } })])],
   }),
@@ -233,10 +233,10 @@ const result = renderTable(spec, {
 - `detailTable()` / `manualTable()` 分别只委托 `createDetailTableIR()` / `createManualTableIR()`；返回值是无方法的 plain `IRTable`，不新增细粒度 column / cell helper
 - `embedTable()` 只返回 `embed('table', id, props)` 的标准 `InputEmbed`；不执行 lowering，不修改 spec，也不把 runtime data 写入 Table IR
 - embed 的运行时身份由 Vanilla 管理，不进入 Table provider 参数，也不作为 Table 模型 id 的替代值
-- `createTableAdapter()` 无 datasets/options 参数；同一 adapter 可服务多个 Table embed，并在 `mount().update(nextFigure)` 时从新 embed props 读取新 data、lower options 与 composites
+- `createTableAdapter()` 无 datasets/options 参数；同一 adapter 可服务多个 Table embed，并在 `mountSceneView().update(nextFigure)` 时从新 embed props 读取新 data、lower options 与 composites
 - adapter 的 `lower()` 必须重新执行 `TableSchema.parse()`，使手写 `embed('table', ...)` 不能绕过 Table schema；嵌入副本的根 id 规范化为 `${embedId}/${spec.id ?? 'table'}`，且不得修改调用方 spec
 - adapter 贡献中的 Table provider 使用同一工厂引用；多个 Table embed 的参数通过下述共享 contribution contract 聚合，不用 module-level side channel 保存本轮 props
-- `renderTable()` 是一次性 SSR + manifest convenience：先 parse spec，再以 `data ?? {}`、`lowerOptions ?? {}` 调用 Table lowering，最后经 `compileToScene` 与 `renderToSvgString` 输出；它不作为浏览器更新或性能优化边界
+- `renderTable()` 是一次性 SSR + manifest convenience：先 parse spec，再以 `data ?? {}`、`lowerOptions ?? {}` 调用 Table lowering，最后经 `compileToScene` 与 `renderToSvg` 输出；它不作为浏览器更新或性能优化边界
 - `composites` 与 Table definitions 合并后进入 `CompileOptions.composites`，语义与 React / embed adapter 相同
 - `output` 复用 `RenderToStringOptions['output']`，其中 width / height / idPrefix 只控制 SVG 宿主输出，不改变 Table 固定轨道几何；不开放调用方覆盖内部 `compile.composites`
 - `{ artifacts: true }` 由 overload 返回 `RenderTableArtifactResult`；省略或显式 `false` 返回 SVG string
@@ -264,7 +264,7 @@ Table 工厂接收按贡献顺序排列的参数数组，应用“Embedded 多�
 
 `detailTable()` / `manualTable()` 的结果保持 JSON-safe。`TableEmbedProps` 是 Vanilla runtime props：`data` 仍与 IR 分离，definitions / composites 可以包含函数，因此带这些 runtime 扩展的整个 Figure 不承诺可持久化；Kernel 当前也只保证 `embed().props` 由调用方与 adapter 负责。任何函数都不得进入 adapter 输出的 Core IR。
 
-alpha.1 不新增 `mountTable()`。浏览器运行统一使用 Kernel `mount()` / `mountSvg()` / `mountCanvas()`，Table 只提供 adapter。当前 `update()` 仍会整图重新 normalize、lower、compile 与渲染；本 ADR 只通过稳定 embed id、Table root id、layer metadata、cache hint、稳定 adapter 与 runtime handle 保留后续增量失效空间，不宣称已实现局部 lowering 或局部渲染。
+alpha.1 不新增 `mountTable()`。浏览器运行统一使用 Kernel `mountSceneView()`，Table 只提供 adapter。当前 `update()` 仍会整图重新 normalize、lower、compile 与渲染；本 ADR 只通过稳定 embed id、Table root id、layer metadata、cache hint、稳定 adapter 与 runtime handle 保留后续增量失效空间，不宣称已实现局部 lowering 或局部渲染。
 
 ### Package
 

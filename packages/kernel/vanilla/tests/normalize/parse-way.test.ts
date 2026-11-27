@@ -319,7 +319,7 @@ describe('parseWay', () => {
 
     it('曲线算子在 way 末尾（无下一项）抛错', () => {
       expect(() => parseWay(['A', { curve: [1, 2] }])).toThrow(/curve operator at end/);
-      expect(() => parseWay(['A', { bend: 'left' }])).toThrow(/curve operator at end/);
+      expect(() => parseWay(['A', { bend: 'left' }])).toThrow(/bend operator at end/);
     });
 
     it('曲线算子后接另一个算子 / cycle 抛错', () => {
@@ -327,7 +327,7 @@ describe('parseWay', () => {
         /curve operator must be followed by a target/,
       );
       expect(() => parseWay(['A', { bend: 'left' }, DrawWay.Cycle])).toThrow(
-        /curve operator must be followed by a target/,
+        /bend operator must be followed by a target/,
       );
       expect(() => parseWay(['A', { curve: [1, 2] }, { bend: 'right' }, 'B'])).toThrow(
         /curve operator must be followed by a target/,

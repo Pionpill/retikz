@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
-import { SceneReconciler } from '@retikz/reconciler';
+import { ReconcilerMode, SceneReconciler } from '@retikz/reconciler';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -27,7 +27,7 @@ const themedComposite = defineComposite({
 
 const runUpdate = (initial: IRScene, next: IRScene) => {
   const options = { composites: [themedComposite], onWarn: () => {} } as const;
-  const session = new SceneReconciler(options);
+  const session = new SceneReconciler(options, { mode: ReconcilerMode.Incremental });
   session.mount(initial);
   const result = session.replace(next);
 
@@ -65,7 +65,7 @@ describe('主题保留失效', () => {
         },
       ],
     });
-    const session = new SceneReconciler();
+    const session = new SceneReconciler({}, { mode: ReconcilerMode.Incremental });
     session.mount(source('red', false));
     for (const next of [source('blue', false), source('blue', true)]) {
       session.replace(next);

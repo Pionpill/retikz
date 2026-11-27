@@ -36,26 +36,26 @@ describe('Node 标签放置', () => {
       expect(
         NodeLabelSchema.parse({
           text: 'L',
-          position: { boundary: 'top', fraction: 0.25 },
+          position: { side: 'top', fraction: 0.25 },
           placement: 'inside',
           distance: 6,
         }),
       ).toMatchObject({
         text: 'L',
-        position: { boundary: 'top', fraction: 0.25 },
+        position: { side: 'top', fraction: 0.25 },
         placement: 'inside',
       });
     });
 
     it('boundary position 只接受 canonical side', () => {
-      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top' } })).toMatchObject({
-        position: { boundary: 'top' },
+      expect(NodeLabelSchema.parse({ text: 'L', position: { side: 'top' } })).toMatchObject({
+        position: { side: 'top' },
       });
-      expect(NodeLabelSchema.parse({ text: 'L', position: { boundary: 'bottom' } })).toMatchObject({
-        position: { boundary: 'bottom' },
+      expect(NodeLabelSchema.parse({ text: 'L', position: { side: 'bottom' } })).toMatchObject({
+        position: { side: 'bottom' },
       });
-      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'north' } })).toThrow();
-      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'above' } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { side: 'north' } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { side: 'above' } })).toThrow();
     });
 
     it('方向 position 只接受 canonical 方位', () => {
@@ -72,11 +72,11 @@ describe('Node 标签放置', () => {
       expect(() => NodeLabelSchema.parse({ text: 'L', position: 'below' })).toThrow();
     });
 
-    it('拒绝未知 placement、未知 boundary 与越界 fraction', () => {
+    it('拒绝未知 placement、未知 side 与越界 fraction', () => {
       expect(() => NodeLabelSchema.parse({ text: 'L', placement: 'inner' })).toThrow();
-      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'up' } })).toThrow();
-      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top', fraction: 1.1 } })).toThrow();
-      expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top', offset: 0.5 } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { side: 'up' } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { side: 'top', fraction: 1.1 } })).toThrow();
+      expect(() => NodeLabelSchema.parse({ text: 'L', position: { side: 'top', offset: 0.5 } })).toThrow();
     });
 
     it('接受 Core 文本对齐值并拒绝未知值', () => {
@@ -100,7 +100,7 @@ describe('Node 标签放置', () => {
     it('IR JSON round-trip 保留 boundary label position', () => {
       const ir = sceneWithLabel({
         text: 'L',
-        position: { boundary: 'right', fraction: 0.2 },
+        position: { side: 'right', fraction: 0.2 },
         placement: 'outside',
         distance: 4,
       });
@@ -138,7 +138,7 @@ describe('Node 标签放置', () => {
       const scene = compileTestResult(
         sceneWithLabel({
           text: 'L',
-          position: { boundary: 'top', fraction: 0.25 },
+          position: { side: 'top', fraction: 0.25 },
           placement: 'inside',
           distance: 6,
         }),
@@ -154,7 +154,7 @@ describe('Node 标签放置', () => {
       const scene = compileTestResult(
         sceneWithLabel({
           text: 'L',
-          position: { boundary: 'right' },
+          position: { side: 'right' },
           placement: 'inside',
           distance: 8,
         }),
@@ -168,11 +168,11 @@ describe('Node 标签放置', () => {
 
     it('boundary position 的端点 fraction=0 / fraction=1 落在同一条边界两端', () => {
       const start = compileTestResult(
-        sceneWithLabel({ text: 'S', position: { boundary: 'bottom', fraction: 0 }, distance: 0 }),
+        sceneWithLabel({ text: 'S', position: { side: 'bottom', fraction: 0 }, distance: 0 }),
         silent,
       ).scene;
       const end = compileTestResult(
-        sceneWithLabel({ text: 'E', position: { boundary: 'bottom', fraction: 1 }, distance: 0 }),
+        sceneWithLabel({ text: 'E', position: { side: 'bottom', fraction: 1 }, distance: 0 }),
         silent,
       ).scene;
       const startLabel = labelText(start.primitives, 'S')!;
@@ -191,7 +191,7 @@ describe('Node 标签放置', () => {
             sceneWithLabel(
               {
                 text: 'L',
-                position: { boundary: 'top', fraction: 0.5 },
+                position: { side: 'top', fraction: 0.5 },
                 placement: 'inside',
               },
               'circle',
@@ -203,11 +203,11 @@ describe('Node 标签放置', () => {
 
     it('bottom boundary 的 start / end 沿切线贴合视觉盒边缘', () => {
       const start = compileTestResult(
-        sceneWithLabel({ text: 'Start', position: { boundary: 'bottom', fraction: 0 }, align: 'start', distance: 0 }),
+        sceneWithLabel({ text: 'Start', position: { side: 'bottom', fraction: 0 }, align: 'start', distance: 0 }),
         silent,
       ).scene;
       const end = compileTestResult(
-        sceneWithLabel({ text: 'End', position: { boundary: 'bottom', fraction: 0 }, align: 'end', distance: 0 }),
+        sceneWithLabel({ text: 'End', position: { side: 'bottom', fraction: 0 }, align: 'end', distance: 0 }),
         silent,
       ).scene;
       const startLabel = labelText(start.primitives, 'Start')!;
@@ -221,11 +221,11 @@ describe('Node 标签放置', () => {
 
     it('right boundary 的切线方向从上到下', () => {
       const start = compileTestResult(
-        sceneWithLabel({ text: 'Start', position: { boundary: 'right', fraction: 0 }, align: 'start', distance: 0 }),
+        sceneWithLabel({ text: 'Start', position: { side: 'right', fraction: 0 }, align: 'start', distance: 0 }),
         silent,
       ).scene;
       const end = compileTestResult(
-        sceneWithLabel({ text: 'End', position: { boundary: 'right', fraction: 0 }, align: 'end', distance: 0 }),
+        sceneWithLabel({ text: 'End', position: { side: 'right', fraction: 0 }, align: 'end', distance: 0 }),
         silent,
       ).scene;
       const startLabel = labelText(start.primitives, 'Start')!;
@@ -258,7 +258,7 @@ describe('Node 标签放置', () => {
       const scene = compileTestResult(
         sceneWithLabel({
           text: 'Rotated',
-          position: { boundary: 'bottom', fraction: 0 },
+          position: { side: 'bottom', fraction: 0 },
           align: 'start',
           rotate: 90,
           distance: 0,
@@ -275,7 +275,7 @@ describe('Node 标签放置', () => {
     it('旋转节点的 boundary label 仍在局部坐标计算一次', () => {
       const label: IRNodeLabel = {
         text: 'L',
-        position: { boundary: 'top', fraction: 0.75 },
+        position: { side: 'top', fraction: 0.75 },
         placement: 'inside',
         distance: 6,
       };
@@ -298,7 +298,7 @@ describe('Node 标签放置', () => {
       const scene = compileTestResult(
         sceneWithLabel({
           text: 'L',
-          position: { boundary: 'top', fraction: 0.5 },
+          position: { side: 'top', fraction: 0.5 },
           placement: 'outside',
           distance: 16,
           pin: true,

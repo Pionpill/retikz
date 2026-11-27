@@ -1,5 +1,5 @@
 ---
-title: Path Compilation
+title: Compilation / Path
 description: Follow target binding, Path Definitions and built-in stroke through geometry, arrows, marks, labels and output
 ---
 
@@ -69,7 +69,7 @@ export type CanonicalPath = Omit<
   };
 
 export type PathResolution = Readonly<{
-  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
+  stroke?: StrokeProviderBindings;
   irPath: PropertyPath;
   canon: CanonicalPath;
   definition: AnyPathDefinition;

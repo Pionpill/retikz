@@ -1,5 +1,6 @@
 import type {
   CompileOccurrenceLocator,
+  CompositeInputScope,
   IRChild,
   LayoutContribution,
   ScenePrimitive,
@@ -21,6 +22,7 @@ import type { CompileOwnerKey } from '../../provenance';
 import type { CompileRuntime } from '../../runtime';
 import { createExecutionInvariantError } from '../../runtime';
 import { createCompileChildPath, enrichLayoutProbeError, orderCompileArtifacts } from '../../shared';
+import type { CompositeMemoSlot } from '../composite';
 import { compileComposite } from '../composite';
 import { visitCoordinate, visitNode, queuePathChild, flushPendingPathEmissions } from '../leaf';
 import { visitScope } from '../scope';
@@ -70,6 +72,7 @@ export class CompileElementExecutor {
 
     return {
       context: {
+        skipGeometries: this.options.skipRootGeometries,
         layout: {
           childProposal: this.options.proposal ?? naturalLayoutProposal,
           // ⚡默认跳过无人消费的父布局占位传播，测量和增量驱动按需显式开启
@@ -89,8 +92,15 @@ export class CompileElementExecutor {
     };
   }
 
-  /** 完成延迟输出与最终排序，不负责选择失效元素 */
-  finish(state: SubtreeCompileState): SubtreeCompilation {
+  /** 全量遍历当前根的子项；增量调度独立构建同形状态 */
+  compileRootChildren(): SubtreeCompileState {
+    const frame = this.createRootRuntime();
+    this.compileChildren(this.rootChildren, frame, true);
+    return frame.state;
+  }
+
+  /** 完成绘制输出；根 Scene 无需父布局测量与重放数据 */
+  finishDrawing(state: SubtreeCompileState) {
     flushPendingPathEmissions(this.runtime, this.output, state.paths);
 
     let visualBounds: SubtreeCompilation['visualBounds'];
@@ -110,20 +120,24 @@ export class CompileElementExecutor {
       (a, b) => (this.output.zIndexMap.get(a) ?? 0) - (this.output.zIndexMap.get(b) ?? 0),
     );
 
+    return { primitives, visualBounds, artifacts: orderCompileArtifacts(state.artifacts) };
+  }
+
+  /** 子树同时交付父布局测量与重放所需的几何和顺序 */
+  finish(state: SubtreeCompileState): SubtreeCompilation {
+    const drawing = this.finishDrawing(state);
     const alignmentGuides = resolveStructuralAlignmentGuides(state.alignmentGuides);
 
     return {
-      primitives,
-      primitiveZIndices: primitives.map(primitive => this.output.zIndexMap.get(primitive)),
+      ...drawing,
+      primitiveZIndices: drawing.primitives.map(primitive => this.output.zIndexMap.get(primitive)),
       layout: {
         ...(this.rootContribution === undefined ? {} : { contribution: this.rootContribution }),
         allocations: state.allocations.filter(allocation => allocation.skipAllocation !== true),
         ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
       },
-      visualBounds,
       geometries: state.geometries,
       bounds: state.bounds,
-      artifacts: orderCompileArtifacts(state.artifacts),
     };
   }
 
@@ -150,6 +164,8 @@ export class CompileElementExecutor {
     isRoot = false,
     scopeOccurrence?: CompileOccurrenceLocator,
     compositeDepth = this.options.compositeDepth ?? 0,
+    authoredInput?: CompositeInputScope,
+    memoSlot?: CompositeMemoSlot,
   ): CompileOwnerKey | undefined {
     const generated = scopeOccurrence !== undefined || (isRoot ? (this.options.generated ?? false) : false);
     const semanticOwner =
@@ -174,11 +190,12 @@ export class CompileElementExecutor {
             expansionPath: [],
           };
     const runtimeInputs =
-      isRoot && this.options.occurrence !== undefined && this.rootChildren.length === 1
+      authoredInput ??
+      (isRoot && this.options.occurrence !== undefined && this.rootChildren.length === 1
         ? this.runtime.context.compositeInputs
         : runtime.context.compositeInput === undefined
           ? undefined
-          : selectCompositeInputScope(runtime.context.compositeInput, ['children', index]);
+          : selectCompositeInputScope(runtime.context.compositeInput, ['children', index]));
     this.compilePreparedChild(
       child,
       index,
@@ -187,6 +204,7 @@ export class CompileElementExecutor {
       compositeDepth,
       generated,
       semanticOwner,
+      memoSlot,
     );
     return semanticOwner;
   }
@@ -200,11 +218,12 @@ export class CompileElementExecutor {
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: CompileOwnerKey,
+    memoSlot?: CompositeMemoSlot,
   ): void {
     try {
       this.runtime.state.execution.withWarningOccurrence(occurrence, () => {
         {
-          this.compileElement(child, index, frame, occurrence, compositeDepth, generated, semanticOwner);
+          this.compileElement(child, index, frame, occurrence, compositeDepth, generated, semanticOwner, memoSlot);
         }
       });
     } catch (thrown) {
@@ -231,12 +250,14 @@ export class CompileElementExecutor {
     compositeDepth: number,
     generated: boolean,
     semanticOwner?: CompileOwnerKey,
+    memoSlot?: CompositeMemoSlot,
   ): void {
     if ('namespace' in child) {
       const contribution = compileComposite(
         {
           runtime: this.runtime,
           host: {
+            compositeDispatcher: this.output.compositeDispatcher,
             compileSubtree: this.options.compileSubtree,
             acceptContribution: this.acceptContribution.bind(this),
             compilePreparedChild: (...args) => this.compilePreparedChild(...args),
@@ -262,6 +283,7 @@ export class CompileElementExecutor {
         occurrence,
         compositeDepth,
         {
+          memoSlot,
           probe: this.options.probe,
           measurementAxis: child === this.rootChildren[0] ? this.options.measurementAxis : undefined,
           semanticOwner,
@@ -273,10 +295,10 @@ export class CompileElementExecutor {
     const elementRuntime = this.runtime;
     switch (child.type) {
       case 'node':
-        visitNode(elementRuntime, this.output, child, index, frame, semanticOwner);
+        visitNode(elementRuntime, this.output, child, index, frame, occurrence, semanticOwner);
         break;
       case 'coordinate':
-        visitCoordinate(elementRuntime, child, index, frame);
+        visitCoordinate(elementRuntime, child, index, frame, occurrence, this.output);
         break;
       case 'scope':
         visitScope(
@@ -325,7 +347,7 @@ export class CompileElementExecutor {
       const zIndex = contribution.primitiveZIndices[index];
       if (zIndex !== undefined) this.output.zIndexMap.set(primitive, zIndex);
     }
-    runtime.state.geometries.push(...contribution.geometries);
+    if (!runtime.context.skipGeometries) runtime.state.geometries.push(...contribution.geometries);
     runtime.state.publications.push(...contribution.publications);
     runtime.state.bounds.push(...contribution.bounds);
     for (const allocation of contribution.allocations) {

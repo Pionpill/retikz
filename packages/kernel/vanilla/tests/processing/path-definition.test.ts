@@ -3,14 +3,13 @@ import { PathSchema } from '@retikz/core';
 import { expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { createProcessingController, compileToScene } from '../../src';
-import { prepareProcessingInput } from '../../src/processing/prepare';
+import { SceneRuntime, compileToScene } from '../../src';
 import { compileTestResult } from '../helpers/compilation';
 
-it('保留完整 Path definition，并在 static 与 retained processing 中执行相同 compile 分支', () => {
+it('保留完整 Path definition，并在 static 与 session processing 中执行相同 compile 分支', () => {
   const definition: AnyPathDefinition = {
-    name: 'retained-fixture',
-    schema: PathSchema.extend({ kind: literal('retained-fixture') }),
+    name: 'session-fixture',
+    schema: PathSchema.extend({ kind: literal('session-fixture') }),
     compile: () => ({
       primitives: [{ type: 'ellipse', cx: 3, cy: 5, rx: 2, ry: 4 }],
       boundsPoints: [
@@ -22,18 +21,16 @@ it('保留完整 Path definition，并在 static 与 retained processing 中执�
   const input: IRScene = {
     version: 1,
     type: 'scene',
-    children: [{ type: 'path', kind: 'retained-fixture' }],
+    children: [{ type: 'path', kind: 'session-fixture' }],
   };
   const options = { compile: { paths: [definition] } };
-  const prepared = prepareProcessingInput(input, options);
-  expect(prepared.coreOptions.paths?.[0]).toBe(definition);
   const direct = compileTestResult(input, options.compile).scene;
-  const retained = createProcessingController(input, options);
+  const session = new SceneRuntime(input, options);
   try {
     expect(compileToScene(input, options).scene).toEqual(direct);
-    expect(retained.read().scene).toEqual(direct);
+    expect(session.current.compilation.result.scene).toEqual(direct);
     expect(direct.primitives).toContainEqual(expect.objectContaining({ type: 'ellipse', cx: 3, cy: 5 }));
   } finally {
-    retained.dispose();
+    session.dispose();
   }
 });

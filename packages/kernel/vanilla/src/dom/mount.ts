@@ -1,102 +1,57 @@
-import type { Scene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
+import type { InputRendererFactory, RendererHost } from '@retikz/render/runtime';
 
-import type {
-  CanvasView,
-  MountCanvasOptions,
-  MountOptions,
-  RawStaticMountCanvasOptions,
-  RawStaticMountOptions,
-  InputRender,
-  RetainedCanvasView,
-  RetainedMountCanvasOptions,
-  RetainedMountOptions,
-  InputRetainedRender,
-  RetainedSvgView,
-  StaticCanvasView,
-  StaticMountCanvasOptions,
-  StaticMountOptions,
-  StaticRawCanvasView,
-  StaticRawSvgView,
-  StaticSvgView,
-  VanillaView,
-} from '../runtime';
-import { mountCanvas } from './mount-canvas';
-import { mountSvg } from './mount-svg';
+import type { InputScene } from '../normalize';
+import { isInputScene, normalizeScene } from '../normalize';
+import type { SceneInputBindings } from '../runtime';
+import { DEFAULT_ID_PREFIX } from '../runtime';
+import type { MountOptions } from './types';
+import { SceneView } from './view';
 
-/** Vanilla 挂载时使用的渲染器选择器 */
-export type MountRenderer = 'svg' | 'canvas';
-
-/** 统一 mount 入口选项 */
-export type RetainedMountUnifiedOptions = (RetainedMountOptions | RetainedMountCanvasOptions) & {
-  /** 渲染后端；缺省使用 SVG */
-  renderer?: MountRenderer;
-};
-
-/** 统一 raw-input static mount 入口选项 */
-export type RawStaticMountUnifiedOptions = (RawStaticMountOptions | RawStaticMountCanvasOptions) & {
-  /** 渲染后端；缺省使用 SVG */
-  renderer?: MountRenderer;
-};
-
-/** 统一 raw-input mount 入口选项 */
-export type MountUnifiedOptions = RetainedMountUnifiedOptions | RawStaticMountUnifiedOptions;
-
-/** 统一 static mount 入口选项 */
-export type StaticMountUnifiedOptions = (StaticMountOptions | StaticMountCanvasOptions) & {
-  /** 渲染后端；缺省使用 SVG */
-  renderer?: MountRenderer;
-};
-
-/** 按 renderer 选择 SVG 或 Canvas runtime 挂载 */
-type MountFn = {
-  (container: Element, input: Scene, options: StaticMountUnifiedOptions & { renderer: 'canvas' }): StaticCanvasView;
-  (
-    container: Element,
-    input: InputRetainedRender,
-    options: RawStaticMountUnifiedOptions & { renderer: 'canvas' },
-  ): StaticRawCanvasView;
-  (
-    container: Element,
-    input: InputRetainedRender,
-    options: RetainedMountUnifiedOptions & { renderer: 'canvas' },
-  ): RetainedCanvasView;
-  (container: Element, input: Scene, options?: StaticMountUnifiedOptions & { renderer?: 'svg' }): StaticSvgView;
-  (
-    container: Element,
-    input: InputRetainedRender,
-    options: RawStaticMountUnifiedOptions & { renderer?: 'svg' },
-  ): StaticRawSvgView;
-  (
-    container: Element,
-    input: InputRetainedRender,
-    options?: RetainedMountUnifiedOptions & { renderer?: 'svg' },
-  ): RetainedSvgView;
-};
-
-/** 按 renderer 把输入挂载为 SVG 或 Canvas view；缺省使用 SVG */
-export const mount: MountFn = ((
+/** 从作者输入或完整 IR 挂载场景视图，默认使用 SVG */
+export function mountSceneView(
   container: Element,
-  input: InputRender,
-  options: StaticMountUnifiedOptions | MountUnifiedOptions = {},
-): VanillaView | CanvasView => {
-  if ('primitives' in input) {
-    const staticOptions = options as StaticMountUnifiedOptions;
-    if (staticOptions.renderer === 'canvas') return mountCanvas(container, input, staticOptions);
-    return mountSvg(container, input, staticOptions);
+  source: InputScene | IRScene,
+  options: MountOptions & { renderer: 'canvas' },
+): SceneView<HTMLCanvasElement>;
+export function mountSceneView(
+  container: Element,
+  source: InputScene | IRScene,
+  options?: MountOptions & { renderer?: 'svg' },
+): SceneView<SVGSVGElement>;
+export function mountSceneView(container: Element, source: InputScene | IRScene, options?: MountOptions): SceneView;
+export function mountSceneView(
+  container: Element,
+  source: InputScene | IRScene,
+  options: MountOptions = {},
+): SceneView {
+  let ir: IRScene;
+  let bindings: SceneInputBindings | undefined;
+  if (isInputScene(source)) {
+    const normalized = normalizeScene(source);
+    ir = normalized.ir;
+    bindings = { contributions: normalized.contributions, runtimeInputs: normalized.runtimeInputs };
+  } else {
+    ir = source;
   }
 
-  const rawOptions = options as MountUnifiedOptions;
-  const mountRawCanvas = mountCanvas as (
-    target: Element,
-    source: InputRetainedRender,
-    mountOptions: MountCanvasOptions,
-  ) => CanvasView;
-  const mountRawSvg = mountSvg as (
-    target: Element,
-    source: InputRetainedRender,
-    mountOptions: MountOptions,
-  ) => VanillaView;
-  if (rawOptions.renderer === 'canvas') return mountRawCanvas(container, input, rawOptions);
+  const { idPrefix = DEFAULT_ID_PREFIX } = options;
+  let renderer: InputRendererFactory;
+  if (options.renderer === 'canvas') {
+    const host = document.createElement('canvas');
+    host.style.objectFit = 'contain';
 
-  return mountRawSvg(container, input, rawOptions);
-}) as MountFn;
+    renderer = {
+      backend: 'canvas',
+      host,
+      immutableOptions: { backend: 'canvas', idPrefix, devicePixelRatio: options.canvas?.devicePixelRatio },
+    };
+  } else {
+    const host = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    renderer = { backend: 'svg', host, immutableOptions: { backend: 'svg', idPrefix } };
+  }
+
+  const view = new SceneView<RendererHost>(ir, options, renderer, bindings);
+  container.appendChild(view.root);
+  return view;
+}

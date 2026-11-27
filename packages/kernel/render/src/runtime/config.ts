@@ -3,16 +3,15 @@ import type { ValueOf } from '@retikz/foundation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { HydrationHandlers } from '../hydration';
 import type { RuntimeDeepReadonly } from '../scene';
-import { cloneAndFreezeRuntimeValue } from './shared';
 
-/** Retained renderer layer cache 策略 */
+/** renderer layer cache 策略 */
 export const RenderCachePolicy = {
   Auto: 'auto',
   Static: 'static',
   Dynamic: 'dynamic',
 } as const;
 
-/** Retained renderer layer cache 策略取值 */
+/** renderer layer cache 策略取值 */
 export type RenderCachePolicy = ValueOf<typeof RenderCachePolicy>;
 
 /** 一份按注册顺序叠加的 hydration handlers */
@@ -45,41 +44,41 @@ export type InputRenderRuntimeConfig = Readonly<{
   cachePolicy?: RenderCachePolicy;
 }>;
 
-/** Session-owned deeply immutable renderer 配置 */
+/** 只读 renderer 配置；成员由调用方在使用期间保持稳定 */
 export type RenderRuntimeConfig = RuntimeDeepReadonly<InputRenderRuntimeConfig>;
 
 const invalidRuntimeInput = (cause: unknown): never => {
   throw new RetikzRenderError({ code: RetikzRenderErrorCode.RuntimeInputInvalid, cause });
 };
 
-/** 捕获一次配置快照，并检查数值范围和本次注册关系 */
-export const captureRuntimeConfig = (input: InputRenderRuntimeConfig): RenderRuntimeConfig => {
+/** 校验数值与注册关系，仅在注册项乱序时构造有序列表 */
+export const prepareRuntimeConfig = (input: InputRenderRuntimeConfig): RenderRuntimeConfig => {
   try {
-    const captured = cloneAndFreezeRuntimeValue(input);
-    const registrations = new Set<number>();
-    const contributions = captured.handlerContributions
-      ?.map(contribution => {
-        const { registration } = contribution;
-        if (!Number.isSafeInteger(registration) || registration < 0 || registrations.has(registration)) {
-          return invalidRuntimeInput(contribution);
-        }
-        registrations.add(registration);
-        return contribution;
-      })
-      .sort((left, right) => left.registration - right.registration);
-    const { animation, canvas, cachePolicy } = captured;
+    const { animation, canvas, handlerContributions } = input;
     if (animation?.snapshotAt !== undefined && (!Number.isFinite(animation.snapshotAt) || animation.snapshotAt < 0)) {
       return invalidRuntimeInput(animation);
     }
     for (const dimension of [canvas?.width, canvas?.height]) {
       if (dimension !== undefined && (!Number.isFinite(dimension) || dimension < 0)) return invalidRuntimeInput(canvas);
     }
-    return Object.freeze({
-      ...(contributions === undefined ? {} : { handlerContributions: Object.freeze(contributions) }),
-      ...(animation === undefined ? {} : { animation }),
-      ...(canvas === undefined ? {} : { canvas }),
-      ...(cachePolicy === undefined ? {} : { cachePolicy }),
-    });
+    if (!handlerContributions) return input;
+    const registrations = new Set<number>();
+    let previous = -1;
+    let ordered = true;
+    for (const contribution of handlerContributions) {
+      const { registration } = contribution;
+      if (!Number.isSafeInteger(registration) || registration < 0 || registrations.has(registration)) {
+        return invalidRuntimeInput(contribution);
+      }
+      registrations.add(registration);
+      if (registration < previous) ordered = false;
+      previous = registration;
+    }
+    if (ordered) return input;
+    return {
+      ...input,
+      handlerContributions: [...handlerContributions].sort((left, right) => left.registration - right.registration),
+    };
   } catch (cause) {
     if (isRetikzRenderError(cause) && cause.code === RetikzRenderErrorCode.RuntimeInputInvalid) throw cause;
     return invalidRuntimeInput(cause);

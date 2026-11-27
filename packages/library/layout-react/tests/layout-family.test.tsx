@@ -18,13 +18,11 @@ import {
   OverlayLayoutItem,
   OverlayLayout,
 } from '@retikz/layout-react';
-import { createInputScene, Node } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import { normalizeScene } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 type ForeignProps = Readonly<{ id: string }>;
 
@@ -46,8 +44,8 @@ Foreign.inputEmbedAdapter = {
 
 /** 以 React 真实 authoring 路径归一化 Layout family JSX */
 const normalizeReactInput = (children: ReactNode) => {
-  const input = createInputScene(children);
-  return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const input = convertReactToInputScene(children);
+  return normalizeScene(input);
 };
 
 describe('Layout React 布局系列', () => {

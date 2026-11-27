@@ -77,7 +77,6 @@ it('为 topology 建立 primitive 双射、真实 semantic owner 与稳定 emiss
     if (node.primitivePath.length > 2 && parentNode !== undefined) expectedParent = parentNode.identity;
 
     expect(identityKey(node.parent)).toBe(identityKey(expectedParent));
-    expect(node.order).toBe(node.primitivePath.at(-1));
   }
 });
 

@@ -45,11 +45,12 @@ export const Example = () => <Layout ir={ir} composites={[circleDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { shape, circleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { shape } from '@retikz/standard-vanilla/shape';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 
 const input = scene({ children: [shape.circle({ center: [0, 0], radius: 32 })] });
-const svg = renderToSvgString(input, { adapters: [circleInputEmbedAdapter] });
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -59,14 +60,15 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { circleDefinition } from '@retikz/standard/shape';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
   children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [circleDefinition] } });
+const compileResult = compileToScene(ir, { compile: { composites: [circleDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

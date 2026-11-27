@@ -16,7 +16,7 @@ The remaining members are inherited from `InputGridLayoutConfig`, with `'childre
 
 | Member                | Type        | Default | Description                                                                    |
 | --------------------- | ----------- | ------- | ------------------------------------------------------------------------------ |
-| `readonly authoring?` | `unknown`   | —       | Opaque authoring data interpreted by an optional compilation driver            |
+| `readonly authoring?` | `unknown`   | —       | Opaque authoring data retained during normalization                            |
 | `readonly children?`  | `ReactNode` | `[]`    | Direct children must be grid layout items; omission creates an empty container |
 
 </ApiTable>
@@ -106,7 +106,7 @@ export type GridLayoutItemProps = Omit<InputGridLayoutItemConfig, 'child' | 'key
 
 ## Direct calls
 
-#### <ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={55}>gridLayout</ApiSourceLink> / <ApiSourceLink label={"InputGridLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={35}>InputGridLayout</ApiSourceLink>
+#### <ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={36}>gridLayout</ApiSourceLink> / <ApiSourceLink label={"InputGridLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={35}>InputGridLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -120,7 +120,7 @@ The remaining members are inherited from `InputGridLayoutConfig`, with `'childre
 | ------------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------- |
 | `children?`              | `ReadonlyArray<InputGridLayoutItem>` | `[]`    | Authored direct items; omission is treated as an empty list                      |
 | `input` (Parameter)      | `InputGridLayout`                    | —       | Container and item input; the input object reference is retained                 |
-| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data for the compilation driver; omitted input adds no authoring data     |
+| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data retained during normalization; omitted input adds no authoring data  |
 | Returns                  | `InputEmbed<InputGridLayout>`        | —       | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
 
 </ApiTable>
@@ -174,11 +174,10 @@ export type InputGridLayoutItem = InputLayoutItem<InputGridLayoutItemConfig>;
 
 </DocTabs>
 
-#### <ApiSourceLink label={"gridLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={12}>gridLayoutInputEmbedAdapter</ApiSourceLink>
+#### <ApiSourceLink label={"gridLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={13}>gridLayoutInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const gridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGridLayout> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputGridLayout>, 'prepare'>>;
+export declare const gridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout>;
 ```
 
 #### <ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/composite.ts"} startLine={30}>createGridLayout</ApiSourceLink> / <ApiSourceLink label={"InputGridLayoutConfig"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>InputGridLayoutConfig</ApiSourceLink>

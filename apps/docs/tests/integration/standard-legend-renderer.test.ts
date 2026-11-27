@@ -1,16 +1,14 @@
 import type { IRChild, Scene } from '@retikz/core';
-import { createInputScene, Node } from '@retikz/react';
+import { convertReactToInputScene, Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
 import type { InputLegend } from '@retikz/standard-vanilla/presentation';
-import { legend, legendInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { legend } from '@retikz/standard-vanilla/presentation';
 import { createLegend, LegendContentKind, legendDefinition, LegendSchema } from '@retikz/standard/presentation';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import { compileTestResult } from '../helpers/compilation';
 
@@ -77,7 +75,7 @@ describe('Standard Legend 渲染器边界', () => {
       },
     } satisfies InputLegend;
     const direct = LegendSchema.parse(createLegend(input));
-    const reactInput = createInputScene(
+    const reactInput = convertReactToInputScene(
       createElement(Legend, {
         kind: LegendContentKind.Items,
         contentAlign: 'end',
@@ -93,13 +91,9 @@ describe('Standard Legend 渲染器边界', () => {
         ),
       }),
     );
-    const react = LegendSchema.parse(
-      normalizeScene(reactInput.scene, { adapters: synchronousInputAdaptersOf(reactInput.adapters) }).ir.children[0],
-    );
+    const react = LegendSchema.parse(normalizeScene(reactInput).ir.children[0]);
     const vanillaInput = scene({ children: [legend(input)] });
-    const vanilla = LegendSchema.parse(
-      normalizeScene(vanillaInput, { adapters: [legendInputEmbedAdapter] }).ir.children[0],
-    );
+    const vanilla = LegendSchema.parse(normalizeScene(vanillaInput).ir.children[0]);
     const compile = (node: IRChild) =>
       compileTestResult(
         { type: 'scene', version: 1, children: [node] },

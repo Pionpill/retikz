@@ -1,4 +1,4 @@
-import { slopeChart, slopeChartInputEmbedAdapter } from '@retikz/chart-vanilla/line';
+import { slopeChart } from '@retikz/chart-vanilla/line';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -31,8 +31,7 @@ describe('Slope React 声明', () => {
       ),
     });
     expect(declarations).toEqual(root);
-    const normalize = (input: typeof root) =>
-      normalizeScene(scene({ children: [slopeChart(input)] }), { adapters: [slopeChartInputEmbedAdapter] }).ir;
+    const normalize = (input: typeof root) => normalizeScene(scene({ children: [slopeChart(input)] })).ir;
     expect(normalize(declarations)).toEqual(normalize(root));
   });
 

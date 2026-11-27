@@ -1,0 +1,133 @@
+---
+title: Incremental / State Model
+description: Explore how the author tree, read dependencies and stage records represent incremental compilation state
+---
+
+Weave is the Reconciler’s incremental compilation mechanism. Core computes geometry and primitives; Weave retains results between edits in a session and determines which ones need to be recomputed.
+
+## Overview
+
+The input IR describes what to draw; the output Scene holds the drawing. A rectangle and a text primitive alone do not tell you that they came from one Node, or which path would be affected if that Node moved. Weave therefore builds a tree with one entry per IR element. Each entry keeps the element’s results alongside the conditions that produced them.
+
+**First mount.** <ApiSourceLink label="WeaveManager" path="packages/kernel/reconciler/src/weave/manager.ts" startLine={38}>`WeaveManager`</ApiSourceLink> builds entries following the input IR hierarchy. A scene containing nodes A and B and a path between them has three entries under the root. With no cached results yet, both nodes and the path must be compiled. The path uses the two node boundaries to place its endpoints. Weave records those reads.
+
+**Later edits.** Moving only B changes its position and boundary. The path’s own IR is unchanged, but the boundary it read from B has moved, so its endpoint must be recomputed. A’s input and context are unchanged: Weave can reuse its geometry and primitives without asking Core to compile A again.
+
+**Output assembly.** Weave combines A’s retained output with the new results for B and the path up the tree. The caller still receives a complete Scene containing all three elements, not a patch containing only the changes. Caching skips repeated compilation, not unchanged elements in the output.
+
+## Weave entries
+
+The <ApiSourceLink label="WeaveEntry" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={305}>`WeaveEntry`</ApiSourceLink> is a union of five IR element entry types. The Scene root has a separate type, `WeaveRoot`. A path that uses node B
+refers to B’s entry. When B moves, the entry stays in place; only its node state is replaced.
+
+```ts
+export type WeaveEntry = WeaveCompositeEntry | WeaveCoordinateEntry | WeavePathEntry | WeaveScopeEntry | WeaveNodeEntry;
+
+type WeaveNodeEntry = {
+  readonly type: 'node';
+  current: WeaveNodeState | null;
+  pending: WeaveNodeState | null;
+};
+```
+
+`current` holds the last committed state, or `null` before a new entry’s first commit. `pending` holds the candidate state for this batch. B₀ and B₁ are node B’s states before and after the move.
+
+| Phase                         | `current` | `pending` |
+| ----------------------------- | --------- | --------- |
+| Before the edit               | B₀        | `null`    |
+| Preparing the move            | B₀        | B₁        |
+| After the computation commits | B₁        | `null`    |
+
+On the first write to an existing B, <ApiSourceLink label="WeaveTransaction" path="packages/kernel/reconciler/src/weave/state/transaction.ts" startLine={37}>`WeaveTransaction`</ApiSourceLink> shallow-copies its state. Collections are copied only on write. Subsequent reads in the batch prefer `pending` and fall back to `current`. The path can therefore use B’s new boundary while A keeps its original state.
+
+After computation, the transaction checks all entries to be committed, sets each entry’s `current` to its `pending` state, and clears the candidate slot. A failed preparation discards the candidate. Even after the switch, if the output target fails to commit, the transaction can restore B₀ from the retained reference. The session publishes the new snapshot only after a successful commit.
+
+<Comparison target="react" title="Comparison with React Fiber">
+
+Both keep a committed version available while preparing an update. The difference is **where the switch happens: React switches trees; Weave replaces state on the same entry.**
+
+|                       | React Fiber                                                                                                                                                   | Weave                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Preparing an update   | When updating an existing component, React creates or reuses a work-in-progress Fiber for its current Fiber. The two point to each other through `alternate`. | Moving B prepares new state in the entry’s `pending` slot. The path still refers to the same B entry. |
+| Committing the update | The root’s `current` pointer switches to the finished work tree, which becomes the new current tree.                                                          | The transaction makes the candidate state `current` on each changed entry and clears `pending`.       |
+
+The analogy describes how versions coexist and switch, not React’s priority scheduling or time slicing.
+
+</Comparison>
+
+## Structural fields
+
+Place A and B inside a Scope and leave the path at the root. The root’s ordered `children` are the Scope and the path; the Scope’s children are A and B. In the other direction, both A and B have the same Scope entry as their `parent`.
+
+```ts
+// All elements (WeaveElementStateBase)
+parent: WeaveRoot | WeaveScopeEntry;
+
+// Scope (WeaveScopeState)
+origin: Readonly<InputWeave<Omit<IRScope, 'children'>>>;
+children: ReadonlyArray<WeaveEntry>;
+
+// Root (WeaveRootState)
+parent: null;
+origin: Omit<IRScene, 'children'>;
+children: ReadonlyArray<WeaveEntry>;
+```
+
+<ComponentPreview files="entry-structure" size="md" hideCode type="illustration" />
+
+The <ApiSourceLink label="WeaveScopeState" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={200}>`WeaveScopeState`</ApiSourceLink> keeps the Scope’s own IR in `origin.own` and its inherited context in `origin.context`. Its children are stored in order
+in `children`, separately from that input. Inserting a node before B changes the order, but B is still the same entry.
+
+## Topology fields
+
+Parentage tells us where the path was declared, but not which nodes determine its endpoints. Three fields in <ApiSourceLink label="WeaveElementStateBase" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={105}>`WeaveElementStateBase`</ApiSourceLink> record what the computation actually read:
+
+```ts
+referenceReads: ReadonlyArray<WeaveReferenceRead>;
+dependencies: ReadonlyMap<WeaveEntry, ReadonlyArray<WeaveDependencyKind>>;
+consumers: ReadonlySet<WeaveEntry>;
+```
+
+- `referenceReads` records which names this entry looked up and what each lookup returned. A failed lookup for B still leaves a record; the root’s `readers` index lets Weave find the path when B is added.
+- `dependencies` maps each entry this one read to the kinds of result it used. For example, the path records A and B as keys and a boundary read for each.
+- `consumers` records the entries that used a result from this entry. Since the path read B’s boundary, B lists the path as a consumer.
+
+<ComponentPreview files="entry-relations" size="md" hideCode type="illustration" />
+
+## Stage state fields
+
+For node B, <ApiSourceLink label="WeaveNodeState" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={119}>`WeaveNodeState`</ApiSourceLink> extends the common fields with the node’s input and stage records. The optional fields below are populated as their
+results become available:
+
+```ts
+export type WeaveNodeState = WeaveElementStateBase & {
+  origin: Readonly<InputWeave<IRNode>>;
+  resolve?: WeaveResolve<
+    IRNode,
+    {
+      nodeDefaults: MergedScopeDefaults['node'];
+      mode: ThemeMode;
+    },
+    CanonicalNode
+  >;
+  compile?: WeaveCompile<
+    {
+      scopeChain: ReadonlyArray<Transform>;
+      proposal: LayoutProposal | undefined;
+    },
+    CompiledNode
+  >;
+  contribution?: WeaveContribution;
+};
+```
+
+| Node B field    | Value type          | Description                                                                                                                       |
+| --------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `origin.own`    | `IRNode`            | The node’s own IR declaration. Its inherited context lives in `origin.context`.                                                   |
+| `resolve.value` | `CanonicalNode`     | The resolved node. The record also keeps the input, node defaults and theme mode used during resolution.                          |
+| `compile.value` | `CompiledNode`      | Core’s compiled node. The record also keeps the transform chain, layout proposal, resources and diagnostics for this computation. |
+| `contribution`  | `WeaveContribution` | Local output for the parent to assemble, including primitives, bounds, name bindings and resources.                               |
+
+When B moves, its position must change, but its content and shape measurements can be reused if their inputs still match. For unchanged A, Scene assembly can use the retained contribution directly. The first case saves work within node compilation; the second reuses output during assembly.
+
+Other entries retain different results. A Scope caches its envelope computation and assembles output from its children. A Composite retains a contribution for the whole instance, without separate basic-element resolution or compilation records. For the resulting snapshot, see [Execution / Output Provenance](/kernel/packages/reconciler/compile-artifacts).

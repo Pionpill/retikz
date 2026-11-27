@@ -27,15 +27,15 @@ Schematic 领域的 Graph package family 当前位于 `packages/schematic/*`，�
 
 `scripts/release-groups.config.mjs` 是机器可读的发布组真源。
 
-| 发布组   | 包                                                                                                                                                                 | 版本策略                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
-| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                                                                           | Standard 组 lockstep        |
-| graph    | `@retikz/graph`, `@retikz/graph-react`, `@retikz/graph-vanilla`                                                                                                    | Schematic Graph 组 lockstep |
-| kernel   | `@retikz/foundation`, `@retikz/math`, `@retikz/reconciler`, `@retikz/core`, `@retikz/inspect`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | kernel 组 lockstep          |
-| data     | `@retikz/data`                                                                                                                                                     | 独立底座包                  |
-| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                                                                       | Plot 组 lockstep            |
-| chart    | `@retikz/chart`, `@retikz/chart-react`, `@retikz/chart-vanilla`                                                                                                    | Chart 组 lockstep           |
-| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                                                                    | Table 组 lockstep           |
+| 发布组   | 包                                                                                                                                              | 版本策略                    |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                                                        | Standard 组 lockstep        |
+| graph    | `@retikz/graph`, `@retikz/graph-react`, `@retikz/graph-vanilla`                                                                                 | Schematic Graph 组 lockstep |
+| kernel   | `@retikz/foundation`, `@retikz/math`, `@retikz/reconciler`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | kernel 组 lockstep          |
+| data     | `@retikz/data`                                                                                                                                  | 独立底座包                  |
+| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                                                    | Plot 组 lockstep            |
+| chart    | `@retikz/chart`, `@retikz/chart-react`, `@retikz/chart-vanilla`                                                                                 | Chart 组 lockstep           |
+| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                                                 | Table 组 lockstep           |
 
 未来 Geo 等功能家族即使放在 `packages/viz/*` 下，也只有在具体能力 ADR 确认 package manifest 后才进入 release group 真源；领域目录不能替未存在的包预留发布配置。
 

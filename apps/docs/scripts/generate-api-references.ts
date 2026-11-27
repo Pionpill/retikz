@@ -12,7 +12,6 @@ import { writeEntityApiReferenceMdx } from './api-reference/entity';
 import { writeFlowApiReferenceMdx } from './api-reference/flow';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeGroupApiReferenceMdx } from './api-reference/group';
-import { writeInspectApiReferenceMdx } from './api-reference/inspect';
 import { writeLayoutApiReferenceMdx } from './api-reference/layout';
 import { writeLayoutComponentApiReferences } from './api-reference/layout-components';
 import { writeManualReferences } from './api-reference/manual-reference';
@@ -65,10 +64,6 @@ await writeDrawApiReferenceMdx(
 
 await writeNodeApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/node/reference/_includes'),
-);
-
-await writeInspectApiReferenceMdx(
-  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/inspect/reference/_includes'),
 );
 
 await writeTexApiReferenceMdx(

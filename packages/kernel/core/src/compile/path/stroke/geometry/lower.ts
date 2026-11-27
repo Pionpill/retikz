@@ -6,7 +6,6 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../../error';
 import type { PathResolution, CanonicalPathStep } from '../../../../resolve';
 import type { IRPosition } from '../../../../schemas';
 import { BuiltinCompileWarningCode } from '../../../shared';
-import { pointOfTarget } from '../../target';
 import type { StrokePathCompileContext } from '../types';
 import { PathCommandEmitter } from './commands';
 import { StrokeCursor } from './cursor';
@@ -104,7 +103,7 @@ export const lowerStrokePathGeometry = (resolution: PathResolution, context: Str
     }
 
     if (step.kind === 'axis-line' && originalStep.kind === 'axis-line') {
-      const targetReference = pointOfTarget(originalStep.to, targetView, scopeChain);
+      const targetReference = targetView.pointOfTarget(originalStep.to, scopeChain);
       if (!targetReference) return null;
 
       const currentReference = cursor.getPenOverride() ?? prev.anchor;

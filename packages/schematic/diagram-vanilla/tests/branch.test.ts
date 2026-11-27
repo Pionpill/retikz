@@ -1,20 +1,18 @@
-import { createProcessingController, compileToScene } from '@retikz/vanilla';
+import { SceneRuntime, compileToScene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
-import { branchDiagram, branchDiagramInputEmbedAdapter } from '../src/branch';
+import { branchDiagram } from '../src/branch';
 
 it('通过同步 Vanilla 嵌入编译 Branch', () => {
-  const result = compileToScene(
-    {
-      children: [
-        branchDiagram({
-          nodes: [{ id: 'a', labels: [{ text: 'A' }] }, { id: 'b' }],
-          branches: [{ id: 'main', nodes: ['a', 'b'] }],
-        }),
-      ],
-    },
-    { adapters: [branchDiagramInputEmbedAdapter] },
-  );
+  const result = compileToScene({
+    type: 'scene',
+    children: [
+      branchDiagram({
+        nodes: [{ id: 'a', labels: [{ text: 'A' }] }, { id: 'b' }],
+        branches: [{ id: 'main', nodes: ['a', 'b'] }],
+      }),
+    ],
+  });
 
   expect(result.artifacts.some(artifact => artifact.type === 'branch')).toBe(true);
   expect(JSON.stringify(result.scene)).toContain('A');
@@ -22,6 +20,7 @@ it('通过同步 Vanilla 嵌入编译 Branch', () => {
 
 it('更新标签而不保留过时的演示内容', () => {
   const source = (visible: boolean) => ({
+    type: 'scene' as const,
     children: [
       branchDiagram({
         nodes: [{ id: 'a', ...(visible ? { labels: [{ text: 'Visible label' }] } : {}) }],
@@ -29,20 +28,20 @@ it('更新标签而不保留过时的演示内容', () => {
       }),
     ],
   });
-  const controller = createProcessingController(source(true), { adapters: [branchDiagramInputEmbedAdapter] });
+  const controller = SceneRuntime.fromInput(source(true));
 
   try {
-    const initial = controller.read();
+    const initial = controller.current.compilation.result;
 
     expect(JSON.stringify(initial.scene)).toContain('Visible label');
 
-    controller.update(source(false));
+    controller.replace(source(false));
 
-    expect(JSON.stringify(controller.read().scene)).not.toContain('Visible label');
+    expect(JSON.stringify(controller.current.compilation.result.scene)).not.toContain('Visible label');
 
-    controller.update(source(true));
+    controller.replace(source(true));
 
-    expect(controller.read().scene).toEqual(initial.scene);
+    expect(controller.current.compilation.result.scene).toEqual(initial.scene);
   } finally {
     controller.dispose();
   }

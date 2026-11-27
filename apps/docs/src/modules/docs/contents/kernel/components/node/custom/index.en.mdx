@@ -83,7 +83,7 @@ import type { FC } from 'react';
 import { horizontalPorts } from './horizontal-ports';
 
 const Demo: FC = () => (
-  <Layout extensions={{ boundaries: [horizontalPorts] }}>
+  <Layout compile={{ boundaries: [horizontalPorts] }}>
     <Node id="io" position={[0, 0]} boundary="horizontal-ports">
       IO
     </Node>
@@ -97,13 +97,13 @@ export default Demo;
 
 ```ts
 import { node, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { horizontalPorts } from './horizontal-ports';
 
 const input = scene({
   children: [node({ id: 'io', position: [0, 0], text: 'IO', boundary: 'horizontal-ports' })],
 });
-const view = mount(document.getElementById('diagram')!, input, { compile: { boundaries: [horizontalPorts] } });
+const view = mountSceneView(document.getElementById('diagram')!, input, { compile: { boundaries: [horizontalPorts] } });
 ```
 
 Provide a `diagram` container and call `view.dispose()` before removing it.
@@ -159,7 +159,7 @@ These are the members most often used to define, inject, and reference a custom 
       description: 'The boundary definition consumed by registries and compilation',
     },
     {
-      name: 'Layout.extensions.boundaries',
+      name: 'Layout.compile.boundaries',
       kind: 'property',
       type: 'ReadonlyArray<BoundaryDefinition>',
       description: 'The React-host entry point for injecting boundary definitions',

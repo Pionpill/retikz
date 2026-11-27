@@ -91,7 +91,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**先用绝对坐标落点，剩余节点再用 [AtPosition](/kernel/components/basic/position) `{ direction: 'bottom', of: 'prev-id' }` 紧贴堆叠：先定骨架，再让同列内容自动往下长，这样最容易读，也最容易改。
 
-- `<Layout ... nodeDistance={34.85}>` 在容器一次性设全局节点间距
+- `<Layout ... compile={{ nodeDistance: 34.85 }}>` 在容器一次性设全局节点间距
 - 段内每个 AtPosition 节点都引用上一个节点 id；视觉上紧贴成"色块条"
 
 ```tsx

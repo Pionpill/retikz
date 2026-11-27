@@ -34,13 +34,28 @@ FlowRuntimeEmbed.createInputEmbedProps = props => (props as FlowRuntimeEmbedProp
 const FlowDiagramComponent: FC<FlowDiagramProps> = props => {
   const generatedId = useId();
   const input = useMemo(() => collectFlowDiagramInput(props, false), [props]);
-  const { shapes, boundaries, clips, arrows, patterns, paths, composites, themeDefinitions, ...hostProps } =
-    flowDiagramLayoutHostPropsOf(props);
+  const {
+    nodeDistance,
+    fontSize,
+    lowerTex,
+    shapes,
+    boundaries,
+    clips,
+    arrows,
+    patterns,
+    paths,
+    composites,
+    themeDefinitions,
+    ...hostProps
+  } = flowDiagramLayoutHostPropsOf(props);
 
   return (
     <Layout
       {...hostProps}
-      extensions={{
+      compile={{
+        nodeDistance,
+        fontSize,
+        lowerTex,
         shapes,
         boundaries,
         clips,

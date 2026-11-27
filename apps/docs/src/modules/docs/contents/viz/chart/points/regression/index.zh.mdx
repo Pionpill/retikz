@@ -70,7 +70,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const Example = () => <Layout ir={ir} extensions={definitions} />;
+export const Example = () => <Layout ir={ir} compile={{ ...definitions }} />;
 ```
 
 </DocTab>
@@ -78,14 +78,14 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { regressionChart, regressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { regressionChart } from '@retikz/chart-vanilla/point';
 import { regressionMinimalData } from './regression-minimal.data';
 
 const chart = regressionChart({
   data: regressionMinimalData,
   encodings: { x: 'distanceMiles', y: 'delayMinutes' },
 });
-export const svg = renderChart(chart, { adapters: [regressionChartInputEmbedAdapter] }).svg;
+export const svg = renderChart(chart).svg;
 ```
 
 </DocTab>
@@ -99,7 +99,7 @@ import { createPlotProviderContribution } from '@retikz/plot';
 import { pathClipProvider } from '@retikz/extension';
 import { regressionMinimalData } from './regression-minimal.data';
 
-import { compileToScene, renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const chart = RegressionChartSchema.parse({
   namespace: 'chart',
@@ -116,7 +116,7 @@ const definitions = resolveCoreProviderDependencies({
   ],
 });
 
-export const svg = renderToSvgString(compileToScene(ir, { compile: definitions }).scene);
+export const svg = renderToSvg(compileToScene(ir, { compile: definitions }).scene);
 ```
 
 </DocTab>

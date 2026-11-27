@@ -286,7 +286,7 @@ export type PathResolveContext = Readonly<{
 /** 路径输入经样式解析、定义绑定与默认值补全后的结果 */
 export type PathResolution = Readonly<{
   /** 内置描边已选用的箭头与标记绑定；自定义定义仅在请求描边能力时解析 */
-  stroke?: Pick<StrokePathResolution, 'arrows' | 'marks'>;
+  stroke?: StrokeProviderBindings;
   /** 当前路径的 IR 路径，用于扩展定义与输出的错误定位 */
   irPath: PropertyPath;
   /** 已补齐默认值并解析绘制资源、供后续编译使用的路径 */
@@ -296,13 +296,15 @@ export type PathResolution = Readonly<{
 }>;
 
 /** 补齐端点箭头与沿线标记定义后，供 Stroke 编译使用的路径结果 */
-export type StrokePathResolution = PathResolution &
-  Readonly<{
-    /** 以路径端点箭头声明对象为键的解析结果 */
-    arrows: ReadonlyMap<IRArrowStyle, CanonicalPathArrow>;
-    /** 以沿线标记声明对象为键的解析结果 */
-    marks: ReadonlyMap<IRPathMark, CanonicalPathMark>;
-  }>;
+export type StrokePathResolution = PathResolution & Readonly<{ stroke: StrokeProviderBindings }>;
+
+/** 标准描边使用的端点和沿线装饰定义 */
+type StrokeProviderBindings = Readonly<{
+  /** 以路径端点箭头声明对象为键的解析结果 */
+  arrows: ReadonlyMap<IRArrowStyle, CanonicalPathArrow>;
+  /** 以沿线标记声明对象为键的解析结果 */
+  marks: ReadonlyMap<IRPathMark, CanonicalPathMark>;
+}>;
 
 /** 标记的已解析定义、样式与放置几何 */
 export type CanonicalPathMark = Readonly<{

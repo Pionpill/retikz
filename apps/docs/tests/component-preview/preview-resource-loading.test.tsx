@@ -201,7 +201,7 @@ describe('ComponentPreview 资源加载', () => {
     const [source, module] = await Promise.all([rawLoader(), moduleLoader()]);
 
     expect(source).toContain('browserMeasurer');
-    expect(source).toContain('renderToSvgString');
+    expect(source).toContain('renderToSvg(');
     expect(module.svg).toContain('<svg');
     expect(module.svg).toContain(text);
   });

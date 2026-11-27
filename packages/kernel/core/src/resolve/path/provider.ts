@@ -5,7 +5,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { getProviderDefinition } from '../../providers';
 import type { IRArrowStyle, IRPathBase } from '../../schemas';
 import { DEFAULT_ARROW_SHAPE } from '../../schemas';
-import { createCompositeContractError } from '../diagnostics';
+import { createContractViolationError } from '../diagnostics';
 import { parseProviderPayload } from '../provider';
 import { resolveMarkStyle } from './mark';
 import type {
@@ -81,7 +81,7 @@ const resolveArrowMark = (mark: MarkColorSource, context: PathResolveContext): C
     shrink: ((tipX - contactX) * resolvedLength) / baseSize - ARROW_PATH_CONTACT_OVERLAP,
   };
   if (!Number.isFinite(geometry.shrink)) {
-    throw createCompositeContractError(
+    throw createContractViolationError(
       `Arrow '${shape}' resolved shrink is non-finite; use smaller tip/contact/length values.`,
     );
   }
@@ -117,7 +117,7 @@ export const resolveStrokePathProviders = <TResolution extends PathResolution>(
   const children = path.children;
   const strokeTooShort = children === undefined || (children.length < 2 && children[0]?.kind !== 'rectangle');
   if (strokeTooShort) {
-    return { ...resolution, canon: path, arrows: new Map(), marks: new Map() };
+    return { ...resolution, canon: path, stroke: { arrows: new Map(), marks: new Map() } };
   }
 
   /** 按标记声明对象索引的解析结果 */
@@ -135,7 +135,6 @@ export const resolveStrokePathProviders = <TResolution extends PathResolution>(
   return {
     ...resolution,
     canon: path,
-    arrows: resolveEndpointArrowProviders(path.arrow, context),
-    marks,
+    stroke: { arrows: resolveEndpointArrowProviders(path.arrow, context), marks },
   };
 };

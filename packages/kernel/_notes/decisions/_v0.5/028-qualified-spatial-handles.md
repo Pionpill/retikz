@@ -75,7 +75,7 @@ type SpatialHandleIndex = Readonly<{
 }>;
 ```
 
-`CompileResult` 增加同一 candidate revision 生成的 `spatialHandles: SpatialHandleIndex`。它是 Core Runtime / 工具链 sidecar，不进入 Scene；Render、SVG、Canvas 与 SSR renderer 不读取或复制该索引。retained compile 必须让 Scene、artifacts、diagnostics provenance 与 spatial handle index 在同一 revision 原子提交或一起回滚。
+`CompileResult` 增加同一 candidate revision 生成的 `spatialHandles: SpatialHandleIndex`。它是 Core Runtime / 工具链 sidecar，不进入 Scene；Render、SVG、Canvas 与 SSR renderer 不读取或复制该索引。session compile 必须让 Scene、artifacts、diagnostics provenance 与 spatial handle index 在同一 revision 原子提交或一起回滚。
 
 理由：
 
@@ -125,7 +125,7 @@ spatial handle contract 明确区分以下 identity，不允许相互代替：
 - `instanceId`：对应 authored composite IR 的显式 `id`；存在时可用于跨工具查询
 - `occurrence`：当前 canonical compile 内的精确 occurrence，始终存在但不承诺 authored reorder 后持久稳定
 - `payload` 中的 domain item key：由 Plot、Table 等 owner 解释，不是 Core identity
-- runtime primitive identity：服务 retained patch 与 renderer，不是 author-facing spatial selector
+- runtime primitive identity：服务 session patch 与 renderer，不是 author-facing spatial selector
 
 显式 id 优先作为 owner instance identity。匿名 composite 只通过当前 compile 的 occurrence 区分；Core 不为其生成全局计数 id，也不承诺在 authored sibling 重排后维持同一持久 identity。需要跨 revision 稳定寻址的作者必须提供 owner 支持的显式 id。
 

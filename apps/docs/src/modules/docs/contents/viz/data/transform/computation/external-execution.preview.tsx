@@ -1,10 +1,12 @@
 import { createDataTransformExecutor } from '@retikz/data';
-import { DetailColumn } from '@retikz/table-react';
+import type { DataTransformResult } from '@retikz/data';
+import { prepareTableData } from '@retikz/table';
+import { Table } from '@retikz/table-react';
+import { detailTable } from '@retikz/table-vanilla';
 import type { FC } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { Lang } from '@/i18n';
-import { PreviewDetailTable } from '@/modules/docs/components/component-preview/theme';
 
 import { executionRows } from './external-execution.data';
 import { createSortProvider } from './external-execution.engine';
@@ -30,30 +32,45 @@ export const ExternalExecutionPreview: FC<ExternalExecutionPreviewProps> = props
       }),
     [],
   );
-  const table = useMemo(
-    () => (
-      <PreviewDetailTable
-        id="sorted-records"
-        dataRef="records"
-        data={executionRows}
-        dataExecution={{ mode, external: 'promise-engine' }}
-        dataTransformExecutor={executor}
-        transform={[{ operation: { kind: 'sort', params: { field: 'value', order } } }]}
-        layout={{
+  const spec = useMemo(
+    () =>
+      detailTable({
+        id: 'sorted-records',
+        dataRef: 'records',
+        dataExecution: { mode, external: 'promise-engine' },
+        transform: [{ operation: { kind: 'sort', params: { field: 'value', order } } }],
+        columns: ['item', 'value'].map(field => ({ id: field, field, header: { kind: 'value', value: field } })),
+        layout: {
           columnSize: { kind: 'fixed', value: 100 },
           rowSize: { kind: 'fixed', value: 30 },
           headerRowSize: { kind: 'fixed', value: 30 },
-        }}
-      >
-        <DetailColumn id="item" field="item" header={{ kind: 'value', value: 'item' }} />
-        <DetailColumn id="value" field="value" header={{ kind: 'value', value: 'value' }} />
-      </PreviewDetailTable>
-    ),
-    [mode, order, executor],
+        },
+      }),
+    [mode, order],
   );
+  const [result, setResult] = useState<{ spec: typeof spec; preparedData: DataTransformResult }>();
+  const [failure, setFailure] = useState<Error>();
+  useEffect(() => {
+    let current = true;
+    const load = async () => {
+      const task = await prepareTableData(spec, {
+        dataBindings: { records: { kind: 'rows', rows: executionRows } },
+        dataTransformExecutor: executor,
+      });
+      const preparedData = await task.execute();
+      if (current && preparedData) setResult({ spec, preparedData });
+    };
+    void load().catch((cause: Error) => {
+      if (current) setFailure(cause);
+    });
+    return () => {
+      current = false;
+    };
+  }, [spec, executor]);
+  if (failure) throw failure;
   return (
     <div>
-      {table}
+      {result && <Table spec={result.spec} preparedData={result.preparedData} />}
       <p>
         {externalExecutionI18n[lang].completed}: {completed}
       </p>

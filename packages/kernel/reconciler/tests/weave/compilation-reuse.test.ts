@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 
 import type { InputWeaveElement, WeaveBatch } from '../../src/weave';
 import { readWeaveCurrent, WeaveManager } from '../../src/weave';
@@ -7,7 +7,7 @@ import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 /** 在内部编译测试中完成候选提交与事务清理 */
 const commitUpdate = (manager: WeaveManager, batch: WeaveBatch) => {
-  const prepared = manager.update(batch);
+  const prepared = manager.prepareUpdate(batch);
   prepared.commit();
   prepared.finish();
   return prepared;
@@ -49,8 +49,8 @@ describe('Weave 编译产物复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [element, ...consumers] };
     const snapshot = JSON.stringify(source);
     const session = new WeaveManager(source);
-    const mounted = session.mount();
-    const entry = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const entry = readWeaveCurrent(session.root).children[0];
     if (entry.type === 'composite') throw new Error('Expected a base element');
     const before = readWeaveCurrent(entry);
     if (before.resolve === undefined || before.compile === undefined)
@@ -62,7 +62,7 @@ describe('Weave 编译产物复用', () => {
       const next = identity === 'same' ? input : identity === 'shallow' ? { ...input } : structuredClone(input);
       const update = commitUpdate(session, {
         operations: [
-          { kind: 'update', target: { kind: 'child', scopeId: mounted.root.scopeId, index: 0 }, input: next },
+          { kind: 'update', target: { kind: 'child', scopeId: session.root.scopeId, index: 0 }, input: next },
         ],
       });
       expect(update.compilation.result, identity).toEqual(compileTestResult(source));
@@ -85,9 +85,10 @@ describe('Weave 编译产物复用', () => {
       ],
     };
     const session = new WeaveManager(source, {}, { captureProvenance: true });
-    const first = session.mount();
-    const root = first.root;
+    session.mount();
+    const root = session.root;
     const stable = root.current!.children[2];
+    assert(stable.type === 'node');
     const product = stable.current!.compile?.value;
     const replacement = {
       type: 'node' as const,
@@ -143,11 +144,12 @@ describe('Weave 编译产物复用', () => {
       ],
     };
     const session = new WeaveManager(source);
-    const first = session.mount();
-    const keep = first.root.current!.children[0];
+    session.mount();
+    const keep = session.root.current!.children[0];
+    assert(keep.type === 'node');
     const product = keep.current!.compile?.value;
     const updated = commitUpdate(session, {
-      operations: [{ kind: 'remove', target: { kind: 'id', scopeId: first.root.scopeId, id: 'remove' } }],
+      operations: [{ kind: 'remove', target: { kind: 'id', scopeId: session.root.scopeId, id: 'remove' } }],
     });
     expect(keep.current!.compile?.value).toBe(product);
     expect(updated.compilation.result).toEqual(compileTestResult({ ...source, children: source.children.slice(0, 1) }));
@@ -172,17 +174,18 @@ describe('Weave 编译产物复用', () => {
       ],
     };
     const session = new WeaveManager(source);
-    const mounted = session.mount();
-    const stable = mounted.root.current!.children[0];
+    session.mount();
+    const stable = session.root.current!.children[0];
+    assert(stable.type === 'scope');
     const compilation = stable.current!.compile?.value;
     const replacement = { type: 'node' as const, id: 'moving', position: [80, 0] as [number, number] };
     const batch: WeaveBatch = {
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'moving' }, input: replacement },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'moving' }, input: replacement },
       ],
     };
     const expected = compileTestResult({ ...source, children: [source.children[0], replacement] });
-    const discarded = session.update(batch);
+    const discarded = session.prepareUpdate(batch);
     expect(discarded.compilation.result).toEqual(expected);
     discarded.rollback();
 

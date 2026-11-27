@@ -10,7 +10,7 @@ import { pipelineImplementationI18n } from './pipeline-implementation.i18n';
 /** 渲染链路图的语言 */
 export type PipelineImplementationProps = { lang?: Lang };
 
-/** 追踪 static React SVG 分支的源码入口 */
+/** 追踪 React SVG 首帧的源码入口 */
 const PipelineImplementation: FC<PipelineImplementationProps> = props => {
   const { lang = 'zh' } = props;
   const text = pipelineImplementationI18n[lang];

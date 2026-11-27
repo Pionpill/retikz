@@ -24,9 +24,9 @@ Render 收到 Scene 时，节点尺寸和路径端点已经确定。要让文字
 
 测量器接收公共字体契约 `TextFont`，其中 `size` 与可选的 `weight` 都是数值。作者输入的 `normal`、`bold` 等字重在解析阶段换算；直接调用测量器时使用 `400`、`700` 等数值。
 
-Vanilla 在未提供 `compile.measureText` 时选择默认测量器，实际测量时才尝试获取 Canvas 2D 上下文。React 的 `Layout` 复用这条默认路径；显式传入 `measureText` 时则透传给 Vanilla。浏览器测量使用 Canvas 2D 的 `measureText` 查询字宽和字形上下边界，即使最后选择 SVG 后端也走这条测量路径；无需先挂载一个 SVG 文本元素再读取它的尺寸。
+Vanilla 在未提供 `compile.measureText` 时选择默认测量器，实际测量时才尝试获取 Canvas 2D 上下文。React 的 `Layout` 复用这条默认路径；显式传入 `compile.measureText` 时则透传给 Vanilla。浏览器测量使用 Canvas 2D 的 `measureText` 查询字宽和字形上下边界，即使最后选择 SVG 后端也走这条测量路径；无需先挂载一个 SVG 文本元素再读取它的尺寸。
 
-字体族优先使用文字自身的配置，其次使用 Vanilla 的 `defaultFontFamily`；React 将 `Layout` 的 `style.fontFamily` 传入这一选项。默认浏览器测量器在字体族仍缺省时读取页面 `body` 的计算字体，最终使用 `sans-serif`。测量使用的字体应与实际显示的字体一致；只改变外围 CSS 的继承环境，不能保证已有几何随之更新。
+默认浏览器测量器优先使用文字自身的字体族，缺省时读取页面 `body` 的计算字体，最终使用 `sans-serif`。React 的 `Layout.style.fontFamily` 只影响宿主显示，不会传给测量器。需要按特定字体布局时，在文字上显式指定字体族，或提供自定义测量器。
 
 显式测量器优先于默认环境探测。没有浏览器环境或无法创建 Canvas 上下文时，默认测量器使用 Core 的 `fallbackMeasurer`；自定义测量器抛错、返回非法指标，或实际浏览器测量抛错时，不会静默改为估算。直接调用 Core 且未提供测量器时，也使用 `fallbackMeasurer`。
 
@@ -34,9 +34,8 @@ Vanilla 在未提供 `compile.measureText` 时选择默认测量器，实际测�
 
 <SourceLinks
   sources={[
-    { label: 'React 透传度量与默认字体', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'Vanilla 默认测量与字体补入', path: 'packages/kernel/vanilla/src/processing/text-measurement.ts' },
-    { label: 'Vanilla 传递编译选项', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
+    { label: 'React 透传度量与默认字体', path: 'packages/kernel/react/src/container/Layout.tsx' },
+    { label: 'Vanilla 默认测量与字体补入', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
     { label: '缺省文字估算器', path: 'packages/kernel/core/src/compile/text/helpers.ts' },
     { label: 'TextMetrics', path: 'packages/kernel/core/src/contract/text.ts' },
     { label: 'resolveTextMetrics', path: 'packages/kernel/core/src/resolve/text/metrics.ts' },
@@ -105,7 +104,7 @@ Reconciler 为每次全量编译或增量更新创建文字度量缓存，按文
 | 变化                   | 当前处理方式                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | 节点文字或字体配置更新 | 通过正常输入更新进入处理链；不能假定命中局部增量快路径                               |
-| React 公式引擎就绪     | `useLowerTex` 返回 ready 状态，应用把 `lowerTex` 传给 Layout；编译选项变化后重新处理 |
+| React 公式引擎就绪     | `useLowerTex` 返回 ready 状态，应用通过 Layout 的 `compile.lowerTex` 传入 lowerer；编译选项变化后重新处理 |
 | 浏览器字体文件加载完成 | 宿主未订阅字体加载事件；应用应在字体可用后首次编译，或主动重新编译／重建处理实例     |
 
 例如，先用备用字体完成编译，再加载目标字体，SVG 文字可能已经显示为新字形，而节点仍保留旧宽度。重新绘制同一份 Scene 无法修正这个尺寸；需要让编译使用新度量。React 中也不能依赖一次输入和选项均未变化的父组件重渲染来保证重算。
@@ -114,7 +113,7 @@ Reconciler 为每次全量编译或增量更新创建文字度量缓存，按文
 
 <SourceLinks
   sources={[
-    { label: 'React 的输入与编译选项依赖', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
+    { label: 'React 的输入与编译选项依赖', path: 'packages/kernel/react/src/container/Layout.tsx' },
     { label: '公式初始化状态与下沉器实例', path: 'packages/kernel/tex/src/react/use-lower-tex.ts' },
     { label: 'SVG 消费文字图元', path: 'packages/kernel/render/src/svg/builders/prim.ts' },
     { label: 'Canvas 消费 Scene', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },

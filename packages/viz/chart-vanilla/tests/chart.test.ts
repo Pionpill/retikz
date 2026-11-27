@@ -19,14 +19,6 @@ import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
 import {
-  scatterChartInputEmbedAdapter,
-  bubbleChartInputEmbedAdapter,
-  connectedScatterChartInputEmbedAdapter,
-  rangedDotChartInputEmbedAdapter,
-  regressionChartInputEmbedAdapter,
-  stripChartInputEmbedAdapter,
-} from '../src/point';
-import {
   bubbleChart,
   connectedScatterChart,
   rangedDotChart,
@@ -35,17 +27,8 @@ import {
   stripChart,
 } from '../src/point';
 
-const adapters = [
-  scatterChartInputEmbedAdapter,
-  bubbleChartInputEmbedAdapter,
-  connectedScatterChartInputEmbedAdapter,
-  rangedDotChartInputEmbedAdapter,
-  regressionChartInputEmbedAdapter,
-  stripChartInputEmbedAdapter,
-];
-
 const sourceOf = (chart: AnyInputEmbed): IRChartSource =>
-  normalizeScene(scene({ children: [chart] }), { adapters }).ir.children[0] as IRChartSource;
+  normalizeScene(scene({ children: [chart] })).ir.children[0] as IRChartSource;
 
 const rows = [
   { x: 1, y: 2, size: 3, order: 1 },
@@ -92,7 +75,7 @@ describe('Chart Vanilla 编写', () => {
       data: rows,
       encodings: { x: 'x', y: 'y', size: 'size' },
     });
-    const rendered = renderChart(chart, { adapters });
+    const rendered = renderChart(chart);
 
     expect(rendered.svg).toContain('<svg');
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('bubble');
@@ -126,7 +109,7 @@ describe('Chart Vanilla 编写', () => {
       encodings: { x: 'x', y: 'y', series: 'species' },
       properties: { sampleCount: 8, extraMethods: [{ method: { kind: 'power' }, trend: { stroke: '#ff0000' } }] },
     });
-    const rendered = renderChart(chart, { adapters });
+    const rendered = renderChart(chart);
     const serializedSource = JSON.stringify(sourceOf(chart));
 
     expect(rendered.svg).toContain('<svg');
@@ -184,7 +167,7 @@ describe('Chart Vanilla 编写', () => {
     expect(result.props.themeDefinitions).toEqual([hostTheme]);
     expect(sourceOf(result)).not.toHaveProperty('theme');
     expect(sourceOf(result)).not.toHaveProperty('chartThemeDefinitions');
-    expect(renderChart(result, { adapters }).svg).toContain('#123456');
+    expect(renderChart(result).svg).toContain('#123456');
   });
 
   it('将显式 Chart 默认值写入 Source，同时在宿主结果中保留 Core 主题', () => {
@@ -281,7 +264,7 @@ describe('Chart Vanilla 编写', () => {
       },
     });
 
-    expect(renderChart(chart, { adapters }).svg.match(/<ellipse/g)).toHaveLength(rows.length);
+    expect(renderChart(chart).svg.match(/<ellipse/g)).toHaveLength(rows.length);
     expect(JSON.stringify(sourceOf(chart))).toContain('copy-chart-field');
     expect(JSON.stringify(sourceOf(chart))).not.toMatch(/outputModel|apply/);
 
@@ -303,7 +286,7 @@ describe('Chart Vanilla 编写', () => {
       dataModel: [...prepared.model],
       encodings: { x: 'copiedX', y: 'y' },
     });
-    expect(renderChart(fromResult, { adapters }).svg.match(/<ellipse/g)).toHaveLength(rows.length);
+    expect(renderChart(fromResult).svg.match(/<ellipse/g)).toHaveLength(rows.length);
     expect(sourceOf(fromResult).plotExtension).toBeUndefined();
   });
 
@@ -322,7 +305,7 @@ describe('Chart Vanilla 编写', () => {
       layout: { width: 320, height: 200 },
       lowerOptions: { provenance: true, datumProvenance: true },
     });
-    const rendered = renderChart(chart, { adapters, output: { width: 320, height: 200 } });
+    const rendered = renderChart(chart, { output: { width: 320, height: 200 } });
 
     expect(rendered.svg).toContain('<svg');
     expect(rendered.compileResult.scene.primitives).toHaveLength(1);
@@ -337,8 +320,8 @@ describe('Chart Vanilla 编写', () => {
       encodings: { x: 'x', y: 'y' },
       layout: { width: 320, height: 200 },
     });
-    const rendered = renderChart(chart, { adapters });
-    const scaled = renderChart(chart, { adapters, output: { width: 640, height: 400 } });
+    const rendered = renderChart(chart);
+    const scaled = renderChart(chart, { output: { width: 640, height: 400 } });
 
     expect(rendered.compileResult.scene.layout).toEqual({ x: 0, y: 0, width: 320, height: 200 });
     expect(rendered.svg).toContain('viewBox="0 0 320 200"');
@@ -349,8 +332,8 @@ describe('Chart Vanilla 编写', () => {
 
   it.each([undefined, { width: 320 }])('没有完整布局尺寸时保留自动取景与显式 padding：%j', layout => {
     const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' }, layout });
-    const automatic = renderChart(chart, { adapters }).compileResult.scene.layout;
-    const unpadded = renderChart(chart, { adapters, compile: { padding: 0 } }).compileResult.scene.layout;
+    const automatic = renderChart(chart).compileResult.scene.layout;
+    const unpadded = renderChart(chart, { compile: { padding: 0 } }).compileResult.scene.layout;
 
     expect(automatic.width).toBeCloseTo(unpadded.width + 20);
     expect(automatic.height).toBeCloseTo(unpadded.height + 20);
@@ -358,7 +341,7 @@ describe('Chart Vanilla 编写', () => {
 
   it('不会为没有来源追溯的匿名 Chart 合成 Scene id', () => {
     const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
-    const rendered = renderChart(chart, { adapters });
+    const rendered = renderChart(chart);
 
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toEqual([]);
   });
@@ -380,7 +363,7 @@ describe('自定义回归 SSR', () => {
         implementations: { regressions: [definitionImplementation] },
       },
     });
-    const rendered = renderChart(chart, { adapters });
+    const rendered = renderChart(chart);
 
     expect(rendered.svg).toContain('<svg');
     expect((rendered.svg.match(/<ellipse\b/g) ?? []).length).toBe(regressionRows.length);

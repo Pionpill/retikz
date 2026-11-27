@@ -38,28 +38,32 @@ describe('Weave 编译构建', () => {
   });
 
   it('保留跨 Scope 延后路径、声明结构和完整来源', () => {
-    const prepared = new WeaveManager(scene, {}, { captureProvenance: true }).mount();
+    const preparedManager = new WeaveManager(scene, {}, { captureProvenance: true });
+    const prepared = preparedManager.mount();
     expect(prepared.compilation.result).toEqual(compileTestResult(scene));
-    expect(prepared.root.pending).toBeNull();
-    expect(readWeaveCurrent(prepared.root).children.every(node => node.pending === null)).toBe(true);
-    expect(readWeaveCurrent(prepared.root).children.map(node => node.type)).toEqual(['path', 'scope', 'scope']);
-    expect(readWeaveCurrent(prepared.root).scopeIds.size).toBe(3);
-    expect(readWeaveCurrent(prepared.root).children.every(node => readWeaveCurrent(node).compile !== undefined)).toBe(
-      true,
-    );
+    expect(preparedManager.root.pending).toBeNull();
+    expect(readWeaveCurrent(preparedManager.root).children.every(node => node.pending === null)).toBe(true);
+    expect(readWeaveCurrent(preparedManager.root).children.map(node => node.type)).toEqual(['path', 'scope', 'scope']);
+    expect(readWeaveCurrent(preparedManager.root).scopeIds.size).toBe(3);
+    expect(
+      readWeaveCurrent(preparedManager.root).children.every(
+        node => node.type !== 'composite' && readWeaveCurrent(node).compile !== undefined,
+      ),
+    ).toBe(true);
     expect(readEmissions(prepared.compilation.provenance!).map(entry => entry.primitivePath)).toEqual(
       readEmissions(compileTestSnapshot(scene, {}, { captureProvenance: true }).provenance!).map(
         entry => entry.primitivePath,
       ),
     );
-    expect(readWeaveCurrent(readWeaveCurrent(prepared.root).children[0]).dependencies.size).toBe(2);
+    expect(readWeaveCurrent(readWeaveCurrent(preparedManager.root).children[0]).dependencies.size).toBe(2);
     expect(scene.children[1]).not.toHaveProperty('id');
   });
 
   it('失败的新候选不改变此前树、索引和已完成输出', () => {
-    const previous = new WeaveManager(scene, {}, { captureProvenance: true }).mount();
+    const previousManager = new WeaveManager(scene, {}, { captureProvenance: true });
+    const previous = previousManager.mount();
     const output = JSON.stringify(previous.compilation.result);
-    const nodes = [...readWeaveCurrent(previous.root).scopeIds.values()];
+    const nodes = [...readWeaveCurrent(previousManager.root).scopeIds.values()];
     expect(() =>
       new WeaveManager({
         ...scene,
@@ -67,7 +71,7 @@ describe('Weave 编译构建', () => {
       }).mount(),
     ).toThrow();
     expect(JSON.stringify(previous.compilation.result)).toBe(output);
-    expect([...readWeaveCurrent(previous.root).scopeIds.values()]).toEqual(nodes);
+    expect([...readWeaveCurrent(previousManager.root).scopeIds.values()]).toEqual(nodes);
   });
 
   it('Scope 局部名称与匿名包络使用 Core 规则', () => {
@@ -267,14 +271,17 @@ it('新环境的测量服务生效，空树不携带旧资源或读取记录', (
     version: 1,
     children: [{ type: 'node', id: 'a', text: 'A', position: [0, 0] }],
   };
-  const first = new WeaveManager(input, { measureText: () => ({ width: 10, height: 10 }) }).mount();
-  const second = new WeaveManager(input, { measureText: () => ({ width: 100, height: 10 }) }).mount();
+  const firstManager = new WeaveManager(input, { measureText: () => ({ width: 10, height: 10 }) });
+  const first = firstManager.mount();
+  const secondManager = new WeaveManager(input, { measureText: () => ({ width: 100, height: 10 }) });
+  const second = secondManager.mount();
   expect(second.compilation.result.scene.layout.width).toBeGreaterThan(first.compilation.result.scene.layout.width);
-  expect(second.root.scopeId).not.toBe(first.root.scopeId);
-  const empty = new WeaveManager({ ...input, children: [] }).mount();
-  expect(readWeaveCurrent(empty.root).records.size).toBe(0);
-  expect(readWeaveCurrent(empty.root).ids.size).toBe(0);
-  expect(readWeaveCurrent(empty.root).scopeIds.size).toBe(1);
+  expect(secondManager.root.scopeId).not.toBe(firstManager.root.scopeId);
+  const emptyManager = new WeaveManager({ ...input, children: [] });
+  const empty = emptyManager.mount();
+  expect(readWeaveCurrent(emptyManager.root).records.size).toBe(0);
+  expect(readWeaveCurrent(emptyManager.root).ids.size).toBe(0);
+  expect(readWeaveCurrent(emptyManager.root).scopeIds.size).toBe(1);
   expect(empty.compilation.result.scene.resources).toBeUndefined();
 });
 
@@ -402,7 +409,7 @@ it.each(['opacity', 'viewBox'] as const)('Path 可见性变化更新 Scope 动�
     ],
   };
   for (const path of [visible, empty, visible]) {
-    const candidate = session.update({
+    const candidate = session.prepareUpdate({
       operations: [
         { kind: 'update', target: { kind: 'child', scopeId: session.getScopeId([0]), index: 0 }, input: path },
       ],

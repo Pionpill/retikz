@@ -5,12 +5,14 @@ keywords: 'Core、Inspector、outline、bounds、keyPoints、boundary'
 
 # ADR-039：扩展 Core 元素观测与内置 Inspector
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-09-13
 - 接受日期：2026-09-13
 - 关联：[当前 roadmap](./roadmap.md) · [Inspector 独立包](./021-extensible-inspector-content.md) · [Drawing Complete](../../architecture/core-drawing-complete.md)
 
-> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。仅保留可选包、统一扩展与普通只读层原则。
+> 输入、选择、上下文、内置能力与失败语义已由 [078](./078-inspect-compiled-output.md) 替代；Core 观测及检查专用出口由 [077](./077-compile-output-contract.md) 删除。当时保留的可选包、统一扩展与只读层后续亦已退役。
+
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
 
 ## 背景与目标
 
@@ -151,7 +153,7 @@ Clip 辅助层显示各次应用的完整路径，不继承主图 clip、不计�
 
 - 未使用 observed compile、未选择 owner 或被 barrier 排除时，不为新增观测调用额外几何出口、克隆产物或执行辅助编译。所有 session 仍只消费最终提交结果，probe、失败候选、未选 replay 不产生 observe；complete 在全部 dispatch 后调用一次。
 - 注册顺序与最终 occurrence 顺序共同决定稳定输出；同一 owner 可有多个不同 key 的 Inspector，重复 key 继续 fail-loud。默认 registry 扩展内置集合，但不会隐式生成 request。
-- 空几何、无正文和空 Scope 是合法结果；能力缺失产生上述非致命诊断。无效 options、显式 self 无最终目标、owner 不匹配、非法产物、回调或片段编译失败保持原子失败，不返回部分 primary/plane，retained 宿主保留上一 committed frame。
+- 空几何、无正文和空 Scope 是合法结果；能力缺失产生上述非致命诊断。无效 options、显式 self 无最终目标、owner 不匹配、非法产物、回调或片段编译失败保持原子失败，不返回部分 primary/plane，session 宿主保留上一 committed frame。
 - 开关辅助内容不得改变 primary Scene、artifacts、spatial handles、资源、身份拓扑、相机、布局及命中结果。SVG/Canvas 执行同一只读层，辅助内容不响应 pointer、hydration、动画或编辑操作。
 - 这是 `0.x` 公开能力扩展：owner union 与扩展段新增分支需要消费者更新穷举；已有显式 scene/subtree Path 请求由“不绘制”改为“绘制”。Path 统一使用 `PATH_INSPECTOR`、`PATH_INSPECTOR_KEY`、`PathInspectOptionsSchema` 与 `core/path` key；Node 统一使用 `core/node` 并默认开启全部显示选项，空间由输出片段指定，不提供旧选择策略开关或兼容分支。
 - 不改变持久化 Core IR。Source 原始参数可编辑性、箭头/装饰专用 Inspector、glyph 轮廓、领域布局 solver trace、跨 revision 稳定选中状态不由这些只读几何产物承诺。

@@ -2,9 +2,9 @@ import type { FC } from 'react';
 import { forwardRef, Fragment, memo } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { Node, Path, Scope, Step } from '../../../src';
+import { Draw, Node, Path, Scope, Step } from '../../../src';
 import type { PathProps } from '../../../src';
-import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hydration-handlers';
+import { collectHydrationHandlers } from '../../../src/container/hydration';
 
 /**
  * 水合：collectHydrationHandlers（与 InputScene 遍历同源，按 id 收 handler）
@@ -25,6 +25,13 @@ const TestPathSugar: FC<Pick<PathProps, 'id' | 'onClick'>> = props => (
 );
 
 describe('collectHydrationHandlers', () => {
+  it('Draw 只注册一次路径事件', () => {
+    const click = vi.fn();
+    const warn = vi.spyOn(console, 'warn');
+    expect(collectHydrationHandlers(<Draw id="edge" way={['a', 'b']} onClick={click} />)).toEqual({ edge: { click } });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('基本：<Node id onClick> 收成 { a: { click } }', () => {
     const click = vi.fn();
     const handlers = collectHydrationHandlers(<Node id="a" position={[0, 0]} onClick={click} />);

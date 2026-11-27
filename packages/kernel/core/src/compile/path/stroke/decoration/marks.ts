@@ -5,7 +5,7 @@ import type { GroupPrimitive, PaintValue, ScenePrimitive, Transform } from '../.
 import type { CanonicalPathMark } from '../../../../resolve';
 import {
   combineOpacity,
-  createCompositeContractError,
+  createContractViolationError,
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   safeThrownDetail,
@@ -44,7 +44,7 @@ export const emitMarkPrimitives = (
       round,
     });
     if ('resources' in output)
-      throw createCompositeContractError(`${owner.label} output: provider cannot declare resources.`);
+      throw createContractViolationError(`${owner.label} output: provider cannot declare resources.`);
     emitted = Array.from(output);
   } catch (cause) {
     if (isFatalProbeError(cause)) throw cause;

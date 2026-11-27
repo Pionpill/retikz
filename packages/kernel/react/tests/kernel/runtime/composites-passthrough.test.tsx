@@ -1,10 +1,11 @@
+// @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { Layout } from '../../../src/kernel';
+import { Layout } from '../../../src';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 /**
  * <Layout composites={...}> Tier 2 透传
@@ -32,15 +33,13 @@ const ir: IRScene = {
 
 describe('<Layout composites> Tier 2 透传', () => {
   it('注入 composites 后含 composite 的 IR 渲染出 rect', () => {
-    const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} ir={ir} extensions={{ composites: [labeledBox] }} />,
-    );
+    const svg = mountedMarkup(<Layout width={100} height={100} ir={ir} compile={{ composites: [labeledBox] }} />);
 
     expect(svg).toContain('<rect');
   });
 
   it('未注入对应 composite → 跳过该节点（不抛、不渲染 rect）', () => {
-    expect(() => renderToStaticMarkup(<Layout width={100} height={100} ir={ir} />)).not.toThrow();
-    expect(renderToStaticMarkup(<Layout width={100} height={100} ir={ir} />)).not.toContain('<rect');
+    expect(() => mountedMarkup(<Layout width={100} height={100} ir={ir} />)).not.toThrow();
+    expect(mountedMarkup(<Layout width={100} height={100} ir={ir} />)).not.toContain('<rect');
   });
 });

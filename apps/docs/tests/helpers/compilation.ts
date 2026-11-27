@@ -8,7 +8,7 @@ export const compileTestSnapshot = <const TComposite extends AnyCompositeDefinit
   options: CompileOptions<TComposite> = {},
   execution: ExecuteOptions = {},
 ): SceneCompilationSnapshot<TComposite> => {
-  const reconciler = new SceneReconciler(options, { ...execution, incremental: false });
+  const reconciler = new SceneReconciler(options, execution);
   try {
     return reconciler.mount(source).compilation;
   } finally {

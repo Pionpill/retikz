@@ -6,7 +6,7 @@ const renderTexPlayground = (values: TexPlaygroundPreviewValues, lowerTex?: TexL
   const content = `${delimiters}${values.source}${delimiters}`;
 
   return (
-    <Layout lowerTex={lowerTex}>
+    <Layout compile={{ lowerTex }}>
       <Node
         id="formula"
         position={[0, 0]}

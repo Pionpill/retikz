@@ -85,7 +85,7 @@ Core `ir-child` 的封闭计数点是共享 `compileChild()` dispatch 入口，�
 
 本 ADR 只锁定 full compile / full renderer commit 的工作量口径；增量、fallback、revision、reuse 和 patch 指标由后续 ADR 定义
 
-CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retained handle / resource 数量等确定性指标。内存硬门槛不直接使用 GC 后 heap 字节；dispose 后 live handle、listener、index 与 resource reference 必须回到 fixture 起始计数。Heap 只在 Node `--expose-gc` 或 browser runner 提供显式 GC 时作为非阻断报告。
+CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、session handle / resource 数量等确定性指标。内存硬门槛不直接使用 GC 后 heap 字节；dispose 后 live handle、listener、index 与 resource reference 必须回到 fixture 起始计数。Heap 只在 Node `--expose-gc` 或 browser runner 提供显式 GC 时作为非阻断报告。
 
 机器可读环境描述固定运行时、浏览器、viewport、DPR、动画、字体与 locale/timezone；wall-clock 只在 fingerprint 一致时比较，确定性工作量仍是主要门槛
 
@@ -119,7 +119,7 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 
 ## 长期边界
 
-- Diff、cache、增量编译、Scene Patch 或 retained renderer。
+- Diff、cache、增量编译、Scene Patch 或 renderer。
 - production telemetry、用户 analytics、远程上报或持久 trace store。
 - 在 IR / Scene 写入性能字段。
 - 为第三方实现承诺稳定的公共 profiling API。
@@ -128,4 +128,4 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 
 - deterministic 工作量预算是共享 CI 的硬证据；wall-clock 仍只在固定环境中比较。
 - trace 是 `0.x` 执行期扩展契约，不进入 IR / Scene，也不承诺 production telemetry 或持久 profiling 服务。
-- ADR-013 与 ADR-014 完成后仍需补齐增量 compile、Scene Patch 和 retained commit 的场景预算。
+- ADR-013 与 ADR-014 完成后仍需补齐增量 compile、Scene Patch 和 session commit 的场景预算。

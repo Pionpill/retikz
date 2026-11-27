@@ -8,19 +8,14 @@ import { collectLineChartDeclarations } from './declaration-collection';
 
 /**
  * Line Chart React 属性
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type LineChartProps<TNative = never> = TypedChartCommonProps<IRLineChart, TNative>;
+export type LineChartProps = TypedChartCommonProps<IRLineChart>;
 
 /** 组装 Line 声明并复用 Vanilla factory 的 React Chart 组件 */
-export const LineChart = createTypedChartComponent<
-  LineChartProps<unknown>,
-  IRLineChart,
-  LineChartInputEmbedProps<unknown>
->(
+export const LineChart = createTypedChartComponent<LineChartProps, IRLineChart, LineChartInputEmbedProps>(
   'LineChart',
   props =>
-    createTypedChartInput<LineChartProps<unknown>, IRLineChart, LineChartInputEmbedProps<unknown>>(
+    createTypedChartInput<LineChartProps, IRLineChart, LineChartInputEmbedProps>(
       props,
       collectLineChartDeclarations(props.children),
       input => lineChart(input),

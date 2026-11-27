@@ -39,7 +39,7 @@ describe('Layout 子默认位置', () => {
   it.each(layouts)('$name 测量与输出等价于显式局部原点', ({ wrap }) => {
     const render = (explicit: boolean) =>
       renderToStaticMarkup(
-        <Layout runtime={{ mode: 'static' }} idPrefix="default-position">
+        <Layout idPrefix="default-position">
           {wrap(
             explicit ? <Node position={[0, 0]} text="A" /> : <Node text="A" />,
             <Node text="B" position={[0, 0]} />,

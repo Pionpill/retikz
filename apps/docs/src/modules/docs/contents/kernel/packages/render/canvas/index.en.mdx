@@ -23,21 +23,21 @@ import { Layout, Node } from '@retikz/react';
 </Layout>;
 ```
 
-**Vanilla (browser)** — `mountCanvas` mounts the figure as a `<canvas>`; its view adds canvas-side hydration and coordinate mapping on top of what `mountSvg` returns:
+**Vanilla (browser)** — `mountSceneView` mounts the figure as a `<canvas>`; use the returned view to bind event handlers:
 
 ```ts
-import { mountCanvas } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
-const view = mountCanvas(container, ir);
-// view.root is the <canvas>; view.update(next) uses the selected static or retained processing; view.dispose() unmounts
+const view = mountSceneView(container, ir, { renderer: 'canvas' });
+// view.root is the <canvas>; view.replace(next) replaces the complete scene; view.dispose() unmounts
 ```
 
 The two entries have different input contracts:
 
-| Entry                 | Accepted input                           | Output     |
-| --------------------- | ---------------------------------------- | ---------- |
-| React `<Layout>`      | JSX `children`<br />or `IRScene`         | `<canvas>` |
-| Vanilla `mountCanvas` | `Scene` / `IRScene`<br />or `InputScene` | `<canvas>` |
+| Entry                    | Accepted input                   | Output     |
+| ------------------------ | -------------------------------- | ---------- |
+| React `<Layout>`         | JSX `children`<br />or `IRScene` | `<canvas>` |
+| Vanilla `mountSceneView` | `IRScene`                        | `<canvas>` |
 
 `devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), preserving enough bitmap resolution for high-DPI screens.
 
@@ -46,7 +46,7 @@ The two entries have different input contracts:
 A canvas has no DOM primitives, so locating one relies on **coordinate hit-testing**: the pointer's client pixels are mapped back into Scene coordinates, then geometry hit-testing yields a primitive `id`. That locating is wrapped inside `view.hydrate`, while the handler registry has the same shape as SVG:
 
 ```ts
-const view = mountCanvas(container, ir);
+const view = mountSceneView(container, ir, { renderer: 'canvas' });
 const handle = view.hydrate({
   handlers: { box: { click: event => toggle('box') } },
 });
@@ -57,7 +57,7 @@ The same `handlers` table works under SVG and Canvas; the locating implementatio
 
 <ComponentAlert
   title="Low-level drawing / hit-testing (for custom integrations)"
-  description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas top."
+  description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; for ordinary mounting, use the DOM API shown above."
 />
 
 ## Known limits
@@ -65,7 +65,7 @@ The same `handlers` table works under SVG and Canvas; the locating implementatio
 Canvas support depends on the 2D APIs and resource loaders supplied by the host. Low-level `drawScene` accepts `warnUnsupported` for diagnostics; without it, diagnostics go to `console.warn`.
 
 - If the host lacks `createConicGradient`, conic-gradient paint is skipped with a warning.
-- Image paint needs `getImage` to return a decoded image. React `<Layout renderer="canvas">` supplies a loader and repaints after loading. In v0.4, Vanilla `mountCanvas` does not expose `getImage`, so image paint is skipped with a warning; custom hosts can call `renderToCanvas` / `drawScene` with a loader and repaint when it becomes ready.
+- Image paint needs `getImage` to return a decoded image. React `<Layout renderer="canvas">` supplies a loader and repaints after loading. In v0.4, Vanilla `mountSceneView` does not expose `getImage`, so image paint is skipped with a warning; custom hosts can call `renderToCanvas` / `drawScene` with a loader and repaint when it becomes ready.
 - When calling `drawScene` directly, patterns and exact non-uniform gradient strokes depend on `createOffscreen`. Browser `renderToCanvas` supplies a default offscreen context; other hosts must inject one.
 - A missing or currently unsupported paint / clip resource is skipped with a warning.
 
@@ -82,7 +82,9 @@ import { compileToScene } from '@retikz/vanilla';
 
 import { renderSceneToImage } from '@retikz/render/canvas-node';
 
-const { scene } = compileToScene(ir);
+const {
+  compileResult: { scene },
+} = compileToScene(ir);
 const png = await renderSceneToImage(scene, {
   width: 960,
   height: 540,

@@ -1,9 +1,9 @@
 import type { ClipDefinition, ClipRegistry, IRClip, SceneClipPath } from '@retikz/core';
 import { jsonStructuralEquals } from '@retikz/foundation';
 
-/** 单次工作区中成功降解的输入快照与尚未发布的路径 */
+/** 单次工作区内的裁剪降解结果及其复用依据 */
 type ClipCacheEntry = {
-  /** 第二次出现后保存的解析输入快照 */
+  /** 第二次出现后借用的只读解析参数 */
   params?: IRClip;
   /** 成功生成的路径，首次出现时仅保留供下一次核对 */
   path: SceneClipPath;
@@ -31,7 +31,7 @@ export const createWorkspaceClipRegistry = (registry: ClipRegistry): ClipRegistr
       definitions = new Map();
       entries.set(clip.definition, definitions);
     }
-    // ⚡ 首次输入只保留路径引用；确认重复后才支付参数和路径内容快照成本
+    // ⚡ 首次只保留路径；确认重复后再记录路径内容
     if (!definitions.has(key)) {
       const path = registry.lower(clip);
       definitions.set(key, { path });
@@ -46,11 +46,10 @@ export const createWorkspaceClipRegistry = (registry: ClipRegistry): ClipRegistr
     ) {
       return cached.path;
     }
-    const params = structuredClone(clip.params);
     const lowered = registry.lower(clip);
     // 首次路径仍可能被调用方修改，只有与本次真实产物一致才沿用其资源身份
     const path = cached && jsonStructuralEquals(cached.path, lowered) ? cached.path : lowered;
-    const entry: ClipCacheEntry = { params, path, pathContent: JSON.stringify(path) };
+    const entry: ClipCacheEntry = { params: clip.params, path, pathContent: JSON.stringify(path) };
     definitions.set(key, entry);
     paths.set(path, entry);
     return path;

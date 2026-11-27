@@ -49,10 +49,10 @@ it('同一布局结果隔离查询游标并保持快照，重新布局后观察�
         [30, 20],
       ],
     });
-    child.position = [90, 80];
+    const movedChild: IRNode = { ...child, position: [90, 80] };
     expect(context.resolvePathTargets(compiled, { source: { id: 'n' }, points: [] }).source).toEqual([30, 20]);
     expect(
-      context.resolvePathTargets(resolvedResultOf(context, child), { source: { id: 'n' }, points: [] }).source,
+      context.resolvePathTargets(resolvedResultOf(context, movedChild), { source: { id: 'n' }, points: [] }).source,
     ).toEqual([90, 80]);
     expect(first).toEqual({ source: [30, 20], points: [[35, 20]] });
   });

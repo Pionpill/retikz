@@ -1,3 +1,4 @@
+import { embed } from '@retikz/vanilla';
 import type { InputEmbed } from '@retikz/vanilla';
 
 import type { InputCircle } from './circle';
@@ -31,52 +32,52 @@ export * from './sector';
 /** Standard 形状家族的 Vanilla 作者入口 */
 export const shape = Object.freeze({
   /** 创建 Circle，显式身份同时用于 embed 与最终路径 */
-  circle: (input: InputCircle): InputEmbed<InputCircle> => ({
-    type: 'embed',
-    kind: circleInputEmbedAdapter.kind,
-    ...(input.id === undefined ? {} : { id: input.id }),
-    props: input,
-  }),
+  circle: (input: InputCircle): InputEmbed<InputCircle> =>
+    embed({
+      adapter: circleInputEmbedAdapter,
+      ...(input.id === undefined ? {} : { id: input.id }),
+      props: input,
+    }),
   /** 创建 Ellipse，显式身份同时用于 embed 与最终路径 */
-  ellipse: (input: InputEllipse): InputEmbed<InputEllipse> => ({
-    type: 'embed',
-    kind: ellipseInputEmbedAdapter.kind,
-    ...(input.id === undefined ? {} : { id: input.id }),
-    props: input,
-  }),
+  ellipse: (input: InputEllipse): InputEmbed<InputEllipse> =>
+    embed({
+      adapter: ellipseInputEmbedAdapter,
+      ...(input.id === undefined ? {} : { id: input.id }),
+      props: input,
+    }),
   /** 创建 Rectangle，显式身份同时用于 embed 与最终路径 */
-  rectangle: (input: InputRectangle): InputEmbed<InputRectangle> => ({
-    type: 'embed',
-    kind: rectangleInputEmbedAdapter.kind,
-    ...(input.id === undefined ? {} : { id: input.id }),
-    props: input,
-  }),
+  rectangle: (input: InputRectangle): InputEmbed<InputRectangle> =>
+    embed({
+      adapter: rectangleInputEmbedAdapter,
+      ...(input.id === undefined ? {} : { id: input.id }),
+      props: input,
+    }),
   /** 创建 Polygon，显式身份同时用于 embed 与最终路径 */
-  polygon: (input: InputPolygon): InputEmbed<InputPolygon> => ({
-    type: 'embed',
-    kind: polygonInputEmbedAdapter.kind,
-    ...(input.id === undefined ? {} : { id: input.id }),
-    props: input,
-  }),
+  polygon: (input: InputPolygon): InputEmbed<InputPolygon> =>
+    embed({
+      adapter: polygonInputEmbedAdapter,
+      ...(input.id === undefined ? {} : { id: input.id }),
+      props: input,
+    }),
   /** 创建 Star，显式身份同时用于 embed 与最终路径 */
-  star: (input: InputStar): InputEmbed<InputStar> => ({
-    type: 'embed',
-    kind: starInputEmbedAdapter.kind,
-    ...(input.id === undefined ? {} : { id: input.id }),
-    props: input,
-  }),
+  star: (input: InputStar): InputEmbed<InputStar> =>
+    embed({
+      adapter: starInputEmbedAdapter,
+      ...(input.id === undefined ? {} : { id: input.id }),
+      props: input,
+    }),
   /** 创建 Arc，显式身份同时用于 embed 与最终路径 */
-  arc: (input: InputArc): InputEmbed<InputArc> => ({
-    type: 'embed',
-    kind: arcInputEmbedAdapter.kind,
-    ...(input.id === undefined ? {} : { id: input.id }),
-    props: input,
-  }),
+  arc: (input: InputArc): InputEmbed<InputArc> =>
+    embed({
+      adapter: arcInputEmbedAdapter,
+      ...(input.id === undefined ? {} : { id: input.id }),
+      props: input,
+    }),
   /** 创建 Sector，显式身份同时用于 embed 与最终路径 */
-  sector: (input: InputSector): InputEmbed<InputSector> => ({
-    type: 'embed',
-    kind: sectorInputEmbedAdapter.kind,
-    ...(input.id === undefined ? {} : { id: input.id }),
-    props: input,
-  }),
+  sector: (input: InputSector): InputEmbed<InputSector> =>
+    embed({
+      adapter: sectorInputEmbedAdapter,
+      ...(input.id === undefined ? {} : { id: input.id }),
+      props: input,
+    }),
 });

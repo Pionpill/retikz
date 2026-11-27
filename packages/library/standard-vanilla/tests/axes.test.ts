@@ -3,7 +3,7 @@ import { axesDefinition, axesProvider, createAxes } from '@retikz/standard/prese
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { axes, axesInputEmbedAdapter, grid, gridInputEmbedAdapter } from '../src/presentation';
+import { axes, axesInputEmbedAdapter, grid } from '../src/presentation';
 
 const input: InputAxes = {
   origin: { position: [100, 80], label: '0' },
@@ -25,9 +25,8 @@ describe('轴（）', () => {
     const embed = axes({ ...input, id: 'authored-axes', meta: { source: 'vanilla' } });
     const contribution = axesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
-      kind: embed.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      kind: embed.adapter.kind,
+      identityPath: ['runtime'],
     });
 
     expect(contribution.node).toMatchObject({ id: 'authored-axes', meta: { source: 'vanilla' } });
@@ -37,12 +36,11 @@ describe('轴（）', () => {
     const embed = axes(input);
     const contribution = axesInputEmbedAdapter.lower(embed.props, {
       id: 'runtime',
-      kind: embed.kind,
-      layerId: 'main',
-      identityPath: ['main', 'runtime'],
+      kind: embed.adapter.kind,
+      identityPath: ['runtime'],
     });
 
-    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes' });
+    expect(embed).toMatchObject({ type: 'embed', adapter: { kind: 'standard.axes' } });
     expect(contribution.node).toEqual(createAxes(input));
     expect(contribution.providerDependencies).toEqual({ roots: [axesProvider.key], providers: [axesProvider] });
     expect(axesProvider.makeDefinition([])).toBe(axesDefinition);
@@ -53,7 +51,6 @@ describe('轴（）', () => {
       scene({
         children: [grid({ bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }), axes(input)],
       }),
-      { adapters: [gridInputEmbedAdapter, axesInputEmbedAdapter] },
     );
 
     expect(result.contributions).toHaveLength(2);

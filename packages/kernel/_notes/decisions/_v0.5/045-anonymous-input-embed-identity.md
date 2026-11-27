@@ -11,7 +11,7 @@ keywords: 'Vanilla、InputEmbed、identity、anonymous、normalize、React'
 
 ## 背景与目标
 
-`InputEmbed` 需要身份以支持同次归一化、嵌套 adapter 和 retained 更新，但领域 Source 的 `id` 表达可持久化、可引用的语义身份。要求作者为两者重复提供相同字符串，会把运行时实现细节暴露为领域 API；反过来，为匿名图元生成 Source id 又会把只需绘制的内容发布到 Core namespace。
+`InputEmbed` 需要身份以支持同次归一化、嵌套 adapter 和 session 更新，但领域 Source 的 `id` 表达可持久化、可引用的语义身份。要求作者为两者重复提供相同字符串，会把运行时实现细节暴露为领域 API；反过来，为匿名图元生成 Source id 又会把只需绘制的内容发布到 Core namespace。
 
 目标是让缺省的 `InputEmbed` 身份由 Vanilla 在归一化中稳定确定，同时不改变任何 Source IR、NodeTarget 或 renderer 语义。
 
@@ -19,7 +19,7 @@ keywords: 'Vanilla、InputEmbed、identity、anonymous、normalize、React'
 
 `InputEmbed.id` 变为可选的 authoring 字段。作者显式提供时，该值仍是 embed 的稳定运行时身份；缺省时，`normalizeScene` 按当前 InputScene 的声明路径与 embed kind 确定一个仅本次 authoring / runtime 链路可见的匿名身份。该身份不得随机生成，也不得写入 Source、Canonical、Scene、artifact 或 Core namespace。
 
-领域 adapter 可以将领域 Source 的显式 `id` 作为 `InputEmbed.id`，从而让一个用户声明同时满足领域引用与 retained 更新定位。没有领域 `id` 的内容仍可作为匿名 embed 正常下沉和绘制；它不因此获得可引用 NodeTarget。
+领域 adapter 可以将领域 Source 的显式 `id` 作为 `InputEmbed.id`，从而让一个用户声明同时满足领域引用与 session 更新定位。没有领域 `id` 的内容仍可作为匿名 embed 正常下沉和绘制；它不因此获得可引用 NodeTarget。
 
 React JSX 的显式 `id` 与匿名收集规则与此相同：JSX / Vanilla 的相同领域 authoring 仍产生同一 Source IR，匿名运行时身份不属于其对等比较对象。
 

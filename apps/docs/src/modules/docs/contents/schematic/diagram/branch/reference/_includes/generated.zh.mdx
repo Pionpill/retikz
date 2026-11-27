@@ -6,7 +6,7 @@
 
 ## 组件声明
 
-#### <ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={60}>BranchDiagram</ApiSourceLink> / <ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={104}>BranchDiagramProps</ApiSourceLink>
+#### <ApiSourceLink label={"BranchDiagram"} path={"packages/schematic/diagram-react/src/branch/BranchDiagram.tsx"} startLine={60}>BranchDiagram</ApiSourceLink> / <ApiSourceLink label={"BranchDiagramProps"} path={"packages/schematic/diagram-react/src/branch/authoring.ts"} startLine={102}>BranchDiagramProps</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -113,11 +113,11 @@ export type BranchProps = InputBranch;
 
 ```ts
 export type BranchDiagramLayoutHostProps = Pick<
-  LayoutProps & LayoutExtensions,
+  LayoutProps & CompileOptions,
   | 'authoring'
-  | 'compileDriver'
   | 'handlers'
-  | 'runtime'
+  | 'reconciler'
+  | 'onDiagnostic'
   | 'width'
   | 'height'
   | 'viewBox'
@@ -139,7 +139,6 @@ export type BranchDiagramLayoutHostProps = Pick<
   | 'composites'
   | 'themeDefinitions'
   | 'lowerTex'
-  | 'artifacts'
   | 'onArtifacts'
   | 'onCompileResult'
 >;
@@ -479,34 +478,8 @@ export type InputBranchNode = IRBranchNode;
 #### <ApiSourceLink label={"branchDiagramInputEmbedAdapter"} path={"packages/schematic/diagram-vanilla/src/branch/branch-diagram.ts"} startLine={42}>branchDiagramInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const branchDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<BranchDiagramInputEmbedProps>;
+export declare const branchDiagramInputEmbedAdapter: InputEmbedAdapter<BranchDiagramInputEmbedProps>;
 ```
-
-#### <ApiSourceLink label={"createBranchDiagramVanillaAdapters"} path={"packages/schematic/diagram-vanilla/src/branch/adapters.ts"} startLine={6}>createBranchDiagramVanillaAdapters</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<ApiTable variant="parameters">
-
-| 类别   | 名称 | 类型 / 签名                                    | 说明 |
-| ------ | ---- | ---------------------------------------------- | ---- |
-| 返回值 | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | —    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export declare const createBranchDiagramVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
-```
-
-</DocTab>
-
-</DocTabs>
 
 ## 扩展定义与注册
 

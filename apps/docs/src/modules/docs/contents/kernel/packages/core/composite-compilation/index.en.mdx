@@ -1,5 +1,5 @@
 ---
-title: Composite Compilation
+title: Compilation / Composite
 description: Understand domain definitions through child generation, layout proposals, isolated probes and replay within ordinary Core compilation
 ---
 
@@ -114,7 +114,9 @@ The fixed path has allocationBounds.width 100. An exact 60 proposal can return a
 
 `measureChild(child, proposal, axis)` queries only the requested size contribution and returns no replay token. Context evaluation distinguishes layout from an axis contribution request. A Composite that can compute that contribution directly may avoid generating a full subtree for measurement.
 
-`layoutChild(child, proposal)` performs isolated complete layout and returns resolved / failed. Success carries a replayable result; a failure handle can be discarded with an alternative or raised. Fatal contract and execution-invariant errors still propagate directly; not every error is an ordinary failed candidate.
+`layoutChild(child, proposal)` performs isolated complete layout and returns resolved / failed. Success carries a replayable result; a failure handle can be discarded with an alternative or raised. Fatal contract and execution-invariant errors still propagate directly; not every error is an ordinary failed candidate. Use `isContractViolationError(cause)` to recognize errors created by `createContractViolationError`. This contract also applies to extensions such as shapes and clips, not just composites.
+
+The compiler borrows ordinary IR children without copying or freezing them. Once you pass a child to measurement or layout, or return it as output, keep it and its members stable until compilation finishes, including replay. Pass a new child for a different layout.
 
 This definition lays out a real node and translates the selected result by 20. Definitions, fonts, inheritance and references still use ordinary compilation rules.
 
@@ -149,7 +151,7 @@ Probes use isolated name writes, resources, primitives and diagnostics. A candid
 
 `replay` turns a successful result into a callback-owned output child. Tokens cannot be serialized, forged, retained across callbacks or placed twice. They are not IR caches. Output is preflighted before committing selected resources, names, primitives and artifacts, so duplicate handles are detected before partial publication.
 
-Ordinary children continue through compilation; replay children consume saved transactions. A replay wrapper accepts lowered numerical transforms and clipping. Use `createScope(props, children)` for full authored Scope semantics and ordinary Scope scheduling.
+Ordinary children continue through compilation; replay children consume saved transactions. A replay wrapper accepts lowered numerical transforms and clipping. Use `createScope(props, children)` for full authored Scope semantics and ordinary Scope scheduling. It borrows the properties and ordered child list without copying or freezing them. Keep both and their members stable until compilation finishes.
 
 ### Queries, Theme and Runtime Input
 

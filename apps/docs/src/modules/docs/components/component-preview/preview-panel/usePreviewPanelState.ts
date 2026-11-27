@@ -1,7 +1,8 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import type { MouseEvent as ReactMouseEvent, RefObject, TouchEvent as ReactTouchEvent } from 'react';
 import { useRef, useState } from 'react';
 
-import type { PreviewControlRuntime, PreviewControlState, RendererMode, SizeKey, Transform } from '../types';
+import type { PreviewControlRuntime, PreviewControlState, SizeKey, Transform } from '../types';
 import { usePanZoom } from './usePanZoom';
 import { usePreviewControlRuntime } from './usePreviewControlRuntime';
 
@@ -10,9 +11,9 @@ export type UsePreviewPanelStateOptions = {
   /** 由 Card 宿主持有并在 Card/Dialog 间共享的业务控件状态 */
   controlState: PreviewControlState;
   /** 宿主尚未局部切换时使用的渲染模式。 */
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   /** 当前内容固定使用的渲染模式；缺省时允许局部切换。 */
-  rendererModeOverride?: RendererMode;
+  rendererModeOverride?: RenderMode;
   /** 宿主尚未局部调整时使用的尺寸。 */
   size: SizeKey;
   /** 宿主尚未局部切换时使用的拖拽状态。 */
@@ -28,11 +29,11 @@ export type UsePreviewPanelStateOptions = {
 /** 单个预览面板拥有的渲染、变换与控件运行时状态。 */
 export type PreviewPanelState = {
   /** 当前内容实际使用的渲染模式。 */
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   /** 当前内容是否锁定渲染模式。 */
   rendererModeFixed: boolean;
   /** 设置当前面板的局部渲染模式。 */
-  setRendererMode: (mode: RendererMode) => void;
+  setRendererMode: (mode: RenderMode) => void;
   /** 在 SVG 与 Canvas 渲染模式之间切换。 */
   toggleRendererMode: () => void;
   /** 当前预览尺寸。 */
@@ -82,7 +83,7 @@ export type PreviewPanelState = {
 /** 为单个预览面板组合独立的渲染、变换与控件运行时。 */
 export const usePreviewPanelState = (options: UsePreviewPanelStateOptions): PreviewPanelState => {
   const { rendererMode: defaultRendererMode, size: defaultSize, dragEnabled: defaultDragEnabled, expanded } = options;
-  const [localRendererMode, setLocalRendererMode] = useState<RendererMode>();
+  const [localRendererMode, setLocalRendererMode] = useState<RenderMode>();
   const [localSize, setLocalSize] = useState<SizeKey>();
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean>();
   const [toolbarPinned, setToolbarPinned] = useState(options.pinned ?? false);

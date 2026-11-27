@@ -1,4 +1,4 @@
-import { BoxSpacingSchema, ChildSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
+import { BoxSpacingValueSchema, ChildSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
@@ -66,10 +66,6 @@ export const LayoutSizeSchema = strictObject({
   .default({ x: { kind: LayoutAxisSizeKind.Content }, y: { kind: LayoutAxisSizeKind.Content } })
   .describe('Physical x and y allocation size policies.');
 
-const LayoutSpacingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).describe(
-  'Uniform or side-specific non-negative box spacing.',
-);
-
 /** 校验视觉溢出保持可见或裁切到容器分配区域的策略 */
 export const LayoutOverflowSchema = zodEnum(LayoutOverflow).describe(
   'Whether visual overflow remains visible or is clipped to the container allocation.',
@@ -78,7 +74,7 @@ export const LayoutOverflowSchema = zodEnum(LayoutOverflow).describe(
 /** 校验容器分配尺寸、内边距与视觉溢出策略 */
 export const LayoutContainerBoxSchema = strictObject({
   size: LayoutSizeSchema.describe('Container allocation size including padding.'),
-  padding: LayoutSpacingSchema.default(0).describe('Insets from allocation box to content box.'),
+  padding: BoxSpacingValueSchema.default(0).describe('Insets from allocation box to content box.'),
   overflow: LayoutOverflowSchema.default(LayoutOverflow.Visible).describe('Container visual overflow policy.'),
 }).describe('Shared Box contract for Layout containers.');
 
@@ -105,7 +101,7 @@ export const LayoutItemBaseSchema = strictObject({
   kind: zodEnum(LayoutItemKind).describe('Discriminator selecting the owning Layout container.'),
   key: NonBlankStringSchema.optional().describe('Optional container-local stable authored item identity.'),
   child: ChildSchema.describe('JSON-safe Core child laid out by the container.'),
-  margin: LayoutSpacingSchema.default(0).describe('Item margin outside the parent allocation slot.'),
+  margin: BoxSpacingValueSchema.default(0).describe('Item margin outside the parent allocation slot.'),
 }).describe('Shared JSON-safe child item contract for Layouts.');
 
 const LayoutArtifactAxisOverflowSchema = strictObject({

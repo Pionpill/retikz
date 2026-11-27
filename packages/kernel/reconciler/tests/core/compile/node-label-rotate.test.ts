@@ -90,7 +90,7 @@ describe('Node 标签旋转', () => {
         text: 'A',
         label: {
           text: 'L',
-          position: { boundary: 'top', fraction: 0.25 },
+          position: { side: 'top', fraction: 0.25 },
           rotate: 'radial',
         },
       },

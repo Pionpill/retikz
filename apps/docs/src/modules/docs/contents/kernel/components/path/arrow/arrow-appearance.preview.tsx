@@ -38,7 +38,7 @@ export const ArrowAppearancePreview = (values: ArrowAppearancePreviewValues) => 
   return (
     <Layout
       viewBox={{ x: -40, y: -100, width: 440, height: 200 }}
-      extensions={{ arrows: [diamondArrowDefinition, openDiamondArrowDefinition] }}
+      compile={{ arrows: [diamondArrowDefinition, openDiamondArrowDefinition] }}
     >
       <Node id="A" position={[40, 0]} style={{ stroke: 'gray', dashed: true }}>
         a

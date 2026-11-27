@@ -1,9 +1,9 @@
 import { DrawWay } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { Path } from '../../../src/kernel';
-import { Step } from '../../../src/kernel';
-import { Draw } from '../../../src/sugar';
+import { Path } from '../../../src';
+import { Step } from '../../../src';
+import { Draw } from '../../../src/components';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
 /**

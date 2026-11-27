@@ -1,11 +1,10 @@
 import type { Transform } from '../../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../../../schemas';
 import { projectLayoutWithTransform, evaluateAnchorReference } from '../../boundary';
 import type { CompiledBoundaryGeometry } from '../../boundary';
 import { BuiltinCompileWarningCode, applyTransformChain, composeScopeTransform } from '../../shared';
 import type { InputScopeCompile, ScopeCompileContext, ScopePlacementPreparation } from '../types';
-import { evaluateScopePositionTarget } from './position';
+import { assertFiniteScopePoint, evaluateScopePositionTarget } from './position';
 import { lowerScopeTransforms } from './transform';
 
 /** 按 transform 失败来源选择 warning code */
@@ -19,13 +18,6 @@ const getTransformWarningCode = (failed: IRTransform | undefined): BuiltinCompil
       return BuiltinCompileWarningCode.PolarOriginUnresolved;
     default:
       return BuiltinCompileWarningCode.UnresolvedNodeReference;
-  }
-};
-
-/** 拒绝非 finite 的 Scope position 中间结果 */
-const assertFiniteScopePoint = (point: IRPosition, label: string): void => {
-  if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
   }
 };
 

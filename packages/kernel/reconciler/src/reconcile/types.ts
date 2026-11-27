@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition } from '@retikz/core';
 import type { PerformanceTraceSink } from '@retikz/foundation';
 
 import type { ExecuteOptions, SceneCompilationSnapshot } from '../compile';
-import type { ReconcilerUpdateStrategy } from './constants';
+import type { ReconcilerMode, ReconcilerUpdateStrategy } from './constants';
 
 /** 同一会话发布的完整编译结果 */
 export type ReconcilerResult<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> = Readonly<{
@@ -46,8 +46,11 @@ type SceneReconcilerBaseOptions<TComposite extends AnyCompositeDefinition> = Exe
 export type FullSceneReconcilerOptions<TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> =
   SceneReconcilerBaseOptions<TComposite> &
     Readonly<{
-      /** 关闭用于后续更新的 Weave 阶段缓存 */
-      incremental: false;
+      /**
+       * 不保留 Weave 阶段缓存
+       * @default ReconcilerMode.Full
+       */
+      mode?: typeof ReconcilerMode.Full;
       /** 完整编译模式不接受批次更新策略 */
       updateStrategy?: never;
     }>;
@@ -58,9 +61,8 @@ export type IncrementalSceneReconcilerOptions<TComposite extends AnyCompositeDef
     Readonly<{
       /**
        * 保留用于后续更新的 Weave 阶段缓存，不表示当前调用只执行局部计算
-       * @default true
        */
-      incremental?: true;
+      mode: typeof ReconcilerMode.Incremental;
       /**
        * 增量会话的批次计算策略，完整输入替换始终完整编译
        * @default ReconcilerUpdateStrategy.Auto

@@ -21,14 +21,7 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   { owner: 'graph-react', symbols: ['Entity', 'EntityProps'] },
   {
     owner: 'graph-vanilla',
-    symbols: [
-      'entity',
-      'InputEntity',
-      'EntityInputEmbedProps',
-      'entityInputEmbedAdapter',
-      'normalizeEntity',
-      'createGraphVanillaAdapters',
-    ],
+    symbols: ['entity', 'InputEntity', 'EntityInputEmbedProps', 'entityInputEmbedAdapter', 'normalizeEntity'],
   },
   {
     owner: 'graph',

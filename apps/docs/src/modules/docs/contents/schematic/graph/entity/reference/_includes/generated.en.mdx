@@ -140,34 +140,8 @@ export type InputEntity = EntityCreateOptions &
 #### <ApiSourceLink label={"entityInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={18}>entityInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const entityInputEmbedAdapter: SynchronousInputEmbedAdapter<EntityInputEmbedProps>;
+export declare const entityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbedProps>;
 ```
-
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable variant="parameters">
-
-| Category | Name | Type / signature                               | Description                                                                         |
-| -------- | ---- | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Returns  | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | A new adapter array containing Graph, Group, the Block family, Entity, and Relation |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
-```
-
-</DocTab>
-
-</DocTabs>
 
 #### <ApiSourceLink label={"createEntity"} path={"packages/schematic/graph/src/contract/authoring/entity.ts"} startLine={14}>createEntity</ApiSourceLink> / <ApiSourceLink label={"EntityCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/entity.ts"} startLine={7}>EntityCreateOptions</ApiSourceLink>
 

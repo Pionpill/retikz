@@ -54,15 +54,12 @@ export const lowerStandalonePlot = (
     },
   });
   (() => {
-    const reconciler = new SceneReconciler(
-      {
-        ...options.environment.compile,
-        // 独立 Source 使用显式 preparedData，不能复用宿主 Source 的实例输入绑定
-        compositeInputs: undefined,
-        composites: [definition],
-      },
-      { incremental: false },
-    );
+    const reconciler = new SceneReconciler({
+      ...options.environment.compile,
+      // 独立 Source 使用显式 preparedData，不能复用宿主 Source 的实例输入绑定
+      compositeInputs: undefined,
+      composites: [definition],
+    });
     try {
       return reconciler.mount({
         version: 1,

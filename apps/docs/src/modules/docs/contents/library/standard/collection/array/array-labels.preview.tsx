@@ -5,7 +5,7 @@ import { Array } from '@retikz/standard-react/collection';
 export type ArrayLabelsPreviewValues = {
   text: string;
   positionMode: 'direction' | 'boundary';
-  boundary: 'top' | 'right' | 'bottom' | 'left';
+  side: 'top' | 'right' | 'bottom' | 'left';
   fraction: number;
   direction: 'top' | 'right' | 'bottom' | 'left';
   align: 'start' | 'middle' | 'end';
@@ -24,9 +24,7 @@ export const renderArrayLabelsPreview = (values: ArrayLabelsPreviewValues) => (
       label={{
         text: values.text,
         position:
-          values.positionMode === 'boundary'
-            ? { boundary: values.boundary, fraction: values.fraction }
-            : values.direction,
+          values.positionMode === 'boundary' ? { side: values.side, fraction: values.fraction } : values.direction,
         align: values.align,
         distance: values.distance,
         rotate: values.rotate,

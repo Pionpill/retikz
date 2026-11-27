@@ -1,7 +1,7 @@
-import type { DataInputBindings, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { RequireExactlyOne } from '@retikz/foundation';
 import type { PlotCompileEnvironment } from '@retikz/plot';
-import type { IRPlot, PlotsLoweringOptions, PlotLineageRun } from '@retikz/plot';
+import type { IRPlot, PreparedPlotData, PlotsLoweringOptions, PlotLineageRun } from '@retikz/plot';
 import { lowerPlotWithLineage } from '@retikz/plot';
 import type { LabelResolverByField } from '@retikz/plot-vanilla';
 import { normalizePlotIR, resolveLabelOf } from '@retikz/plot-vanilla';
@@ -12,9 +12,8 @@ import type { PlotProps } from './Plot';
 
 /**
  * `Plot` props 的完整 authoring 结果
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type PlotAuthoringResolution<TSource = never> = Readonly<{
+export type PlotAuthoringResolution = Readonly<{
   /** 完整 Plot Source IR */
   spec: IRPlot;
 
@@ -24,8 +23,8 @@ export type PlotAuthoringResolution<TSource = never> = Readonly<{
   RequireExactlyOne<{
     /** 传给 Plot 下沉阶段的外部行数据集 */
     readonly datasets: ExternalDatasets;
-    /** 传给数据执行阶段的运行时源绑定 */
-    readonly dataBindings: DataInputBindings<TSource>;
+    /** 与 spec 匹配的就绪数据 */
+    readonly preparedData: PreparedPlotData;
   }>;
 
 /** `resolvePlotAuthoring` 的可选嵌入与默认数据引用配置 */
@@ -54,8 +53,8 @@ const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
   return next;
 };
 
-const lowerPlotOptionsOf = <TSource>(
-  props: PlotProps<TSource>,
+const lowerPlotOptionsOf = (
+  props: PlotProps,
   effectiveDatasetFieldMaps: PlotsLoweringOptions['datasetFieldMaps'],
   collectedResolveLabel: LabelResolverByField | undefined,
 ): PlotsLoweringOptions => {
@@ -143,12 +142,11 @@ const applyPlotPropsToSpec = (
 
 /**
  * 解析 `<Plot>` props 为下沉运行时输入
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export const resolvePlotAuthoring = <TSource = never>(
-  props: PlotProps<TSource>,
+export const resolvePlotAuthoring = (
+  props: PlotProps,
   options: PlotAuthoringResolveOptions = {},
-): PlotAuthoringResolution<TSource> => {
+): PlotAuthoringResolution => {
   const dataRef = !props.spec
     ? (props.dataRef ??
       options.defaultDataReference ??
@@ -192,29 +190,31 @@ export const resolvePlotAuthoring = <TSource = never>(
 
   return {
     spec,
-    ...(props.dataBindings === undefined ? { datasets } : { dataBindings: props.dataBindings }),
+    ...(props.preparedData === undefined ? { datasets } : { preparedData: props.preparedData }),
     lowerOptions: lowerPlotOptionsOf(props, effectiveDatasetFieldMaps, collectedResolveLabel),
   };
 };
 
 /**
  * 解析一组 `<Plot>` props 对应的 runtime-only 图元链路
- * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export const resolvePlotLineage = <TSource = never>(
-  props: PlotProps<TSource>,
+export const resolvePlotLineage = (
+  props: PlotProps,
   options: { embedded?: boolean; environment: PlotCompileEnvironment },
 ): PlotLineageRun | undefined => {
   if (props.lineage === false) return undefined;
 
-  const { spec, datasets, lowerOptions } = resolvePlotAuthoring(props, options);
-  if (datasets === undefined || props.dataTransformExecutor !== undefined)
-    throw new RetikzPlotReactError('Plot async lineage is delivered from the committed processing result');
+  const { spec, datasets, preparedData, lowerOptions } = resolvePlotAuthoring(props, options);
 
-  return lowerPlotWithLineage(spec, datasets, {
-    ...lowerOptions,
-    environment: options.environment,
-    lineage: props.lineage ?? {},
-    hostLineageMetadata: props.hostLineageMetadata,
-  }).lineage;
+  return lowerPlotWithLineage(
+    spec,
+    datasets ?? {},
+    {
+      ...lowerOptions,
+      environment: options.environment,
+      lineage: props.lineage ?? {},
+      hostLineageMetadata: props.hostLineageMetadata,
+    },
+    preparedData,
+  ).lineage;
 };

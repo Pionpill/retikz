@@ -195,6 +195,51 @@
       }
     },
     {
+      "files": [
+        "packages/kernel/react/src/components/{Coordinate,Scope}.tsx",
+        "packages/kernel/react/src/components/node/{Node,Text}.tsx",
+        "packages/kernel/react/src/components/path/{Path,Step}.tsx"
+      ],
+      "rules": {
+        "react/only-export-components": [
+          "error",
+          {
+            "allowExportNames": [
+              "convertCoordinateProps",
+              "convertNodeProps",
+              "convertPathProps",
+              "readPathChildren",
+              "convertScopeProps",
+              "convertStepProps",
+              "convertTextProps"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/kernel/react/src/container/context/use-*.tsx"],
+      "rules": {
+        "react/only-export-components": [
+          "error",
+          {
+            "allowExportNames": [
+              "AnimationModeContext",
+              "RendererModeContext",
+              "ThemeContext",
+              "useAnimationMode",
+              "useDefaultAnimationEnabled",
+              "useRendererMode",
+              "useTheme",
+              "useThemeDefinitions",
+              "mergeThemeDefinitions",
+              "mergeThemeOverlays"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/docs/src/modules/docs/contents/**/*.tsx"],
       "rules": {
         "react/only-export-components": [

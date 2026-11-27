@@ -44,13 +44,9 @@ describe('Overlay 功能预览', () => {
     const controls = getPreviewControlFields(definition);
     const canonical = demo.previewSource.buildViews!({ lang: 'zh' });
 
-    expect(canonical.vanilla?.files[0].code).not.toContain('createLayoutInspectionVanillaDriver');
-    expect(canonical.ir?.files[0].code).not.toContain('inspector');
-
     for (const view of [canonical.vanilla, canonical.ir]) {
       const svg = renderToStaticMarkup(view!.render!('svg'));
 
-      expect(svg).not.toContain('data-retikz-readonly-layer');
       expect(svg).toContain('<text');
     }
 
@@ -71,7 +67,6 @@ describe('Overlay 功能预览', () => {
         });
         const svg = renderToStaticMarkup(views.vanilla!.render!('svg'));
 
-        expect(svg).not.toContain('data-retikz-readonly-layer');
         expect(svg).not.toContain('NaN');
       }
     }

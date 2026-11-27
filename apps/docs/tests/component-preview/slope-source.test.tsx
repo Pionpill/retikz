@@ -16,7 +16,7 @@ describe('Slope 文档源码预览', () => {
     });
     const vanilla = buildVanillaPreview(preview);
     expect(vanilla.code).toContain('@retikz/chart-vanilla/line');
-    expect(vanilla.code).toContain('slopeChartInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('slopeChartInputEmbedAdapter');
     expect(vanilla.svg).toContain('<svg');
   });
 

@@ -44,15 +44,14 @@ const resolveGradientStops = (stops: ReadonlyArray<GradientStop>): Array<Gradien
 const channelToHex = (n: number): string => Math.round(n).toString(16).padStart(2, '0');
 
 const colorAt = (stops: ReadonlyArray<GradientStop>, t: number): { color: string; opacity?: number } => {
-  const normalized = resolveGradientStops(stops);
   const offset = clamp01(t);
-  let left = normalized[0];
-  let right = normalized[normalized.length - 1];
+  let left = stops[0];
+  let right = stops[stops.length - 1];
 
-  for (let i = 0; i < normalized.length - 1; i += 1) {
-    if (offset >= normalized[i].offset && offset <= normalized[i + 1].offset) {
-      left = normalized[i];
-      right = normalized[i + 1];
+  for (let i = 0; i < stops.length - 1; i += 1) {
+    if (offset >= stops[i].offset && offset <= stops[i + 1].offset) {
+      left = stops[i];
+      right = stops[i + 1];
       break;
     }
   }
@@ -82,6 +81,7 @@ const buildConicGradient = (spec: Extract<IRPaint, { kind: 'conicGradient' }>, i
   const [cx, cy] = spec.center ?? [0.5, 0.5];
   const radius =
     Math.max(Math.hypot(cx, cy), Math.hypot(1 - cx, cy), Math.hypot(cx, 1 - cy), Math.hypot(1 - cx, 1 - cy)) * 1.02;
+  const stops = resolveGradientStops(spec.stops);
   const startAngle = spec.angle ?? 0;
   const children: Array<SvgNode> = [];
 
@@ -90,7 +90,7 @@ const buildConicGradient = (spec: Extract<IRPaint, { kind: 'conicGradient' }>, i
     const t1 = (i + 1) / CONIC_SEGMENTS;
     const [x0, y0] = conicPoint(cx, cy, radius, startAngle + t0 * 360 - CONIC_SEGMENT_OVERLAP_DEG);
     const [x1, y1] = conicPoint(cx, cy, radius, startAngle + t1 * 360 + CONIC_SEGMENT_OVERLAP_DEG);
-    const sample = colorAt(spec.stops, (t0 + t1) / 2);
+    const sample = colorAt(stops, (t0 + t1) / 2);
     children.push({
       tag: 'path',
       attrs: compact({
@@ -135,7 +135,7 @@ const buildPatternTile = (tile: CompiledPatternTile, id: string, context: SvgPri
 
 /**
  * 一个 paint 资源 → SVG paint server SvgNode（gradient / pattern / image）
- * @description gradient / image 用 objectBoundingBox（随形状缩放）；pattern 用 userSpaceOnUse（tile 固定 user units）。
+ * @description gradient / image 用 objectBoundingBox（随形状缩放）；pattern 用 userSpaceOnUse（tile 固定 user units）
  */
 export const buildPaintDef = (resource: PaintResource, id: string, context: SvgPrimitiveBuildContext = {}): SvgNode => {
   if ('tile' in resource) return buildPatternTile(resource.tile, id, context);

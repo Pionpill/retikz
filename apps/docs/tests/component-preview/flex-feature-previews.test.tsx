@@ -27,17 +27,14 @@ describe('Flex 功能示例的 API 视图', () => {
     ['wrapping', wrappingSource],
     ['baseline', baselineSource],
     ['clipping', clippingSource],
-  ])('%s 的 Vanilla 和 IR 都绘制普通布局，IR 不包含检查请求', (_name, source) => {
+  ])('%s 的 Vanilla 和 IR 都绘制普通布局', (_name, source) => {
     const views = source.buildViews!({ lang: 'zh' });
 
-    expect(views.vanilla?.files[0].code).not.toContain('createLayoutInspectionVanillaDriver');
-    expect(views.ir?.files[0].code).not.toContain('inspector');
     expect(views.ir?.files[0].code).not.toContain('selection');
 
     for (const view of [views.vanilla, views.ir]) {
       const svg = renderToStaticMarkup(view!.render!('svg'));
 
-      expect(svg).not.toContain('data-retikz-readonly-layer');
       expect(svg).toMatch(/>(?:A|First(?: Node)?)<\/(?:tspan|text)>/);
     }
   });

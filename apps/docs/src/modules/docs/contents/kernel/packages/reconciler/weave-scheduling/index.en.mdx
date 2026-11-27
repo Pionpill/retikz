@@ -1,0 +1,57 @@
+---
+title: Incremental / Dependency Scheduling
+description: Follow two paths that read the same node through name binding, stage readiness and change propagation
+---
+
+[Change tracking](/kernel/packages/reconciler/weave-changes) gives the scheduler the entries directly affected by an edit. Suppose a batch increases node A’s minimum size from 40 to 80. Two paths start at A: one at its center, the other on its boundary facing the destination. Only one path needs to be recompiled.
+
+## Name binding and actual reads
+
+```ts
+// Start steps of two paths, both ending at [100, 0]
+const centerStart = { type: 'step', kind: 'move', to: { id: 'a', anchor: 'center' } } as const;
+const boundaryStart = { type: 'step', kind: 'move', to: { id: 'a' } } as const;
+```
+
+On the first compilation, each path is a **consumer** and node A is its **producer**. Both paths look up the name `a`, but they pass different second arguments to `lookupReference`: `{ anchor: 'center', boundary: undefined }` for the explicit center anchor and `'boundary'` for the implicit boundary. Weave records the geometry the compiler actually asks for rather than inferring a dependency from the path declaration.
+
+<ComponentPreview files="path-starts" size="md" hideCode type="illustration" />
+
+The path compiler wraps `compilePath` in <ApiSourceLink label="observeReferences" path="packages/kernel/reconciler/src/weave/element/path/compile.ts" startLine={199}>`observeReferences`</ApiSourceLink> to capture the endpoint lookup. <ApiSourceLink label="recordComputed" path="packages/kernel/reconciler/src/weave/manager.ts" startLine={346}>`recordComputed`</ApiSourceLink> saves the read in the path’s candidate state, then <ApiSourceLink label="updateEntryReadDependencies" path="packages/kernel/reconciler/src/weave/state/tracker.ts" startLine={75}>`updateEntryReadDependencies`</ApiSourceLink> updates both directions of the index:
+
+| State field             | What it holds in this example                                                    | How the scheduler uses it                                                         |
+| ----------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Path’s `referenceReads` | Name `a`, binding found, read kind and `readiness: 'output'`                     | Repeat the lookup and validate the previously read result before reusing the path |
+| Path’s `dependencies`   | Entry A as the key and the kinds of geometry this path reads from A as its value | Compare only the geometry this path needs when A changes                          |
+| A’s `consumers`         | The two path entries                                                             | Find A’s direct consumers without walking every path in the scene                 |
+
+<ComponentPreview files="read-lifecycle" size="md" hideCode type="illustration" />
+
+Both indexes follow the actual reads. If a path switches to B and no longer depends on A in any way, the tracker removes A from the path’s `dependencies` and the path from A’s `consumers`.
+
+## Stage readiness
+
+The unit of scheduling is **an entry and a stage**, not an entire subtree. The <ApiSourceLink label="WeaveTaskQueue" path="packages/kernel/reconciler/src/weave/schedule/queue.ts" startLine={8}>`WeaveTaskQueue`</ApiSourceLink> keeps one record for each task in a batch:
+
+| Queue operation | Effect                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `request`       | Register an entry’s stage for processing. Repeated requests for the same stage share one task.                                                                                                    |
+| `require`       | A consumer needs the result now. Complete the required stage synchronously if necessary; return immediately if it is complete. Requiring the same running stage again reports a dependency cycle. |
+| `flush`         | Drain the queue, including tasks added during execution. A stage already completed to satisfy a read does not run again.                                                                          |
+
+This edit changes A directly. The scheduler requests A’s `compile` and `output` tasks; it does not queue both paths up front. Conversely, if a path runs first and reads A, <ApiSourceLink label="lookup" path="packages/kernel/reconciler/src/weave/schedule/binding.ts" startLine={184}>`lookup`</ApiSourceLink> calls `ensure(A)`. If A has a pending request, Weave checks its dependencies and requires A’s `compile` task on the current call stack. Once the bindings are ready, the lookup prefers the current execution’s `bindings`, falling back to `A.current.contribution.bindings` if A did not execute in this batch. The path needs A’s geometry, not its finished drawing output.
+
+## Propagation follows the result read
+
+When A’s `compile` task completes, the queue calls <ApiSourceLink label="notifyConsumers" path="packages/kernel/reconciler/src/weave/schedule/dependency.ts" startLine={135}>`notifyConsumers`</ApiSourceLink>. It visits A’s candidate-state `consumers` and looks up `consumer.dependencies.get(A)` for each. With the binding name unchanged, <ApiSourceLink label="compareReferenceGeometry" path="packages/kernel/reconciler/src/weave/shared/reference.ts" startLine={36}>`compareReferenceGeometry`</ApiSourceLink> compares **the last committed binding geometry** with **the geometry produced in this batch**. For a center read it evaluates and compares the two anchor positions. For a boundary read it compares the shape and boundary definitions, rectangle, margin and parameters, not just the final endpoint.
+
+A stays in place while its minimum size increases from 40 to 80:
+
+| Position read by the path    | Effect of resizing A         | What happens to the path                       |
+| ---------------------------- | ---------------------------- | ---------------------------------------------- |
+| Center anchor                | The center stays in place    | Reuse the existing path                        |
+| Boundary facing the endpoint | The right edge moves outward | Recompile the path with its new starting point |
+
+The functional test counts compilation callbacks separately: resizing A leaves the center path’s count unchanged and adds one call for the boundary path. The result matches a full compilation.
+
+The center read compares equal, so the notification loop skips that path. For the changed boundary read, `notify` offers the path’s previous `contribution` for checking and requests its `compile` and `output` tasks. **Queueing does not discard cached work**: during execution, <ApiSourceLink label="matchWeaveReferences" path="packages/kernel/reconciler/src/weave/shared/reference.ts" startLine={21}>`matchWeaveReferences`</ApiSourceLink> rechecks the binding and geometry against the path’s saved reads. Here the boundary no longer matches, so the old path cannot be reused as a whole. That is why scheduling can start with A alone.

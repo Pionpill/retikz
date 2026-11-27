@@ -9,6 +9,8 @@ keywords: 编译产物、CompositeArtifact、Inspect、observer、nodeLayouts、
 - 决策日期：2026-10-28
 - 关联：[roadmap](./roadmap.md) · [007](./007-layout-aware-composite.md) · [021](./021-extensible-inspector-content.md) · [028](./028-qualified-spatial-handles.md) · [039](./039-builtin-inspection.md) · [052](./052-unified-composite-compilation.md) · [绘图完备性](../../architecture/core-drawing-complete.md)
 
+> [090](./090-remove-inspect.md) 退役通用 Inspect 和单图只读辅助层；原有主图编译、领域产物与具名 Scene 图层不受影响。
+
 ## 背景与目标
 
 检查工具应当从已经完成的绘图结果中读取信息。为观察者保留选择、所属者产物发布、最终事件派发和上下文片段编译，使 Core 承担了检查工具的执行生命周期，也使 Reconciler 的复用与输出提交受观察者影响。节点布局摘要又形成一套独立的专用收集出口。

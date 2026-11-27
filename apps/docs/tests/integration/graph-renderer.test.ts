@@ -4,11 +4,11 @@ import type { IRGraph } from '@retikz/graph';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import type { InputGraph } from '@retikz/graph-vanilla';
-import { createGraphVanillaAdapters, graph, graphInputEmbedAdapter, normalizeGraph } from '@retikz/graph-vanilla';
+import { graph, normalizeGraph } from '@retikz/graph-vanilla';
 import { Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
-import { normalizeScene, renderToSvgString as renderVanillaToSvgString, scene } from '@retikz/vanilla';
+import { compileToScene, normalizeScene, renderToSvg, scene } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -128,8 +128,7 @@ describe('Graph 渲染器集成', () => {
   it('让 direct、React 与 Vanilla 产生同一个 IRGraph root', () => {
     const direct = normalizeGraph(graphInput);
     const react = buildPreviewIR(ReactGraph).ir.children[0];
-    const vanilla = normalizeScene({ children: [graph(graphInput)] }, { adapters: createGraphVanillaAdapters() }).ir
-      .children[0];
+    const vanilla = normalizeScene({ type: 'scene', children: [graph(graphInput)] }).ir.children[0];
 
     expect(react).toEqual(direct);
     expect(vanilla).toEqual(direct);
@@ -160,7 +159,7 @@ describe('Graph 渲染器集成', () => {
     });
 
     expect(vanilla.code).toContain('graph({');
-    expect(vanilla.code).toContain('graphInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('graphInputEmbedAdapter');
     expect(vanilla.code).not.toContain('entityInputEmbedAdapter');
     expect(vanilla.code).not.toContain('relationInputEmbedAdapter');
     expect(vanilla.code).toContain('graphThemeDefinitions: PreviewThemeDefinitionBundle.graph');
@@ -173,9 +172,9 @@ describe('Graph 渲染器集成', () => {
     expect(vanilla.code).toContain('entity({');
     expect(vanilla.code).toContain('relation({');
     expect(vanilla.code.match(/graph\(\{/g)).toHaveLength(2);
-    expect(vanilla.code).toContain('entityInputEmbedAdapter');
-    expect(vanilla.code).toContain('relationInputEmbedAdapter');
-    expect(vanilla.code).toContain('graphInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('entityInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('relationInputEmbedAdapter');
+    expect(vanilla.code).not.toContain('graphInputEmbedAdapter');
     expect(vanilla.code).not.toContain("id: 'preview-entity-1'");
     expect(vanilla.code).not.toContain("id: 'preview-relation-1'");
     expect(vanilla.code).not.toContain("id: 'preview-graph-1'");
@@ -204,8 +203,7 @@ describe('Graph 渲染器集成', () => {
     expect(() => drawScene(recordingContext(calls), compiled)).not.toThrow();
     expect(calls.length).toBeGreaterThan(0);
     expect(
-      renderVanillaToSvgString(vanillaInput, {
-        adapters: [graphInputEmbedAdapter],
+      renderToSvg(compileToScene(vanillaInput).scene, {
         output: { width: 280, height: 200 },
       }),
     ).toContain('<svg');

@@ -22,11 +22,11 @@ describe('Node 阶段复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [node] };
     const options = { measureText };
     const session = new WeaveManager(source, options);
-    const mounted = session.mount();
+    session.mount();
     const moved: IRNode = { ...node, label: [{ text: 'label', position: 'bottom' }] };
     measured.length = 0;
-    const move = session.update({
-      operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'body' }, input: moved }],
+    const move = session.prepareUpdate({
+      operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: moved }],
     });
     expect(measured).toEqual([]);
     expect(move.compilation.result).toEqual(compileTestResult({ ...source, children: [moved] }, options));
@@ -34,9 +34,9 @@ describe('Node 阶段复用', () => {
     move.finish();
     const renamed: IRNode = { ...moved, label: [{ text: 'renamed', position: 'bottom' }] };
     measured.length = 0;
-    const rename = session.update({
+    const rename = session.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'body' }, input: renamed },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: renamed },
       ],
     });
     expect(measured).toEqual(['renamed']);
@@ -54,16 +54,16 @@ describe('Node 阶段复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [node] };
     const options = { measureText };
     const session = new WeaveManager(source, options);
-    const mounted = session.mount();
-    const entry = readWeaveCurrent(mounted.root).children[0];
+    session.mount();
+    const entry = readWeaveCurrent(session.root).children[0];
     if (entry.type !== 'node') throw new Error('Expected node');
     const layout = readWeaveCurrent(entry).compile?.value.layout;
     expect(layout?.content).toBeDefined();
     expect(layout?.shape).toBeDefined();
     const beforeMove = measurements;
     const moved: IRNode = { ...node, position: [50, 30] };
-    const move = session.update({
-      operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'body' }, input: moved }],
+    const move = session.prepareUpdate({
+      operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: moved }],
     });
     expect(measurements).toBe(beforeMove);
     expect(move.compilation.result).toEqual(compileTestResult({ ...source, children: [moved] }, options));
@@ -73,9 +73,9 @@ describe('Node 阶段复用', () => {
     expect(readWeaveCurrent(entry).compile?.value.layout.shape).toBe(layout?.shape);
     const narrower: IRNode = { ...moved, layout: { width: 80 } };
     const beforeResize = measurements;
-    const resize = session.update({
+    const resize = session.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'body' }, input: narrower },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: narrower },
       ],
     });
     expect(measurements).toBeGreaterThan(beforeResize);
@@ -120,11 +120,11 @@ describe('Node 阶段复用', () => {
       ],
     };
     const session = new WeaveManager(source, { paths });
-    const mounted = session.mount();
+    session.mount();
     const before = { ...calls };
     const resized: IRNode = { ...node, layout: { minimumSize: 80 } };
-    const update = session.update({
-      operations: [{ kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'a' }, input: resized }],
+    const update = session.prepareUpdate({
+      operations: [{ kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'a' }, input: resized }],
     });
     expect(calls.center).toBe(before.center);
     expect(calls.boundary).toBe(before.boundary + 1);
@@ -152,16 +152,16 @@ describe('Node 阶段复用', () => {
       children: [{ type: 'coordinate', id: 'origin', position: [0, 0] }, body],
     };
     const session = new WeaveManager(source, { measureText });
-    const mounted = session.mount();
-    const entry = readWeaveCurrent(mounted.root).children[1];
+    session.mount();
+    const entry = readWeaveCurrent(session.root).children[1];
     if (entry.type !== 'node') throw new Error('Expected node');
     const layout = readWeaveCurrent(entry).compile?.value.layout.overall;
     expect(layout).toBeDefined();
     const before = measurements;
     const repainted = { ...body, style: { textColor: 'blue' } };
-    const paint = session.update({
+    const paint = session.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'body' }, input: repainted },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'body' }, input: repainted },
       ],
     });
     expect(measurements).toBe(before);
@@ -173,9 +173,9 @@ describe('Node 阶段复用', () => {
     expect(readWeaveCurrent(entry).compile?.value.layout.overall).toBe(layout);
     const origin: IRCoordinate = { type: 'coordinate', id: 'origin', position: [50, 0] };
     const beforeMove = measurements;
-    const moved = session.update({
+    const moved = session.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'origin' }, input: origin },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'origin' }, input: origin },
       ],
     });
     expect(measurements).toBe(beforeMove);
@@ -196,16 +196,16 @@ describe('Node 阶段复用', () => {
     const source: IRScene = { type: 'scene', version: 1, children: [scope] };
     const session = new WeaveManager(source);
     const mounted = session.mount();
-    const container = readWeaveCurrent(mounted.root).children[0];
+    const container = readWeaveCurrent(session.root).children[0];
     if (container.type !== 'scope') throw new Error('Expected scope');
     const entry = readWeaveCurrent(container).children[0];
     if (entry.type !== 'node') throw new Error('Expected node');
     const previous = readWeaveCurrent(entry).compile?.value;
     expect(previous).toBeDefined();
     const next: IRScope = { ...scope, defaults: { node: { style: { fill: 'blue' } } } };
-    const update = session.update({
+    const update = session.prepareUpdate({
       operations: [
-        { kind: 'update', target: { kind: 'id', scopeId: mounted.root.scopeId, id: 'container' }, input: next },
+        { kind: 'update', target: { kind: 'id', scopeId: session.root.scopeId, id: 'container' }, input: next },
       ],
     });
     expect(update.compilation.result).toEqual(compileTestResult({ ...source, children: [next] }));

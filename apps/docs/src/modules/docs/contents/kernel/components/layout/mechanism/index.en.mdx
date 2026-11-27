@@ -15,29 +15,24 @@ Compare the two identical sets of nodes below: A has no fill of its own; B expli
 
 On both sides, A inherits blue and B stays orange. **defaults** supplies values that descendants have not set explicitly; it does not forcibly rewrite node properties. `rootScope.defaults.style` supplies general drawing styles such as `fill / stroke / opacity`. The figure uses `dodgerblue` and `darkorange` with translucent fills to keep the node text legible.
 
-Internally, `wrapRootScope` selects effective `defaults` overrides, creates an ordinary Scope only when needed, and places the original children inside it. The left side reuses that wrapper function; the right side declares Scope directly. Both therefore use the same inheritance rules.
+Layout leaves the children unchanged when `rootScope.defaults` is omitted. Providing `defaults` creates an ordinary Scope, even for `{}` or `{ reset: false }`. React does not inspect its contents.
 
-Wrapping depends on whether the configuration contributes an override, not merely whether the `rootScope` object exists:
-
-- **No effective override**: when omitted, `{}`, or limited to empty overrides such as `defaults: { style: {} }` and `defaults: {}`, use the original children without adding a synthetic Scope.
-- **Effective override**: actual styles, defaults, or an effective `defaults.reset` wrap the children in an ordinary Scope and reuse its inheritance rules. A `reset` of `true` or a nonempty channel list cuts the corresponding outer name inheritance; `false` or an empty list alone does not trigger wrapping.
-- **ir supplied**: use the complete child structure described by IR, ignoring any children and `rootScope` supplied alongside it. Change the IR itself to change its scopes; host CSS `style` remains applicable.
+- **ir supplied**: use the complete child structure described by IR, without JSX children or a `rootScope` prop. Change the IR itself to change its scopes; host CSS `style` remains applicable.
 
 **The synthetic Scope is not a local namespace.** `rootScope` only accepts `defaults`. Use an explicit Scope inside the drawing for `localNamespace`; see [Scope usage](/kernel/components/scope/usage) for naming and references.
 
 <SourceLinks
   sources={[
     {
-      label: 'Choose whether effective overrides require a root Scope',
-      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 598,
-      endLine: 601,
+      label: 'Wrap children when defaults are supplied',
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 98,
     },
     {
       label: 'Layout: ir and rootScope boundaries',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 488,
-      endLine: 506,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 96,
+      endLine: 102,
     },
   ]}
 />
@@ -74,9 +69,9 @@ Moving, adding, or removing elements can therefore change the automatic viewport
   sources={[
     {
       label: 'Layout: explicit viewBox overrides the input',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 509,
-      endLine: 525,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 104,
+      endLine: 117,
     },
     {
       label: 'Core: select an explicit viewport or automatic bounds',
@@ -126,21 +121,19 @@ SVG and Canvas share this display-size calculation. CSS strings are not parsed a
   sources={[
     {
       label: 'Numeric aspect-ratio completion and CSS dimensions',
-      path: 'packages/kernel/react/src/render/display-size.ts',
+      path: 'packages/kernel/render/src/shared/display-size.ts',
       startLine: 1,
       endLine: 24,
     },
     {
       label: 'SVG: apply size to the root element',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 180,
-      endLine: 183,
+      path: 'packages/kernel/react/src/container/render/SvgHost.tsx',
     },
     {
       label: 'Canvas: reuse the display-size calculation',
-      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
-      startLine: 153,
-      endLine: 162,
+      path: 'packages/kernel/react/src/container/render/CanvasHost.tsx',
+      startLine: 19,
+      endLine: 26,
     },
   ]}
 />
@@ -177,15 +170,15 @@ Two further boundaries affect final colors:
   sources={[
     {
       label: 'Layout: merge Provider, input, and explicit themes',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 509,
-      endLine: 525,
+      path: 'packages/kernel/react/src/container/Layout.tsx',
+      startLine: 104,
+      endLine: 117,
     },
     {
       label: 'Field-wise Theme merge',
-      path: 'packages/kernel/react/src/kernel/runtime/theme-context.ts',
+      path: 'packages/kernel/react/src/container/context/use-theme.tsx',
       startLine: 5,
-      endLine: 20,
+      endLine: 13,
     },
     {
       label: 'Theme mode and numeric color resolution',
@@ -205,9 +198,9 @@ Two further boundaries affect final colors:
     },
     {
       label: 'Nested ThemeProvider inheritance',
-      path: 'packages/kernel/react/src/kernel/runtime/ThemeProvider.tsx',
-      startLine: 18,
-      endLine: 25,
+      path: 'packages/kernel/react/src/container/context/use-theme.tsx',
+      startLine: 46,
+      endLine: 54,
     },
   ]}
 />

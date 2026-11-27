@@ -24,22 +24,20 @@ export const LineHeightSchema = PositiveNumberSchema.describe('Text line height 
 
 /** 校验混排行中的纯文本片段及其局部视觉覆盖 */
 export const TextSegmentSchema = strictObject({
-  text: string().describe('Text segment content within a mixed text+math line.'),
+  text: string(),
   fill: ContextualColorSchema.optional().describe(
     'Per-segment text color: an exact CSS color or a weight derived from the effective host text color.',
   ),
-  opacity: OpacitySchema.optional().describe('Per-segment opacity.'),
+  opacity: OpacitySchema.optional(),
   font: FontSchema.optional().describe(
     'Per-segment font overrides; missing fields inherit from the line / block font.',
   ),
-}).describe('A text segment in a mixed line (same fields as a line object).');
+});
 
 /** 校验与相邻文本共用基线的公式片段及其局部颜色和透明度 */
 export const MathSegmentSchema = strictObject({
   fontSize: FontSizeSchema.optional().describe('Math font size; omitted values inherit the effective line font size.'),
-  tex: string().describe(
-    'LaTeX source for this inline formula segment, rendered to glyph paths by an injected lowerTex capability.',
-  ),
+  tex: string().describe('LaTeX source for this segment.'),
   displayMode: boolean()
     .optional()
     .describe(
@@ -48,7 +46,7 @@ export const MathSegmentSchema = strictObject({
   fill: ContextualColorSchema.optional().describe(
     'Glyph color for this formula segment: an exact CSS color or a weight derived from the effective host text color.',
   ),
-  opacity: OpacitySchema.optional().describe('Per-segment opacity.'),
+  opacity: OpacitySchema.optional(),
 }).describe(
   'Inline math segment in a mixed line, baseline-aligned to surrounding text. Requires an injected lowerTex capability.',
 );
@@ -59,29 +57,28 @@ export const SegmentedLineSchema = strictObject({
   segments: array(union([TextSegmentSchema, MathSegmentSchema]))
     .min(1)
     .describe('Text and math segments laid out left-to-right on a shared baseline.'),
-}).describe(
-  'A line composed of text and math segments laid out left-to-right on a shared baseline (canonical form of the `$...$` string sugar).',
-);
+}).describe('Mixed line equivalent to inline math string syntax.');
 
 /** 校验带有逐行颜色、透明度和字体覆盖的文本行 */
 export const TextLineSchema = strictObject({
-  text: string().describe('Line content'),
+  text: string(),
   fill: ContextualColorSchema.optional().describe(
     'Per-line text color: an exact CSS color or a weight derived from the effective block text color.',
   ),
-  opacity: OpacitySchema.optional().describe('Per-line opacity.'),
+  opacity: OpacitySchema.optional(),
   font: FontSchema.optional().describe('Per-line font overrides; missing fields inherit from block-level `font`'),
-}).describe('One styled text line with per-line visual overrides.');
+});
 
 /** 校验普通字符串、带样式文本行或文本与公式混排行 */
 export const LineSchema = union([string(), TextLineSchema, SegmentedLineSchema]).describe(
-  'Single line of text: bare string for default styling (with `$...$` math sugar), an object with per-line `fill` / `opacity` / `font` overrides, or a `{ segments }` mixed text+math line.',
+  'String lines support inline math sugar.',
 );
 
 /** 校验单字符串文本块或非空文本行序列 */
-export const TextBlockSchema = union([string(), array(LineSchema).min(1)]).describe(
-  'Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ segments }` for mixed text+math).',
-);
+export const TextBlockSchema = union([
+  string().describe('Newlines are hard line breaks. Math in $...$ or $$...$$ requires lowerTex.'),
+  array(LineSchema).min(1),
+]);
 
 /** 校验带正文元素的文本颜色及字体覆盖 */
 export const TextVisualSchema = strictObject({
@@ -89,7 +86,7 @@ export const TextVisualSchema = strictObject({
     'Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`.',
   ),
   font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
-}).describe('Text color and font for a primary text-bearing element.');
+});
 
 /** 校验文本块对齐、行高与自动折行宽度约束 */
 export const TextLayoutSchema = strictObject({
@@ -102,7 +99,7 @@ export const TextLayoutSchema = strictObject({
   maxTextWidth: PositiveNumberSchema.optional().describe(
     'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
   ),
-}).describe('Text block alignment, line height, and wrapping width.');
+});
 
 /** 混排文字段 IR 类型 */
 export type IRTextSegment = ZodInfer<typeof TextSegmentSchema>;

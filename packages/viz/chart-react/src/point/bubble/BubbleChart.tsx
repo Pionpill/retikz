@@ -8,19 +8,14 @@ import { collectBubbleChartDeclarations } from './declaration-collection';
 
 /**
  * BubbleChart React 根属性
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  */
-export type BubbleChartProps<TNative = never> = TypedChartCommonProps<IRBubbleChart, TNative>;
+export type BubbleChartProps = TypedChartCommonProps<IRBubbleChart>;
 
 /** Bubble 具体类型的 Chart React 组件 */
-export const BubbleChart = createTypedChartComponent<
-  BubbleChartProps<unknown>,
-  IRBubbleChart,
-  BubbleChartInputEmbedProps<unknown>
->(
+export const BubbleChart = createTypedChartComponent<BubbleChartProps, IRBubbleChart, BubbleChartInputEmbedProps>(
   'BubbleChart',
   props =>
-    createTypedChartInput<BubbleChartProps<unknown>, IRBubbleChart, BubbleChartInputEmbedProps<unknown>>(
+    createTypedChartInput<BubbleChartProps, IRBubbleChart, BubbleChartInputEmbedProps>(
       props,
       collectBubbleChartDeclarations(props.children),
       input => bubbleChart(input),

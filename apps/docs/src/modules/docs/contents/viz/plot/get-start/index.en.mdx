@@ -108,6 +108,8 @@ The preview shows the same data and mappings. React's `width` and `height` set t
 
 To use your own data, replace `measurements` and change `time` and `value` to your field names. This example uses numeric fields; see [Scales](/viz/plot/scale) for categorical ordering.
 
+To trace marks back to their data, use `onLineage` on a standalone `<Plot>` after React commits. Embedding a Plot in a Vanilla scene does not dispatch lineage callbacks; consume lineage explicitly after the host succeeds. Standalone `renderPlot` and `renderPlotAsync` can return both SVG and lineage via the `lineage` option.
+
 ## Further reading
 
 <LinkedSections

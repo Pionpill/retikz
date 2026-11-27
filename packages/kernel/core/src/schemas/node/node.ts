@@ -37,31 +37,34 @@ export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 
 /** 校验按边、轴或统一值指定的盒间距；具体边优先于轴，轴优先于统一值 */
 export const BoxSpacingSchema = strictObject({
-  default: NonNegativeNumberSchema.optional().describe('Fallback spacing for all sides.'),
-  x: NonNegativeNumberSchema.optional().describe('Horizontal spacing for left and right sides.'),
-  y: NonNegativeNumberSchema.optional().describe('Vertical spacing for top and bottom sides.'),
-  left: NonNegativeNumberSchema.optional().describe('Left-side spacing.'),
-  right: NonNegativeNumberSchema.optional().describe('Right-side spacing.'),
-  top: NonNegativeNumberSchema.optional().describe('Top-side spacing.'),
-  bottom: NonNegativeNumberSchema.optional().describe('Bottom-side spacing.'),
-}).describe('CSS-like box spacing overrides. Side fields override axis fields, then default.');
+  default: NonNegativeNumberSchema.optional(),
+  x: NonNegativeNumberSchema.optional(),
+  y: NonNegativeNumberSchema.optional(),
+  left: NonNegativeNumberSchema.optional(),
+  right: NonNegativeNumberSchema.optional(),
+  top: NonNegativeNumberSchema.optional(),
+  bottom: NonNegativeNumberSchema.optional(),
+}).describe('Each side uses its own value, then x (left/right) or y (top/bottom), then default.');
 
 /** 接受统一间距或按方向设置的间距 */
-const BoxSpacingValueSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
+export const BoxSpacingValueSchema = union([
+  NonNegativeNumberSchema.describe('Applies the same spacing to all four sides.'),
+  BoxSpacingSchema,
+]);
 
 /** 校验双轴缩放覆盖值；指定轴优先于统一倍率 */
 export const AxisScaleSchema = strictObject({
-  default: PositiveNumberSchema.optional().describe('Fallback scale factor for both axes.'),
-  x: PositiveNumberSchema.optional().describe('Horizontal scale factor.'),
-  y: PositiveNumberSchema.optional().describe('Vertical scale factor.'),
-}).describe('Axis-specific scale overrides. Axis fields override default.');
+  default: PositiveNumberSchema.optional(),
+  x: PositiveNumberSchema.optional(),
+  y: PositiveNumberSchema.optional(),
+}).describe('Each axis uses its own scale factor, falling back to default.');
 
 /** 校验宽高覆盖值；单独指定的宽或高优先于统一尺寸 */
 export const BoxSizeSchema = strictObject({
-  default: NonNegativeNumberSchema.optional().describe('Fallback size for width and height.'),
-  width: NonNegativeNumberSchema.optional().describe('Width size.'),
-  height: NonNegativeNumberSchema.optional().describe('Height size.'),
-}).describe('Box size overrides. Width and height override default.');
+  default: NonNegativeNumberSchema.optional(),
+  width: NonNegativeNumberSchema.optional(),
+  height: NonNegativeNumberSchema.optional(),
+}).describe('Width and height each fall back to default when omitted.');
 
 /** 校验节点可使用的坐标与相对定位方式 */
 const SharedNodePositionSchema = union([
@@ -96,11 +99,15 @@ const NodePositionSchema = preprocess(
 /** 校验节点描边及虚线快捷设置 */
 export const NodeStrokeSchema = strictObject({
   ...GraphicStrokeSchema.shape,
-  dashed: boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
-  dotted: boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
-}).describe(
-  'Node stroke overrides. dashPattern takes precedence over dashed, then dotted. Omitted width defaults to 1 when no width is inherited.',
-);
+  strokeWidth: GraphicStrokeSchema.shape.strokeWidth.describe(
+    'Stroke width in user units. Defaults to 1 if no width is inherited.',
+  ),
+  dashPattern: GraphicStrokeSchema.shape.dashPattern.describe(
+    'Dash lengths in user units. Overrides both presets; if both are enabled, dashed wins over dotted.',
+  ),
+  dashed: boolean().optional(),
+  dotted: boolean().optional(),
+}).describe('Node border stroke styles.');
 
 /** 节点实例视觉覆盖 */
 export const NodeStyleSchema = strictObject({
@@ -118,72 +125,45 @@ export const NodeLayoutSchema = strictObject({
   width: PositiveNumberSchema.optional().describe(
     'Exact unscaled visible border width in user units. Excludes margin and must not be smaller than the effective minimum width.',
   ),
-  minimumSize: union([NonNegativeNumberSchema, BoxSizeSchema])
+  minimumSize: union([NonNegativeNumberSchema.describe('Sets the same minimum for width and height.'), BoxSizeSchema])
     .optional()
-    .describe(
-      'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
-    ),
-  padding: BoxSpacingValueSchema.optional().describe(
-    'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
-  ),
-  margin: BoxSpacingValueSchema.optional().describe(
-    'Outer offset around the connection boundary. Number applies to all sides; object fields resolve as side > axis > default.',
-  ),
-}).describe('Node size, spacing, and text layout overrides.');
+    .describe("Lower bound on the node's visible border size, in user units."),
+  padding: BoxSpacingValueSchema.optional().describe('Inner spacing from content to border.'),
+  margin: BoxSpacingValueSchema.optional().describe('Outer offset around the connection boundary.'),
+});
 
 /** 组合节点自身字段与共用样式，供最终节点校验复用 */
 const NodeBaseSchema = strictObject({
-  type: literal('node').describe('Discriminator marking this child as a node'),
-  id: NonBlankStringSchema.optional().describe(
-    'Optional unique id; required if any path needs to reference this node by string',
-  ),
+  type: literal('node'),
+  id: NonBlankStringSchema.optional().describe('Unique ID for referencing this node.'),
   aliasIds: array(NonBlankStringSchema)
     .optional()
-    .describe('Additional ids for the same node geometry; requires id and excludes duplicate or primary ids.'),
-  shape: ShapeValueSchema.optional().describe(
-    'Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.',
-  ),
+    .describe('Aliases for the same node. They require id and must differ from it and from each other.'),
+  shape: ShapeValueSchema.optional().describe('Defaults to rectangle.'),
   boundary: BoundarySchema.optional().describe(
-    'Default connection surface for edges meeting this node. Per-edge endpoints may override it.',
+    'Default connection surface; individual path endpoints can override it.',
   ),
-  meta: JsonObjectSchema.optional().describe(
-    'Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.',
-  ),
+  meta: JsonObjectSchema.optional().describe('Copied unchanged to Scene primitives; does not affect compilation.'),
   animations: array(AnimationTrackSchema)
     .optional()
-    .describe(
-      'Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.',
-    ),
+    .describe('Carried into Scene primitives without affecting layout. Not inherited across scopes.'),
   position: NodePositionSchema.default([0, 0]).describe(
-    'Node placement: Cartesian [x, y], polar, relative-to-node, offset, between two endpoints, or anchor-to-anchor alignment. Defaults to [0, 0] in the current local coordinate system. Non-Cartesian forms resolve at compile time.',
+    'Position of the node center in the current local coordinate system.',
   ),
   rotate: number().optional().describe('Rotation in degrees around the node center; positive is visually clockwise.'),
-  text: TextBlockSchema.optional().describe(
-    'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math segments. Newlines are hard line breaks; math sugar requires lowerTex.',
-  ),
+  text: TextBlockSchema.optional().describe('Text inside the node.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
-    'Top-level corner radius in user units. Only effective on `rectangle` shape.',
+    'Rectangle corner radius in user units. shape.params.cornerRadius takes precedence.',
   ),
-  scale: union([PositiveNumberSchema, AxisScaleSchema])
+  scale: union([PositiveNumberSchema.describe('Scales both axes equally.'), AxisScaleSchema])
     .optional()
-    .describe(
-      'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
-    ),
+    .describe('Scales the node and its path attachment positions.'),
   label: union([NodeLabelSchema, array(NodeLabelSchema)])
     .optional()
-    .describe(
-      'Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.',
-    ),
-  zIndex: number()
-    .int()
-    .optional()
-    .describe(
-      'Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.',
-    ),
-  style: NodeStyleSchema.optional().describe(
-    'Node visual overrides; fields independently override inherited defaults.',
-  ),
-  layout: NodeLayoutSchema.optional().describe('Node size, spacing, and text layout overrides.'),
+    .describe('Border annotations. Set text layout and styling on each label itself.'),
+  zIndex: number().int().optional().describe('Higher values draw above siblings; ties keep source order.'),
+  style: NodeStyleSchema.optional(),
+  layout: NodeLayoutSchema.optional(),
 });
 
 /** 校验可定位的节点，并要求别名依附主标识且在节点内不重复 */
@@ -200,7 +180,7 @@ export const NodeSchema = NodeBaseSchema.superRefine((node, context) => {
       context.addIssue({ code: 'custom', path: ['aliasIds', index], message: `Duplicate Node id '${id}'.` });
     ids.add(id);
   });
-}).describe('Node primitive: a positioned, optionally textual shape');
+}).describe('A positioned shape with optional interior text; paths can connect to its boundary.');
 
 /** CSS-like 四边 spacing 对象，供 Node padding / margin 复用 */
 export type IRBoxSpacing = ZodInfer<typeof BoxSpacingSchema>;

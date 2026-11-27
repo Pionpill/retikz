@@ -1,0 +1,132 @@
+---
+title: 增量 / 状态模型
+description: 从作者树、读取依赖和阶段记录理解 Weave 如何保存增量编译状态
+---
+
+Weave 是 Reconciler 的增量编译机制。Core 负责计算几何和图元；Weave 负责在同一会话的多次编辑之间保留计算结果，并判断哪些需要重算。
+
+## 整体流程
+
+输入 IR 描述要画什么，输出 Scene 保存画出来的结果。只看 Scene 里的矩形和文字，看不出它们来自同一个 Node，也不知道移动这个 Node 会影响哪条连线。因此，Weave 以 IR 元素为单位建树，把每个元素的计算结果和产生结果的条件保存在对应条目上。
+
+**首次挂载。** <ApiSourceLink label="WeaveManager" path="packages/kernel/reconciler/src/weave/manager.ts" startLine={38}>`WeaveManager`</ApiSourceLink> 按输入 IR 的层级建立条目。假设场景中有节点 A、节点 B 和连接它们的路径，三者就是根下的三个条目。第一次没有缓存，两个节点和路径都要编译。路径用两个节点的边界确定端点，Weave 也记下了这次读取。
+
+**后续编辑。** 如果只移动 B，B 的位置和边界要更新。路径自身的 IR 虽然没改，但它用到的 B 的边界变了，端点也要重新计算。A 的输入和上下文都没变，可以直接沿用上次的几何和图元，不必再调用 Core 计算 A。
+
+**组装输出。** Weave 把 A 保留的结果与 B、路径的新结果沿树向上汇总，交付的仍是包含三个元素的完整 Scene，而不是只包含变化部分的补丁。缓存省下的是重复的编译工作，不是从输出中省略未改变的元素。
+
+## Weave 实体
+
+源码中的 <ApiSourceLink label="WeaveEntry" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={305}>`WeaveEntry`</ApiSourceLink> 是五种 IR 元素条目的联合类型；Scene 根由单独的 `WeaveRoot` 表示。以节点 B 为例，路径引用的是 B 的条目。移动 B
+时，条目本身不变，替换的是条目中的节点状态。
+
+```ts
+export type WeaveEntry = WeaveCompositeEntry | WeaveCoordinateEntry | WeavePathEntry | WeaveScopeEntry | WeaveNodeEntry;
+
+type WeaveNodeEntry = {
+  readonly type: 'node';
+  current: WeaveNodeState | null;
+  pending: WeaveNodeState | null;
+};
+```
+
+`current` 保存上次提交的状态，新条目首次提交前为 `null`。`pending` 保存本批正在准备的候选状态。B₀、B₁ 分别表示节点 B 移动前后的状态。
+
+| 时刻       | `current` | `pending` |
+| ---------- | --------- | --------- |
+| 编辑前     | B₀        | `null`    |
+| 准备移动 B | B₀        | B₁        |
+| 计算提交后 | B₁        | `null`    |
+
+编辑已有的 B 时，<ApiSourceLink label="WeaveTransaction" path="packages/kernel/reconciler/src/weave/state/transaction.ts" startLine={37}>`WeaveTransaction`</ApiSourceLink> 在首次写入时浅复制它的状态，集合等到要修改时才复制。本批后续计算优先读 `pending`；还没改过的条目直接读 `current`。这样路径可以用 B 的新边界计算端点，而 A 仍可共享原状态。
+
+计算完成后，事务先检查所有待提交条目，再让各条目的 `current` 指向 `pending` 中的状态并清空候选槽。准备失败可以直接丢弃候选；即使计算侧已切换，如果随后输出目标提交失败，事务仍能用保留的旧引用恢复 B₀。会话在提交成功后才对外发布新快照。
+
+<Comparison target="react" title="与 React Fiber 对照">
+
+两者都保留已提交的版本，同时准备下一次更新。区别在于，**React 在两棵树之间切换，Weave 在同一个条目上切换状态。**
+
+|          | React Fiber                                                                                                          | Weave                                                                   |
+| -------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 准备更新 | 更新已有组件时，React 为当前 Fiber 创建或复用一个工作中的 Fiber（work-in-progress），两者通过 `alternate` 互相引用。 | 移动 B 时，在原条目的 `pending` 中准备新状态；路径仍引用同一个 B 条目。 |
+| 提交更新 | 提交时，根的 `current` 指向已完成的工作树。这棵树成为新的当前树。                                                    | 事务让改过的条目以候选状态作为 `current`，再清空 `pending`。            |
+
+这里对照的是新旧版本如何共存和切换，不涉及 React 的优先级调度或时间切片。
+
+</Comparison>
+
+## 结构属性
+
+把 A、B 放进同一个 Scope，路径留在根下。根的 `children` 依次指向 Scope 和路径，Scope 的 `children` 再指向 A 和 B。反方向上，A 和 B 的 `parent` 都指向同一个 Scope 条目。
+
+```ts
+// 元素共有；摘自 WeaveElementStateBase
+parent: WeaveRoot | WeaveScopeEntry;
+
+// Scope；摘自 WeaveScopeState
+origin: Readonly<InputWeave<Omit<IRScope, 'children'>>>;
+children: ReadonlyArray<WeaveEntry>;
+
+// 根；摘自 WeaveRootState
+parent: null;
+origin: Omit<IRScene, 'children'>;
+children: ReadonlyArray<WeaveEntry>;
+```
+
+<ComponentPreview files="entry-structure" size="md" hideCode type="illustration" />
+
+在源码中，<ApiSourceLink label="WeaveScopeState" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={200}>`WeaveScopeState`</ApiSourceLink> 把 Scope 自己的 IR 输入放在 `origin.own`，继承上下文放在 `origin.context`。子项只在 `children`
+中排列，不重复存进自身输入。在 B 前插入节点时，改变的是 Scope 的子项顺序，B 仍是原来的条目。
+
+## 拓扑关系属性
+
+父子关系决定声明放在哪里，却不能说明路径的端点随谁移动。<ApiSourceLink label="WeaveElementStateBase" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={105}>`WeaveElementStateBase`</ApiSourceLink> 用下面三个字段记录计算时实际发生的读取：
+
+```ts
+referenceReads: ReadonlyArray<WeaveReferenceRead>;
+dependencies: ReadonlyMap<WeaveEntry, ReadonlyArray<WeaveDependencyKind>>;
+consumers: ReadonlySet<WeaveEntry>;
+```
+
+- `referenceReads`：记录这个条目按名称查找了什么、当时查到什么结果。即使路径没有找到 B，也会留下读取记录；根状态的 `readers` 按名称索引这些读取，之后添加 B 时仍能找到这条路径。
+- `dependencies`：记录这个条目用到了哪些条目的哪类结果。例如，路径以 A、B 的条目为键，记录自己读取了它们的边界。
+- `consumers`：记录哪些条目用到了当前条目的结果。例如，B 的边界被路径读取，因此 B 的 `consumers` 中有这条路径。
+
+<ComponentPreview files="entry-relations" size="md" hideCode type="illustration" />
+
+## 阶段状态属性
+
+以节点 B 为例，<ApiSourceLink label="WeaveNodeState" path="packages/kernel/reconciler/src/weave/shared/types.ts" startLine={119}>`WeaveNodeState`</ApiSourceLink> 在公共字段上增加节点自己的输入和阶段记录。下面的可选字段在对应结果产生后才有值：
+
+```ts
+export type WeaveNodeState = WeaveElementStateBase & {
+  origin: Readonly<InputWeave<IRNode>>;
+  resolve?: WeaveResolve<
+    IRNode,
+    {
+      nodeDefaults: MergedScopeDefaults['node'];
+      mode: ThemeMode;
+    },
+    CanonicalNode
+  >;
+  compile?: WeaveCompile<
+    {
+      scopeChain: ReadonlyArray<Transform>;
+      proposal: LayoutProposal | undefined;
+    },
+    CompiledNode
+  >;
+  contribution?: WeaveContribution;
+};
+```
+
+| 节点 B 的字段   | 值的类型            | 说明                                                                    |
+| --------------- | ------------------- | ----------------------------------------------------------------------- |
+| `origin.own`    | `IRNode`            | 节点自身的 IR 声明；继承上下文保存在 `origin.context`。                 |
+| `resolve.value` | `CanonicalNode`     | 确定化结果；同一记录还保存所用的节点输入、默认值和主题模式。            |
+| `compile.value` | `CompiledNode`      | Core 的编译结果；同一记录还保存变换链、布局提案、本次使用的资源和诊断。 |
+| `contribution`  | `WeaveContribution` | 交给父层组装的局部输出，包括图元、边界、名称绑定和资源。                |
+
+移动 B 时，旧位置不能直接沿用；如果测量输入未变，重新编译仍可复用原有的内容和形状测量。对没有变化的 A，组装 Scene 时直接取它保留的贡献。这两种复用分别发生在节点计算和输出组装阶段。
+
+不同条目保留的结果也不同：Scope 缓存自己的包络计算，再从子项组装输出；Composite 以整个实例为单位保存贡献，没有独立的基础元素确定化或编译记录。最终快照的结构见[执行 / 产物来源](/kernel/packages/reconciler/compile-artifacts)。

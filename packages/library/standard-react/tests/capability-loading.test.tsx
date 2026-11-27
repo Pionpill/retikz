@@ -1,4 +1,4 @@
-import { createInputScene, Layout, Node } from '@retikz/react';
+import { convertReactToInputScene, Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameTitle, Grid, Legend, LegendItem } from '@retikz/standard-react/presentation';
 import {
   createGrid,
@@ -10,8 +10,6 @@ import {
 import { normalizeScene } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-
-import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 describe('Standard React 定义加载', () => {
   it('保持 JSX 组件通过其静态适配器进行自注册', () => {
@@ -48,14 +46,14 @@ describe('Standard React 定义加载', () => {
     ).not.toThrow();
     expect(() =>
       renderToStaticMarkup(
-        <Layout extensions={{ composites: [gridDefinition] }} width={120} height={80}>
+        <Layout compile={{ composites: [gridDefinition] }} width={120} height={80}>
           {legend}
         </Layout>,
       ),
     ).not.toThrow();
 
-    const input = createInputScene(legend);
-    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+    const input = convertReactToInputScene(legend);
+    const normalized = normalizeScene(input);
 
     expect(normalized.contributions[0]).toEqual({
       roots: [legendProvider.key, gridProvider.key],
@@ -71,7 +69,7 @@ describe('Standard React 定义加载', () => {
     };
 
     const svg = renderToStaticMarkup(
-      <Layout ir={ir} extensions={{ composites: [gridDefinition] }} width={120} height={80} />,
+      <Layout ir={ir} compile={{ composites: [gridDefinition] }} width={120} height={80} />,
     );
 
     expect(svg).toContain('<path');
@@ -80,14 +78,14 @@ describe('Standard React 定义加载', () => {
   it('对相同显式定义对象进行去重，并拒绝同一键上的不同对象', () => {
     expect(() =>
       renderToStaticMarkup(
-        <Layout extensions={{ composites: [gridDefinition] }} width={120} height={80}>
+        <Layout compile={{ composites: [gridDefinition] }} width={120} height={80}>
           <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         </Layout>,
       ),
     ).not.toThrow();
     expect(() =>
       renderToStaticMarkup(
-        <Layout extensions={{ composites: [{ ...gridDefinition }] }} width={120} height={80}>
+        <Layout compile={{ composites: [{ ...gridDefinition }] }} width={120} height={80}>
           <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         </Layout>,
       ),

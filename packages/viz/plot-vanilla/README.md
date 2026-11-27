@@ -43,14 +43,12 @@ normalizes the former and preserves the latter.
 ## Compose in a Vanilla scene
 
 ```ts
-import { plotInputEmbedAdapter, embedPlot } from '@retikz/plot-vanilla';
-import { renderToSvgString, scene } from '@retikz/vanilla';
+import { embedPlot } from '@retikz/plot-vanilla';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
 const input = scene([embedPlot({ spec }, { sales })]);
-const svg = renderToSvgString(input, {
-  adapters: [plotInputEmbedAdapter],
-  output: { width: 360, height: 200 },
-});
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene, { output: { width: 360, height: 200 } });
 ```
 
 Datasets and runtime callbacks stay outside `IRPlot`. `plotInputEmbedAdapter`
@@ -58,3 +56,5 @@ receives the typed `InputPlotEmbed` during the single Vanilla scene-normalizatio
 traversal, then delegates Plot IR lowering to `@retikz/plot`.
 
 See the [retikz docs site](https://pionpill.github.io/retikz/) for usage.
+
+Embedded plots contribute drawing input only. For standalone SVG and mark lineage, pass a `lineage` option to `renderPlot` or `renderPlotAsync` and read the returned `{ svg, lineage }` after the operation succeeds.

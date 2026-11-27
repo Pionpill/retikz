@@ -12,33 +12,29 @@ export type {
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
 } from '../scene';
+export { computeDisplaySize } from '../shared';
 export * from '../trace';
 export * from './builtin';
 export * from './config';
-export * from './frame';
-export * from './readonly-layer';
 export type {
-  DefineRetainedRenderer,
-  RetainedCanvasRenderer,
-  InputRetainedCanvasRendererDefinition,
-  RetainedCanvasRendererImmutableOptions,
-  RetainedRenderer,
-  RetainedRendererDefinitionBase,
-  InputRetainedRendererDefinition,
-  RetainedRendererFactory,
-  InputRetainedRendererFactory,
-  RetainedRendererHost,
-  RetainedRendererImmutableOptions,
-  RetainedRendererRead,
-  RetainedRendererTokenBase,
-  RetainedSvgRenderer,
-  InputRetainedSvgRendererDefinition,
-  RetainedSvgRendererImmutableOptions,
+  CanvasRenderer,
+  CanvasRendererImmutableOptions,
+  DefineRenderer,
+  InputCanvasRendererDefinition,
+  InputRendererDefinition,
+  InputRendererFactory,
+  InputSvgRendererDefinition,
+  RenderMode,
+  Renderer,
+  RendererDefinitionBase,
+  RendererFactory,
+  RendererHost,
+  RendererImmutableOptions,
+  RendererRead,
+  RendererTokenBase,
+  SvgRenderer,
+  SvgRendererImmutableOptions,
 } from './renderer';
-export {
-  defineRetainedRenderer,
-  isRetainedRenderer,
-  RetainedRendererCapability,
-  RetainedRendererReadonlyLayerCapability,
-} from './renderer';
+export { defineRenderer, isRenderer, RendererCapability } from './renderer';
 export * from './target';
+export { mergeRenderHandlers } from './handlers';

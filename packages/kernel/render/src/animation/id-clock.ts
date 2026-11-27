@@ -74,7 +74,12 @@ export const createIdClockRegistry = (): IdClockRegistry => {
     },
     isActive: id => (id === undefined ? false : (clockEntries.get(id)?.active ?? false)),
     isStopped: id => (id === undefined ? false : (clockEntries.get(id)?.stopped ?? false)),
-    hasActive: () => Array.from(clockEntries.values()).some(entry => entry.active && !entry.stopped),
+    hasActive: () => {
+      for (const entry of clockEntries.values()) {
+        if (entry.active && !entry.stopped) return true;
+      }
+      return false;
+    },
     play: (id, globalTime) => {
       const entry = getOrCreateClockEntry(id);
       if (entry.pausedAt !== null) {

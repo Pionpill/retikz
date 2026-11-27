@@ -59,12 +59,10 @@ const CoordinateOverview: FC<CoordinateOverviewProps> = props => {
       </FlowLayout>
       <FlowRelations
         items={[
-          ...stages
-            .slice(1)
-            .map((item, index) => ({
-              source: { id: stages[index].id, anchor: 'bottom' as const },
-              target: { id: item.id, anchor: 'top' as const },
-            })),
+          ...stages.slice(1).map((item, index) => ({
+            source: { id: stages[index].id, anchor: 'bottom' as const },
+            target: { id: item.id, anchor: 'top' as const },
+          })),
           { source: { id: 'context', anchor: 'right' }, target: { id: 'resolve', anchor: 'left' } },
         ]}
       />

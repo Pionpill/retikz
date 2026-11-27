@@ -6,7 +6,7 @@ import { Battery, circuitShapes, Resistor, Rheostat, Switch } from './circuit-sh
 const FONT = { family: 'Arial, sans-serif' } as const;
 
 const CircuitDemo: FC = () => (
-  <Layout extensions={{ shapes: circuitShapes }}>
+  <Layout compile={{ shapes: circuitShapes }}>
     <Scope
       defaults={{
         node: {

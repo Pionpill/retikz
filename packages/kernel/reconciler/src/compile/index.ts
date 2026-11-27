@@ -5,6 +5,7 @@ export {
   assembleNode,
   assemblePaths,
   bindScopeOutputAnimations,
+  compileScene,
   createNodeCompileContext,
   createNodeResolveContext,
   createPathCompileContext,
@@ -12,6 +13,7 @@ export {
   createTreePositionContext,
   emitScopeGroup,
   finalizeSceneCompilation,
+  needsScopeEnvelope,
   prepareScopeExecution,
   queuePathChild,
   resolveStructuralAlignmentGuides,
@@ -24,6 +26,7 @@ export type {
   SubtreeCompileContext,
   SubtreeCompileRuntime,
   SubtreeCompileState,
+  RetainedProbeOutput,
   TreeOutputState,
 } from './execution';
 export * from './provenance';

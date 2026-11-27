@@ -1,5 +1,5 @@
 import type { TextMetrics } from '../../contract';
-import { createCompositeContractError } from '../diagnostics';
+import { createContractViolationError } from '../diagnostics';
 import { guardProviderOutput } from '../provider';
 import type { CanonicalTextMetrics } from './types';
 
@@ -10,7 +10,7 @@ export const resolveTextMetrics = (metrics: TextMetrics): CanonicalTextMetrics =
 
     const assertMetric = (name: keyof TextMetrics, value: number): number => {
       if (!Number.isFinite(value) || value < 0) {
-        throw createCompositeContractError(
+        throw createContractViolationError(
           `resolveTextMetrics: invalid ${name} '${String(value)}'; must be a non-negative finite number`,
         );
       }
@@ -28,7 +28,7 @@ export const resolveTextMetrics = (metrics: TextMetrics): CanonicalTextMetrics =
     if (measuredAscent !== undefined && measuredDescent !== undefined) {
       const measuredVerticalSpan = measuredAscent + measuredDescent;
       if (!Number.isFinite(measuredVerticalSpan)) {
-        throw createCompositeContractError(
+        throw createContractViolationError(
           `resolveTextMetrics: invalid ascent/descent sum '${measuredVerticalSpan}'; must be a non-negative finite number`,
         );
       }

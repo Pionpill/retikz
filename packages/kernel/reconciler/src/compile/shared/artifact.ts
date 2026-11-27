@@ -65,7 +65,6 @@ export const freezeOccurrence = (occurrence: CompileOccurrenceLocator): CompileO
  * @template T 要保留判别信息与产物值关联的编译产物类型
  */
 export const freezeCompileArtifact = <T extends CompositeArtifact>(artifact: T): T => {
-  Object.freeze(artifact.value);
   return Object.freeze({
     ...artifact,
     occurrence: freezeOccurrence(artifact.occurrence),

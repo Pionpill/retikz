@@ -80,29 +80,23 @@ export const FontSizeSchema = union([
 ]).describe('Font size as user units, web preset, or relative `em` / `rem` value.');
 
 /** 校验供文本使用的 CSS 字体族字符串 */
-export const FontFamilySchema = string().describe(
-  'CSS font-family string such as "serif", "monospace", or "Inter, sans-serif".',
-);
+export const FontFamilySchema = string().describe('CSS font family or fallback list.');
 
 /** 校验字重关键字或数值字重 */
-export const FontWeightSchema = union([zodEnum(FontWeightKeyword), number()]).describe(
-  'CSS font-weight keyword or numeric value.',
-);
+export const FontWeightSchema = union([zodEnum(FontWeightKeyword), number()]);
 
 /** 校验 CSS 字形关键字 */
-export const FontStyleSchema = zodEnum(FontStyle).describe('CSS font-style keyword.');
+export const FontStyleSchema = zodEnum(FontStyle);
 
 /** 校验正文、标签和作用域默认样式共用的字体覆盖字段 */
 export const FontSchema = object({
-  family: FontFamilySchema.optional().describe(
-    'CSS font-family string such as "serif", "monospace", or "Inter, sans-serif".',
-  ),
+  family: FontFamilySchema.optional().describe('CSS font family or fallback list.'),
   size: lazy(() => FontSizeSchema)
     .optional()
     .describe('Font size in user units, presets, or relative units. Omitted fields use inherited text defaults.'),
-  weight: FontWeightSchema.optional().describe('CSS font-weight: keyword `normal` / `bold` or numeric value.'),
-  style: FontStyleSchema.optional().describe('CSS font-style keyword.'),
-}).describe('Font properties shared by node text, labels, line specs, and scope defaults.');
+  weight: FontWeightSchema.optional(),
+  style: FontStyleSchema.optional(),
+});
 
 /** 字体规格 IR 类型（所有字段可选，编译期解析默认值） */
 export type IRFont = ZodInfer<typeof FontSchema>;

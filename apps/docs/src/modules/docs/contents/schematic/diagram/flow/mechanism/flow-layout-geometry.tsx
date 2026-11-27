@@ -1,4 +1,4 @@
-import { Layout, Node, Path, Scope } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -40,7 +40,7 @@ const FlowLayoutGeometry: FC<FlowLayoutGeometryProps> = props => {
           layout={{ width: 80, minimumSize: { height: 40 }, padding: 4 }}
           style={{ font: { size: 14 } }}
         />
-        <Path
+        <Draw
           way={[
             [40, 60],
             [152, 60],
@@ -74,8 +74,8 @@ const FlowLayoutGeometry: FC<FlowLayoutGeometryProps> = props => {
           layout={{ width: 80, minimumSize: { height: 40 }, padding: 4 }}
           style={{ font: { size: 14 } }}
         />
-        <Path way={['receive.right', 'verify.left']} arrow="->" />
-        <Path
+        <Draw way={['receive.right', 'verify.left']} arrow="->" />
+        <Draw
           way={[
             [40, 60],
             [152, 60],
@@ -90,7 +90,7 @@ const FlowLayoutGeometry: FC<FlowLayoutGeometryProps> = props => {
           style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}
         />
       </Scope>
-      <Path
+      <Draw
         way={['local.right', [210, 90], [210, 140], 'placed.left']}
         arrow="->"
         label={{ text: t.move, font: { size: 12 }, textColor: 'gray', sloped: false, side: 'left', distance: 12 }}

@@ -179,10 +179,7 @@ const translatePresentationApiReference = (source: string): string =>
       .replace(/React (\w+) 组件接受的 Standard authoring 输入/g, 'Standard authoring input accepted by React $1')
       .replace(/Standard (\w+) 的 React Tier 2 authoring 组件/g, 'React Tier 2 authoring component for Standard $1')
       .replace(/Standard (\w+) 的 InputEmbed adapter/g, 'InputEmbed adapter for Standard $1')
-      .replace(
-        /Standard (\w+) 的同步与异步 InputEmbed adapter/g,
-        'Synchronous and asynchronous InputEmbed adapter for Standard $1',
-      )
+
       .replace(
         /创建由 (\w+)InputEmbedAdapter 下沉的 Standard (\w+) embed/g,
         'Create a Standard $2 embed lowered by $1InputEmbedAdapter',

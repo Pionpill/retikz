@@ -3,7 +3,7 @@ import { CompositeBaseSchema, defineComposite, naturalLayoutProposal, LayoutChil
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
-import { SceneReconciler } from '../../src';
+import { ReconcilerMode, SceneReconciler } from '../../src';
 import { compileTestResult, compileTestSnapshot } from '../helpers/compilation';
 
 const input: IRScene = {
@@ -29,7 +29,7 @@ describe('统一编译模式', () => {
       {},
       {
         ...execution,
-        incremental: true,
+        mode: ReconcilerMode.Incremental,
         trace: record => {
           if (record.phase === 'update' && record.unit === 'element-compile') computed += record.visited;
         },
@@ -58,8 +58,8 @@ describe('统一编译模式', () => {
 
   it('两种会话模式产生相同的完整结果和诊断', () => {
     const expected = compileTestSnapshot(input);
-    for (const incremental of [false, true]) {
-      const session = new SceneReconciler({}, { incremental });
+    for (const mode of [ReconcilerMode.Full, ReconcilerMode.Incremental]) {
+      const session = new SceneReconciler({}, { mode });
       const actual = session.mount(input);
       expect(actual.compilation.result).toEqual(expected.result);
       expect(actual.compilation.diagnostics).toEqual(expected.diagnostics);
@@ -69,7 +69,7 @@ describe('统一编译模式', () => {
   });
 
   it('非增量会话支持完整替换但拒绝批次更新，拒绝后仍保留已发布结果', () => {
-    const session = new SceneReconciler({}, { incremental: false });
+    const session = new SceneReconciler();
     const initial = session.mount(input);
     expect(() => session.update({ operations: [] })).toThrow();
     expect(session.read()).toBe(initial);
@@ -94,7 +94,7 @@ describe('统一编译模式', () => {
       children: [...input.children, { namespace: 'mode-test', type: 'marker' }],
     };
     const options = { composites: [definition] };
-    const session = new SceneReconciler(options, { incremental: true });
+    const session = new SceneReconciler(options, { mode: ReconcilerMode.Incremental });
     const first = session.mount(source);
     expect(first.compilation.result).toEqual(compileTestResult(source, options));
     expect(() => session.getScopeId([2])).toThrow('authored Scope');
@@ -134,7 +134,11 @@ describe('统一编译模式', () => {
     const source: IRScene = { ...input, children: [input.children[0], { namespace: 'mode-test', type: 'probe' }] };
     const options = { composites: [definition] };
     for (const updateStrategy of ['auto', 'full'] as const) {
-      const session = new SceneReconciler(options, { updateStrategy, captureProvenance: true });
+      const session = new SceneReconciler(options, {
+        mode: ReconcilerMode.Incremental,
+        updateStrategy,
+        captureProvenance: true,
+      });
       const first = session.mount(source);
       const scopeId = session.getScopeId();
       expect(() =>

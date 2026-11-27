@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 /*
  * @retikz/vanilla 架构守卫（node 环境）
  * @description 钉死三条不可越界：仅依赖 core/render（无 react）、不复制 Scene→SVG 内核、
- *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvgString 不炸）
+ *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvg 不炸）
  */
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,36 +24,40 @@ describe('@retikz/vanilla 架构守卫', () => {
     expect(pkg.dependencies).not.toHaveProperty('react');
   });
 
-  it('no-renderer-core-duplication：经 @retikz/render/svg builder，不自写 Scene→SVG', () => {
-    const mountSrc = readSrc('dom/mount-svg.ts');
-    const strSrc = readSrc('runtime/render-svg.ts');
+  it('no-renderer-core-duplication：DOM 挂载与 SVG 字符串输出均委托给 Render', () => {
+    const mountSrc = readSrc('dom/mount.ts');
+    const viewSrc = readSrc('dom/view.ts');
+    const strSrc = readSrc('runtime/svg.ts');
 
-    expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
-    expect(mountSrc).toMatch(/buildSvgFrameDocument/);
+    expect(mountSrc).toMatch(/new SceneView(?:<RendererHost>)?\(/);
+    expect(viewSrc).toMatch(/from ['"]@retikz\/render\/runtime['"]/);
+    expect(viewSrc).toContain('createRenderTarget(');
     expect(strSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
 
     // 不在 vanilla 复制 prim→attrs（stroke-width 这类呈现属性映射是 svg 的活）
-    expect(mountSrc + strSrc).not.toMatch(/['"]stroke-width['"]/);
+    expect(mountSrc + viewSrc + strSrc).not.toMatch(/['"]stroke-width['"]/);
   });
 
   it('participant-stays-private：根 processing 与 DOM materializer 不把 transaction participant 暴露为公共扩展点', () => {
-    const root = readSrc('processing/index.ts') + readSrc('processing/types.ts');
-    const dom = readSrc('dom/retained.ts');
+    const root =
+      readSrc('index.ts') +
+      readSrc('normalize/scene/types.ts') +
+      readSrc('runtime/layers.ts') +
+      readSrc('dom/index.ts');
 
     expect(root).not.toMatch(/ProcessingTransactionParticipant|createDomProcessingController|updateParticipant/);
-    expect(dom).toMatch(/processing\/internal/);
   });
 
-  it('ssr-import-no-dom：无 document 的 Node 下 import + renderToSvgString 不炸', async () => {
+  it('ssr-import-no-dom：无 document 的 Node 下 import + renderToSvg 不炸', async () => {
     expect(typeof document).toBe('undefined'); // 确认在无 DOM 的 node 环境
 
     const mod = await import('../../src/index');
 
-    expect(typeof mod.renderToSvgString).toBe('function');
-    expect('mountSvg' in mod).toBe(false);
+    expect(typeof mod.renderToSvg).toBe('function');
+    expect('mountSceneView' in mod).toBe(false);
 
     const scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
 
-    expect(() => mod.renderToSvgString(scene as never)).not.toThrow();
+    expect(() => mod.renderToSvg(scene as never)).not.toThrow();
   }, 15_000);
 });

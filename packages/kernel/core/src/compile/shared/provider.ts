@@ -1,14 +1,14 @@
 import type { Position } from '@retikz/math';
 
 import type { PathPrimitiveAppearance, ScenePrimitive } from '../../contract';
-import { guardProviderOutput, createCompositeContractError } from '../../resolve';
+import { guardProviderOutput, createContractViolationError } from '../../resolve';
 
 /** 校验并脱离 provider 返回的有限二维坐标 */
 export const snapshotProviderPosition = (owner: string, value: Position): Position =>
   guardProviderOutput(owner, () => {
     const [x, y] = value;
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
-      throw createCompositeContractError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
+      throw createContractViolationError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
     }
     return [x, y];
   });
@@ -42,7 +42,7 @@ export const snapshotProviderOutputJson = <T>(
     shouldCheckResources = allowedResourceIds !== undefined,
   ): unknown => {
     if (typeof input === 'number' && !Number.isFinite(input)) {
-      throw createCompositeContractError(
+      throw createContractViolationError(
         `${owner} emit produced a ${formatCurrentPath(depth)} with a non-finite number.`,
       );
     }
@@ -55,7 +55,7 @@ export const snapshotProviderOutputJson = <T>(
     }
     if (shouldCheckResources) {
       if ('resources' in input || ('clipRef' in input && input.clipRef !== undefined)) {
-        throw createCompositeContractError(
+        throw createContractViolationError(
           `${owner} output ${formatCurrentPath(depth)}: provider cannot declare resources or clipRef; use input properties instead.`,
         );
       }
@@ -64,7 +64,7 @@ export const snapshotProviderOutputJson = <T>(
         input.kind === 'resourceRef' &&
         (!('id' in input) || !allowedResourceIds?.has(input.id as string))
       ) {
-        throw createCompositeContractError(
+        throw createContractViolationError(
           `${owner} output ${formatCurrentPath(depth)}: resource reference '${'id' in input ? String(input.id) : ''}' was not supplied to this provider; use input fill or stroke instead.`,
         );
       }
@@ -92,7 +92,7 @@ export const snapshotProviderOutputJson = <T>(
 /** 校验已复制且有限的数值非负；省略的可选值无需校验 */
 export const assertProviderOutputNonNegative = (owner: string, value: number | undefined, path: string): void => {
   if (value !== undefined && value < 0) {
-    throw createCompositeContractError(`${owner} emit produced an invalid ${path}.`);
+    throw createContractViolationError(`${owner} emit produced an invalid ${path}.`);
   }
 };
 
@@ -134,7 +134,7 @@ const assertScenePrimitive = (owner: string, value: ScenePrimitive, path: string
       assertProviderOutputNonNegative(owner, value.measuredWidth, `${path}.measuredWidth`);
       assertProviderOutputNonNegative(owner, value.measuredHeight, `${path}.measuredHeight`);
       if (value.lines.length === 0) {
-        throw createCompositeContractError(`${owner} emit produced an invalid ${path}.lines.`);
+        throw createContractViolationError(`${owner} emit produced an invalid ${path}.lines.`);
       }
       value.lines.forEach((line, index) => {
         assertProviderOutputNonNegative(owner, line.fontSize, `${path}.lines[${index}].fontSize`);
@@ -154,7 +154,7 @@ export const snapshotScenePrimitives = (
 ): Array<ScenePrimitive> =>
   guardProviderOutput(owner, () => {
     if ('resources' in emitted)
-      throw createCompositeContractError(`${owner} output: provider cannot declare resources.`);
+      throw createContractViolationError(`${owner} output: provider cannot declare resources.`);
     return Array.from(emitted, primitive => {
       const primitiveSnapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive', allowedResourceIds);
       assertScenePrimitive(owner, primitiveSnapshot, 'Scene primitive');
@@ -170,7 +170,7 @@ export const materializeScenePrimitives = (
 ): Array<ScenePrimitive> =>
   guardProviderOutput(owner, () => {
     if ('resources' in emitted)
-      throw createCompositeContractError(`${owner} output: provider cannot declare resources.`);
+      throw createContractViolationError(`${owner} output: provider cannot declare resources.`);
     return Array.from(emitted, primitive =>
       snapshotProviderOutputJson(owner, primitive, 'Scene primitive', allowedResourceIds),
     );

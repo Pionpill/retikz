@@ -20,10 +20,6 @@ export type PatternStyleResolution = Readonly<{
 
 /** 已绑定图案定义并确定尺寸、线型的图案 */
 export type PatternResolution = Readonly<{
-  /** 原始图案配置，供资源去重与生成使用 */
-  spec: IRPatternPaint;
-  /** 实际绑定的图案名称 */
-  name: string;
   /** 已绑定的图案定义 */
   definition: PatternDefinition;
   /** 依次取显式值、定义默认值或内置默认值，再舍入后的基础尺寸 */
@@ -57,8 +53,6 @@ export type InputPaintResolution = string | PaintResolution;
 export type ClipResolution = Readonly<{
   /** 原始裁剪配置 */
   spec: IRClip;
-  /** 裁剪定义的注册名称 */
-  kind: string;
   /** 已绑定的裁剪定义 */
   definition: ClipDefinition;
   /** 裁剪定义的 schema 解析后的完整配置 */

@@ -31,7 +31,7 @@ const createFullTopology = (
   const topology: Array<SceneRuntimeNode> = [];
 
   const visit = (items: ReadonlyArray<RuntimeScenePrimitive>, parent: SceneRuntimeNode['parent']): void => {
-    items.forEach((primitive, order) => {
+    items.forEach(primitive => {
       const record = metadata.get(primitive);
       if (record === undefined) {
         throw new RetikzRenderError(
@@ -45,7 +45,6 @@ const createFullTopology = (
           identity: record.identity,
           semanticOwner: record.semanticOwner,
           parent,
-          order,
           primitivePath: record.primitivePath,
           ...(primitive.id === undefined ? {} : { publicId: primitive.id }),
         }),

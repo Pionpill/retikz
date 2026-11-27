@@ -8,8 +8,8 @@ import { normalizeStripChart } from '@retikz/chart-vanilla/point';
 import { ScatterChartSchema } from '@retikz/chart/point';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
-import { normalizeScene, scene } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
+import { embed, normalizeScene, scene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -38,7 +38,7 @@ import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '
 import { StripChart, StripEncodings, StripMark, StripProperties } from '../src/point/strip';
 
 type InputComponent<TInput> = {
-  inputEmbedAdapter: SynchronousInputEmbedAdapter<TInput>;
+  inputEmbedAdapter: InputEmbedAdapter<TInput>;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 
@@ -46,8 +46,7 @@ type InputComponent<TInput> = {
 const inputFromProps = <TInput,>(component: InputComponent<TInput>, props: Readonly<Record<string, unknown>>) => {
   const input = component.createInputEmbedProps(props);
   const normalized = normalizeScene(
-    scene({ children: [{ type: 'embed', kind: component.inputEmbedAdapter.kind, props: input }] }),
-    { adapters: [component.inputEmbedAdapter] },
+    scene({ children: [embed({ adapter: component.inputEmbedAdapter, props: input })] }),
   );
 
   return { source: normalized.ir.children[0] as IRChartSource, input };

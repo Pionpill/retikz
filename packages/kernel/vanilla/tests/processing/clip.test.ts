@@ -4,8 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
-import { createProcessingController, normalizeScene, compileToScene } from '../../src';
-import { prepareProcessingInput } from '../../src/processing/prepare';
+import { embed, SceneRuntime, normalizeScene, compileToScene } from '../../src';
 import { compileTestResult } from '../helpers/compilation';
 
 const customClip = (): ClipDefinition =>
@@ -27,6 +26,7 @@ const customClip = (): ClipDefinition =>
   });
 
 const input: InputScene = {
+  type: 'scene',
   children: [
     {
       type: 'scope',
@@ -41,15 +41,15 @@ describe('Vanilla 裁剪处理等价性', () => {
     const compile = { clips: [customClip()] };
     const direct = compileTestResult(normalizeScene(input).ir, compile).scene;
     const staticResult = compileToScene(input, { compile });
-    const retained = createProcessingController(input, { compile });
+    const session = SceneRuntime.fromInput(input, { compile });
 
     expect(staticResult.scene).toEqual(direct);
-    expect(retained.read().scene).toEqual(direct);
+    expect(session.current.compilation.result.scene).toEqual(direct);
     expect(direct.resources?.clips).toEqual([
       expect.objectContaining({ kind: 'clip', path: expect.objectContaining({ fillRule: 'nonzero' }) }),
     ]);
 
-    retained.dispose();
+    session.dispose();
   });
 
   it('在提供者图冲突检查中包含显式裁剪', () => {
@@ -70,12 +70,12 @@ describe('Vanilla 裁剪处理等价性', () => {
       }),
     };
     const embedded: InputScene = {
-      children: [{ type: 'embed', kind: 'ticketClip', id: 'ticket', props: {} }],
+      type: 'scene',
+      children: [embed({ adapter, id: 'ticket', props: {} })],
     };
 
     expect(() =>
-      prepareProcessingInput(embedded, {
-        adapters: [adapter],
+      compileToScene(embedded, {
         compile: { clips: [customClip()] },
       }),
     ).toThrow(/definition conflict for clip:ticketClip/i);

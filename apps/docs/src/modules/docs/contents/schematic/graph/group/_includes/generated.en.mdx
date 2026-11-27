@@ -127,34 +127,8 @@ export type InputGroup = Omit<GroupCreateOptions, 'children'> &
 #### <ApiSourceLink label={"groupInputEmbedAdapter"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={19}>groupInputEmbedAdapter</ApiSourceLink>
 
 ```ts
-export declare const groupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps>;
+export declare const groupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedProps>;
 ```
-
-#### <ApiSourceLink label={"createGraphVanillaAdapters"} path={"packages/schematic/graph-vanilla/src/adapters.ts"} startLine={16}>createGraphVanillaAdapters</ApiSourceLink>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<ApiTable variant="parameters">
-
-| Category | Name | Type / signature                               | Description                                                                         |
-| -------- | ---- | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Returns  | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | A new adapter array containing Graph, Group, the Block family, Entity, and Relation |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
-```
-
-</DocTab>
-
-</DocTabs>
 
 #### <ApiSourceLink label={"createGroup"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={8}>createGroup</ApiSourceLink> / <ApiSourceLink label={"GroupCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/group.ts"} startLine={5}>GroupCreateOptions</ApiSourceLink>
 

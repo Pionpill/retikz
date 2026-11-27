@@ -1,13 +1,13 @@
+import type { RenderMode } from '@retikz/render/runtime';
 import { Brush, LineDotRightHorizontal } from 'lucide-react';
 import type { FC } from 'react';
 
 import { ToolbarIconButton } from '../components';
-import type { RendererMode } from '../types';
 
 /** 渲染模式切换按钮。 */
 export type RendererModeButtonProps = {
   /** 当前渲染模式。 */
-  rendererMode: RendererMode;
+  rendererMode: RenderMode;
   /** 切换渲染模式。 */
   onToggle: () => void;
   /** 是否因当前内容固定渲染目标而禁用切换。 */

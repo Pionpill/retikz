@@ -40,7 +40,7 @@ const RibbonBoundaryGeometry: FC<RibbonBoundaryGeometryProps> = props => {
   };
 
   return (
-    <Layout style={{ maxWidth: '100%', height: 'auto' }} extensions={{ paths: [ribbonPathDefinition] }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }} compile={{ paths: [ribbonPathDefinition] }}>
       {t.stages.map((title, stage) => (
         <Scope key={title} position={[stage * 235, 0]}>
           <Node position={[77, -30]} text={title} style={{ stroke: 'none', font: { size: 14 } }} />

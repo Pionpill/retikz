@@ -19,13 +19,13 @@ const Demo: FC<{ lang?: Lang }> = props => {
   const lowerTexState = useLowerTex({ profile: 'math' });
 
   if (lowerTexState.status !== 'ready') {
-    return <Layout />;
+    return <Layout>{null}</Layout>;
   }
 
   const lowerTex: TexLowerer = lowerTexState.lowerTex;
 
   return (
-    <Layout lowerTex={lowerTex}>
+    <Layout compile={{ lowerTex }}>
       <Node position={[0, -48]} style={{ stroke: 'none', font: { size: 18 } }} layout={{ padding: 0 }}>
         {i18n.inlineFormula}
       </Node>

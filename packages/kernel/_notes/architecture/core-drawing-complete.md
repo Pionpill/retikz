@@ -16,15 +16,15 @@ Drawing Complete 不表示 core 内置所有 shape、diagram preset 或视觉效
 
 ## 2. 包角色与交界面
 
-| 角色         | 包                                | 责任                                                                                                | 不拥有                                                       |
-| ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 计算底座     | `@retikz/math`                    | 零依赖纯几何、向量、仿射、求交和曲线计算                                                            | IR、Scene、layout 语义                                       |
-| 执行底座     | `@retikz/reconciler`              | 完整与增量编译执行、Composite 试算/重放、Weave 缓存、transaction、revision 与 trace                 | Core IR、Scene、几何、renderer                               |
-| 主责包       | `@retikz/core`                    | Core IR、definition / registry、原子编译阶段、共享产物、Scene 与 Composite 契约                     | DOM、renderer 实例、框架状态                                 |
-| Scene 执行包 | `@retikz/render`                  | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                                   | 新图形 IR、上层领域语义                                      |
-| API 基础包   | `@retikz/vanilla`                 | `InputXxx -> Core IR`、编译 / runtime 选项与 framework-neutral processing session / readonly result | Core 图形语义、DOM 与框架生命周期                            |
-| 框架宿主     | `@retikz/react` 等                | 框架语法到 Vanilla Input、框架生命周期、订阅结果与宿主桥接                                          | Core IR builder、compile driver、Runtime、平行 renderer 编排 |
-| 上层消费方   | plot / table / standard 等 Tier 2 | lowering 到 Core IR，复用 Core contract；由 `@retikz/reconciler` 统一执行生成内容                   | Core 的通用图形、几何和 renderer 语义                        |
+| 角色         | 包                                | 责任                                                                                                | 不拥有                                       |
+| ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 计算底座     | `@retikz/math`                    | 零依赖纯几何、向量、仿射、求交和曲线计算                                                            | IR、Scene、layout 语义                       |
+| 执行底座     | `@retikz/reconciler`              | 完整与增量编译执行、Composite 试算/重放、Weave 缓存、transaction、revision 与 trace                 | Core IR、Scene、几何、renderer               |
+| 主责包       | `@retikz/core`                    | Core IR、definition / registry、原子编译阶段、共享产物、Scene 与 Composite 契约                     | DOM、renderer 实例、框架状态                 |
+| Scene 执行包 | `@retikz/render`                  | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                                   | 新图形 IR、上层领域语义                      |
+| API 基础包   | `@retikz/vanilla`                 | `InputXxx -> Core IR`、编译 / runtime 选项与 framework-neutral processing session / readonly result | Core 图形语义、DOM 与框架生命周期            |
+| 框架宿主     | `@retikz/react` 等                | 框架语法到 Vanilla Input、框架生命周期、订阅结果与宿主桥接                                          | Core IR builder、Runtime、平行 renderer 编排 |
+| 上层消费方   | plot / table / standard 等 Tier 2 | lowering 到 Core IR，复用 Core contract；由 `@retikz/reconciler` 统一执行生成内容                   | Core 的通用图形、几何和 renderer 语义        |
 
 完整闭环可以跨包，但语义所有权不能漂移。比如 renderer 负责实现 blur，不等于 blur 可以只存在于 SVG descriptor；React 负责 JSX authoring，不等于 shape extension 可以只存在于组件映射。
 
@@ -64,7 +64,7 @@ Composite assembly 与 composite registry 是相邻但不同的契约：registry
 
 Spatial sidecar 与 Scene 也是相邻但不同的产物：Scene 只承载 renderer execution；qualified handles 与 Scene、artifacts、diagnostics provenance 在同一 compile revision 生成和提交，但由 Core query / tooling 消费。外层 Composite 只能为 descendant owner path 增加前缀，不能复制、重命名或丢弃内部 handle。
 
-Core shared colors 是跨包 value contract，不是领域 palette。Inspect 从普通编译结果独立生成辅助 IR，自行使用公共色板形成 `InspectionAppearanceContext`，不要求 Core 提供观测或对象主题。领域产物缺少可靠 Scene 坐标时不绘制叠加内容。
+Core shared colors 是跨包 value contract，不是领域 palette。
 
 ## 5. 准入原则
 

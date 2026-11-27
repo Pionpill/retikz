@@ -6,12 +6,8 @@ import {
   RetikzStandardErrorCode,
   surfaceProvider,
 } from '@retikz/standard/presentation';
-import type {
-  InputChild,
-  InputEmbed,
-  SynchronousInputEmbedAdapter,
-  EmbedChildrenNormalizationResult,
-} from '@retikz/vanilla';
+import { embed } from '@retikz/vanilla';
+import type { InputChild, InputEmbed, InputEmbedAdapter, EmbedChildrenNormalizationResult } from '@retikz/vanilla';
 
 import { standardSurfaceEmbedKind } from '../shared/constants';
 
@@ -60,9 +56,8 @@ const createSurfaceContribution = (props: InputSurface, normalized: EmbedChildre
   };
 };
 
-/** Standard Surface 的同步与异步 InputEmbed adapter */
-export const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
-  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>> = {
+/** Standard Surface 的 InputEmbed adapter */
+export const surfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
   kind: standardSurfaceEmbedKind,
   lower: (props, context) => {
     const { child } = props;
@@ -79,16 +74,12 @@ export const surfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface
 
     return createSurfaceContribution(props, normalized);
   },
-  prepare: async (props, context) => {
-    const child = await context.prepareChildren([props.child]);
-    return { execute: async () => createSurfaceContribution(props, await child.execute()) };
-  },
 };
 
 /** 创建由 surfaceInputEmbedAdapter 下沉的 Standard Surface embed */
-export const surface = (input: InputSurface): InputEmbed<InputSurface> => ({
-  type: 'embed',
-  kind: standardSurfaceEmbedKind,
-  ...(input.id === undefined ? {} : { id: input.id }),
-  props: input,
-});
+export const surface = (input: InputSurface): InputEmbed<InputSurface> =>
+  embed({
+    adapter: surfaceInputEmbedAdapter,
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
+  });

@@ -65,18 +65,10 @@ export type BlendMode = ValueOf<typeof BlendMode>;
 
 /** 校验预设阴影或显式偏移；单独指定的样式字段覆盖预设值 */
 export const DropShadowSchema = object({
-  preset: zodEnum(ShadowPreset)
-    .optional()
-    .describe(
-      'Tailwind-style size preset seeding offsetX / offsetY / blur / color; any explicit field below overrides it.',
-    ),
-  offsetX: number().optional().describe('Horizontal shadow offset in user units. Overrides the preset value.'),
-  offsetY: number()
-    .optional()
-    .describe('Vertical shadow offset in user units (overrides preset); positive = downward under screen y-down.'),
-  blur: NonNegativeNumberSchema.optional().describe(
-    'Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.',
-  ),
+  preset: zodEnum(ShadowPreset).optional().describe('Seeds offsets, blur and color.'),
+  offsetX: number().optional().describe('Horizontal offset in user units.'),
+  offsetY: number().optional().describe('Vertical offset in user units; positive is down.'),
+  blur: NonNegativeNumberSchema.optional().describe('Blur radius in user units; zero gives a hard edge.'),
   color: lazy(() => CssColorSchema)
     .optional()
     .describe(
@@ -89,7 +81,7 @@ export const DropShadowSchema = object({
   .refine(s => s.preset !== undefined || (s.offsetX !== undefined && s.offsetY !== undefined), {
     message: 'Provide a `preset`, or explicit `offsetX` + `offsetY`.',
   })
-  .describe('Drop shadow: a `preset` (size defaults) with optional per-field overrides, or fully explicit offsets.');
+  .describe('Explicit fields override the shadow preset.');
 
 /** IR shadow 对象分支（可带 preset 与显式字段覆盖） */
 export type IRDropShadow = ZodInfer<typeof DropShadowSchema>;

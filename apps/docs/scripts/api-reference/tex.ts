@@ -1399,12 +1399,16 @@ const matchesSchemaMemberType = (schema: z.core.$ZodType, node: ts.TypeNode): bo
   if (schema instanceof z.ZodUnion) return schema.options.some(option => matchesSchemaMemberType(option, node));
 
   if (ts.isLiteralTypeNode(node)) {
+    if (schema instanceof z.ZodEnum && ts.isStringLiteral(node.literal))
+      return schema.options.includes(node.literal.text);
     if (!(schema instanceof z.ZodLiteral))
       return !(schema instanceof z.ZodNumber || schema instanceof z.ZodString || schema instanceof z.ZodObject);
     return [...schema.values].some(
       value => JSON.stringify(value) === node.literal.getText().replace(/^'([^']*)'$/, '"$1"'),
     );
   }
+  if (schema instanceof z.ZodEnum && ts.isUnionTypeNode(node))
+    return node.types.every(member => matchesSchemaMemberType(schema, member));
   if (node.kind === ts.SyntaxKind.NumberKeyword)
     return !(schema instanceof z.ZodLiteral || schema instanceof z.ZodString || schema instanceof z.ZodObject);
   if (node.kind === ts.SyntaxKind.StringKeyword)
@@ -1529,9 +1533,7 @@ const projectSchemaMembers = (
 ): Array<ApiReferenceMember> => {
   const fields = schema.shape as Partial<Record<string, z.ZodType>>;
   const expected = new Set(members.map(member => member.name));
-  const missing = [...expected].filter(
-    name => fields[name] === undefined || localizations.descriptions[name] === undefined,
-  );
+  const missing = [...expected].filter(name => fields[name] === undefined);
   const unknown = Object.keys(localizations.descriptions).filter(name => !knownFields.has(name.split('.')[0]));
   if (missing.length > 0 || unknown.length > 0)
     throw new Error(
@@ -1541,16 +1543,16 @@ const projectSchemaMembers = (
   return members.map(member => {
     const field = fields[member.name];
     const chinese = localizations.descriptions[member.name];
-    if (!field || !chinese) throw new Error(`Missing ${schemaName}.${member.name} Schema field or translation`);
+    if (!field) throw new Error(`Missing ${schemaName}.${member.name} Schema field`);
 
     const english = schemaDescription(field);
-    if (!english) throw new Error(`Missing ${schemaName}.${member.name} .describe()`);
+    if (english && !chinese) throw new Error(`Unpaired ${schemaName}.${member.name} Schema description`);
 
     return {
       ...member,
       description: '',
       details: '',
-      schemaDescription: { zh: chinese, en: english },
+      schemaDescription: english && chinese ? { zh: chinese, en: english } : undefined,
       defaultValue: schemaDefaultValue(field),
     };
   });

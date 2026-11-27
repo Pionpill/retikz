@@ -1,14 +1,36 @@
-/** 按内容比例补齐输出尺寸；退化轴以一个 CSS 像素承载 */
-export const computeDisplaySize = (
+/** 补齐 CSS 显示尺寸；数值轴按内容比例推导，CSS 字符串由浏览器按固有比例排版 */
+export function computeDisplaySize(
   layout: Readonly<{ width: number; height: number }>,
   width?: number,
   height?: number,
-): { width: number; height: number } => {
+): { width: number; height: number };
+export function computeDisplaySize(
+  layout: Readonly<{ width: number; height: number }>,
+  width?: number | string,
+  height?: number | string,
+): { width: number | string; height: number | string };
+export function computeDisplaySize(
+  layout: Readonly<{ width: number; height: number }>,
+  width?: number | string,
+  height?: number | string,
+): { width: number | string; height: number | string } {
   const intrinsicWidth = layout.width > 0 ? layout.width : 1;
   const intrinsicHeight = layout.height > 0 ? layout.height : 1;
 
   return {
-    width: width ?? (height === undefined ? intrinsicWidth : (height * intrinsicWidth) / intrinsicHeight),
-    height: height ?? (width === undefined ? intrinsicHeight : (width * intrinsicHeight) / intrinsicWidth),
+    width:
+      width ??
+      (typeof height === 'number'
+        ? (height * intrinsicWidth) / intrinsicHeight
+        : height === undefined
+          ? intrinsicWidth
+          : 'auto'),
+    height:
+      height ??
+      (typeof width === 'number'
+        ? (width * intrinsicHeight) / intrinsicWidth
+        : width === undefined
+          ? intrinsicHeight
+          : 'auto'),
   };
-};
+}

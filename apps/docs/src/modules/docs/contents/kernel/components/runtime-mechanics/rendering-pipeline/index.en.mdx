@@ -17,7 +17,7 @@ Our example has rectangular nodes A and B centered at `[0, 0]` and `[180, 0]`, e
 
 <ComponentPreview files="pipeline-example" size="xs" />
 
-The preview source offers React, Vanilla and IR views. The example uses static mode to follow one complete processing pass.
+The preview source offers React, Vanilla and IR views. The example follows the first complete compilation.
 
 ## Declarations and input
 
@@ -33,9 +33,9 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
   sources={[
     {
       label: 'Layout collects declarations and calls Vanilla',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      path: 'packages/kernel/react/src/container/Layout.tsx',
     },
-    { label: 'JSX to InputScene', path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts' },
+    { label: 'JSX to InputScene', path: 'packages/kernel/react/src/container/convert.ts' },
   ]}
 />
 
@@ -43,7 +43,7 @@ Both entries deliver nodes A and B and their connecting path. Names, positions, 
 
 Vanilla handles configuration at the input layer: it normalizes `InputScene` into `IRScene`, assembles compile options and arranges Core execution. Existing IR enters here too. The prepared IR still contains references to A and B, ready for Core to calculate their connection points.
 
-Vanilla also assembles the processing mode. **static** creates a temporary non-incremental SceneReconciler and disposes it after compilation. In the default **retained** mode, the controller holds a reconciler and applies complete input updates through replace. The reconciler selects complete traversal or Weave scheduling according to the compilation mode; both drivers share drawing computation and output assembly.
+Layout uses `compileToScene` for its first render. After the client commits, it creates a Vanilla `SceneRuntime` and passes later authoring input or complete IR to `replace`. The reconciler defaults to full mode and can be configured for incremental mode via `reconciler`. Complete replacements always compile in full.
 
 <ComponentPreview files="pipeline-processing" size="sm" hideCode type="flow" />
 
@@ -51,12 +51,7 @@ React Layout calls Vanilla's processing APIs and connects controller creation, u
 
 <SourceLinks
   sources={[
-    { label: 'Input preparation', path: 'packages/kernel/vanilla/src/processing/prepare.ts' },
-    { label: 'Single-pass processing', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    {
-      label: 'Reconciler and controller assembly',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-    },
+    { label: 'One-shot compilation and scene sessions', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
   ]}
 />
 
@@ -95,7 +90,7 @@ A is centered at `[0, 0]` and has width 60, putting its right edge at `x = 30`. 
 </DocTab>
 </DocTabs>
 
-These excerpts show the path structure. The complete Scene also contains rectangles, text and canvas information. Reconciler delivers Scene with Composite artifacts and diagnostics; Vanilla organizes them into `ProcessingResult` for the host. Drawing uses Scene, while applications can read other outputs as needed.
+These excerpts show the path structure. The complete Scene also contains rectangles, text and canvas information. Reconciler delivers Scene with Composite artifacts and diagnostics; Vanilla passes the original compile result to the host. Drawing uses Scene, while applications can read other outputs as needed.
 
 <SourceLinks
   sources={[
@@ -109,7 +104,7 @@ These excerpts show the path structure. The complete Scene also contains rectang
 
 ## Render and hosts
 
-Render consumes the geometry in Scene. The SVG backend builds a `SvgNode` tree of elements and attributes, which React or Vanilla's DOM host commits as SVG elements. The Canvas backend executes drawing operations on a canvas managed by its host.
+Render consumes the geometry in Scene. The SVG backend builds a `SvgNode` tree of elements and attributes, which the native SVG renderer commits into the root provided by React or Vanilla. The Canvas backend executes drawing operations on a canvas managed by its host.
 
 <ComponentPreview files="pipeline-output" size="sm" hideCode type="flow" />
 
@@ -120,26 +115,28 @@ Static export can serialize the SVG tree into a string. Applications with an exi
 <SourceLinks
   sources={[
     { label: 'SVG description tree', path: 'packages/kernel/render/src/svg/builders/document.ts' },
-    { label: 'React displays processing results', path: 'packages/kernel/react/src/render/processing-result.tsx' },
-    { label: 'Vanilla SVG host', path: 'packages/kernel/vanilla/src/dom/mount-svg.ts' },
+    {
+      label: 'React displays processing results',
+      path: 'packages/kernel/react/src/container/render/LayoutOutput.tsx',
+    },
+    { label: 'Vanilla DOM host', path: 'packages/kernel/vanilla/src/dom/mount.ts' },
     { label: 'Canvas drawing', path: 'packages/kernel/render/src/canvas/render-to-canvas.ts' },
   ]}
 />
 
 ## Implementation sequence
 
-Follow the example's React JSX, static, SVG branch through these entries. Arrows show the reading order of execution, including calls inside input preparation and the compile driver.
+Follow the example's first render from React JSX to SVG through these entries. Arrows show the reading order of execution, including calls inside input preparation.
 
 <ComponentPreview files="pipeline-implementation" size="lg" hideCode type="flow" />
 
-Start at Layout's `createInputScene`, then follow Vanilla's `prepareStaticProcessing`. Inside it, `prepareProcessingInput` prepares the input and the static driver creates a temporary non-incremental `SceneReconciler`, reads artifacts and diagnostics from the mount result, and disposes the instance when the call ends. The result returns to React's `ProcessingResultHost`; `buildSvgFrameDocument` and `svgToReact` produce React elements for React to commit to the page.
+Layout collects JSX with `convertReactToInputScene` and sizes the initial host using `compileToScene`. Once React mounts the empty SVG root, Layout starts a `SceneRuntime` with a DOM render target. The native SVG renderer commits the children and handles subsequent updates.
 
 <SourceLinks
   sources={[
-    { label: 'React scene entry', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-    { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/processing/static.ts' },
-    { label: 'Default compile driver', path: 'packages/kernel/vanilla/src/processing/compile-driver.ts' },
-    { label: 'SvgNode to React elements', path: 'packages/kernel/react/src/render/svg/svg-to-react.ts' },
+    { label: 'React scene entry', path: 'packages/kernel/react/src/container/Layout.tsx' },
+    { label: 'Vanilla synchronous processing', path: 'packages/kernel/vanilla/src/runtime/runtime.ts' },
+    { label: 'React SVG root host', path: 'packages/kernel/react/src/container/render/SvgHost.tsx' },
   ]}
 />
 

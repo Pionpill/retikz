@@ -2,9 +2,8 @@ import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOptions } from '../compile';
-import { createCompileRuntime, formatCompileWarning } from '../compile';
+import { compileScene, createCompileRuntime, formatCompileWarning } from '../compile';
 import { RetikzReconcilerError, RetikzReconcilerErrorCode } from '../error';
-import { compileScene } from '../full';
 import type { WeaveBatch, WeavePreparedUpdate } from '../weave';
 import { WeaveManager } from '../weave';
 import {
@@ -17,7 +16,7 @@ import {
 import type { ReconcilerPreparedCommit, ReconcilerResult, SceneReconcilerOptions } from './types';
 
 /** 同步协调编译与一个输出目标，不依赖 DOM 或 Runtime 注册图 */
-export class SceneReconciler<const TComposite extends AnyCompositeDefinition = never> {
+export class SceneReconciler<const TComposite extends AnyCompositeDefinition = AnyCompositeDefinition> {
   private current: ReconcilerResult<TComposite> | undefined;
   private weave: WeaveManager<TComposite> | undefined;
   private status: ReconcilerStatus = ReconcilerStatus.Idle;
@@ -30,7 +29,7 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
 
   /** 从当前执行选项读取模式，不重复保存派生状态 */
   private get mode(): ReconcilerMode {
-    return this.execution.incremental === false ? ReconcilerMode.Full : ReconcilerMode.Incremental;
+    return this.execution.mode ?? ReconcilerMode.Full;
   }
 
   constructor(
@@ -95,7 +94,7 @@ export class SceneReconciler<const TComposite extends AnyCompositeDefinition = n
       return expected;
     this.status = ReconcilerStatus.Preparing;
     try {
-      const prepared = this.weave.update(batch, this.execution.updateStrategy === ReconcilerUpdateStrategy.Full);
+      const prepared = this.weave.prepareUpdate(batch, this.execution.updateStrategy === ReconcilerUpdateStrategy.Full);
       const published = this.publish(
         { revision: this.nextRevision(), compilation: prepared.compilation },
         this.weave,

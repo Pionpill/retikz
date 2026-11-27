@@ -1,15 +1,74 @@
 // @vitest-environment jsdom
-import type { IRScene } from '@retikz/core';
-import { CompositeBaseSchema, defineComposite, defineTheme, ThemeMode } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
+import { ReconcilerMode } from '@retikz/reconciler';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
-import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
-import { createProcessingController, compileToScene, processToStaticResult } from '../../src';
-import { prepareProcessingInput } from '../../src/processing/prepare';
+import type { InputEmbedAdapter, InputScene } from '../../src';
+import { scene, node, normalizeScene, renderToSvg, embed, SceneRuntime, compileToScene } from '../../src';
 
 describe('Vanilla 处理', () => {
-  it('只在 processing prepare 中解析 InputEmbed 的 Composite contribution', () => {
+  it('单图可替换为 IR；批次只接受当前版本，导出不再次编译或发布', () => {
+    const runtime = SceneRuntime.fromInput(scene([]), {
+      reconciler: { mode: ReconcilerMode.Incremental },
+    });
+    try {
+      const input = scene([node({ id: 'point', position: [5, 0] })]);
+      runtime.replace(normalizeScene(input).ir);
+      const expected = runtime.current;
+      const remove = {
+        operations: [
+          {
+            kind: 'remove' as const,
+            target: { kind: 'id' as const, id: 'point', scopeId: runtime.getScopeId([], expected) },
+          },
+        ],
+      };
+      const listener = vi.fn();
+      runtime.subscribe(listener);
+      expect(runtime.toSvgString()).toBe(renderToSvg(expected.compilation.result.scene));
+      expect(listener).not.toHaveBeenCalled();
+      runtime.update(remove, expected);
+      const current = runtime.current;
+      expect(listener.mock.lastCall?.[0]).toBe(current);
+      expect(current.compilation.result.scene.primitives).toHaveLength(0);
+      expect(() => runtime.update(remove, expected)).toThrow(/stale/i);
+      expect(runtime.current).toBe(current);
+      expect(listener).toHaveBeenCalledTimes(1);
+    } finally {
+      runtime.dispose();
+    }
+  });
+
+  it('协调器拒绝提交期间的销毁后，会话仍可更新和释放', () => {
+    const ir = normalizeScene(scene([])).ir;
+    const commit = vi.fn<() => void>();
+    const dispose = vi.fn();
+    const runtime = new SceneRuntime(ir, {
+      createTarget: () => ({
+        prepare: () => ({ commit, rollback: () => undefined, dispose: () => undefined }),
+        dispose,
+      }),
+    });
+    const listener = vi.fn();
+    runtime.subscribe(listener);
+    const initial = runtime.current;
+    commit.mockImplementationOnce(() => runtime.dispose());
+    try {
+      expect(() => runtime.replace(ir)).toThrow(/Cannot dispose an active update/);
+      expect(runtime.current).toBe(initial);
+      expect(listener).not.toHaveBeenCalled();
+      expect(dispose).not.toHaveBeenCalled();
+      runtime.replace(ir);
+      expect(listener).toHaveBeenCalledWith(runtime.current);
+    } finally {
+      runtime.dispose();
+    }
+    expect(dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('一次编译只解析并执行一次嵌入的 Composite 定义', () => {
+    const compile = vi.fn(() => ({ children: [] }));
     const definition = defineComposite({
       namespace: 'fixture',
       type: 'box',
@@ -17,7 +76,7 @@ describe('Vanilla 处理', () => {
         namespace: literal('fixture'),
         type: literal('box'),
       }),
-      compile: () => ({ children: [] }),
+      compile,
     });
     const makeDefinition = vi.fn(() => definition);
     const adapter: InputEmbedAdapter<Record<string, never>> = {
@@ -36,29 +95,20 @@ describe('Vanilla 处理', () => {
       }),
     };
     const input: InputScene = {
-      children: [{ type: 'embed', kind: 'fixture-box', id: 'box', props: {} }],
+      type: 'scene',
+      children: [embed({ adapter, id: 'box', props: {} })],
     };
 
-    const prepared = prepareProcessingInput(input, { adapters: [adapter] });
+    compileToScene(input);
 
     expect(makeDefinition).toHaveBeenCalledTimes(1);
-    expect(prepared.coreOptions.composites).toEqual([definition]);
+    expect(compile).toHaveBeenCalledOnce();
   });
 
-  it('在同一 Scope 链中把有效 Theme 交给 InputEmbed adapter', () => {
-    const themeName = defineTheme({
-      name: 'academic',
-      resolve: () => ({
-        semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
-        categorical: ['#112233'],
-      }),
-    });
+  it('保留嵌套 Scope 的 Theme 供 Core 解析', () => {
     const adapter: InputEmbedAdapter<Record<string, never>> = {
       kind: 'theme-probe',
-      lower: (_props, context) => {
-        expect(context.theme).toMatchObject({ name: 'academic', mode: ThemeMode.Dark });
-        expect(context.themeDefinitions).toEqual([themeName]);
-
+      lower: () => {
         return {
           node: { type: 'node', id: 'theme-probe', position: [0, 0] },
           providerDependencies: { roots: [], providers: [] },
@@ -66,21 +116,19 @@ describe('Vanilla 处理', () => {
       },
     };
 
-    const prepared = prepareProcessingInput(
-      {
-        theme: { name: 'academic', mode: ThemeMode.Light },
-        children: [
-          {
-            type: 'scope',
-            theme: { mode: ThemeMode.Dark },
-            children: [{ type: 'embed', kind: 'theme-probe', id: 'theme-probe', props: {} }],
-          },
-        ],
-      },
-      { adapters: [adapter], compile: { themeDefinitions: [themeName] } },
-    );
+    const normalized = normalizeScene({
+      type: 'scene',
+      theme: { name: 'academic', mode: ThemeMode.Light },
+      children: [
+        {
+          type: 'scope',
+          theme: { mode: ThemeMode.Dark },
+          children: [embed({ adapter, id: 'theme-probe', props: {} })],
+        },
+      ],
+    });
 
-    expect(prepared.source.children).toEqual([
+    expect(normalized.ir.children).toEqual([
       {
         type: 'scope',
         theme: { mode: ThemeMode.Dark },
@@ -89,59 +137,54 @@ describe('Vanilla 处理', () => {
     ]);
   });
 
-  it('IRScene 直接进入 processing，不触发 Input normalize 或 schema parse', () => {
-    const source = {
-      type: 'scene' as const,
-      version: 1 as const,
-      children: [{ type: 'node' as const, id: 'a', position: [0, 0] as [number, number] }],
-    };
-
-    expect(prepareProcessingInput(source, {}).source).toEqual(source);
-  });
-
-  it('retained controller 创建时保留 Core 编译诊断', () => {
+  it('session controller 创建时保留 Core 编译诊断', () => {
     expect(() =>
-      createProcessingController({
+      SceneRuntime.fromInput({
+        type: 'scene',
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
     ).toThrow(/Unknown provider 'missing-shape'/);
   });
 
   it('controller 仅在完整成功后发布不可变 revision，失败保持上一次结果', () => {
-    const controller = createProcessingController({ children: [{ type: 'node', id: 'first', position: [0, 0] }] }, {});
-    const first = controller.read();
+    const controller = SceneRuntime.fromInput(
+      { type: 'scene', children: [{ type: 'node', id: 'first', position: [0, 0] }] },
+      {},
+    );
+    const first = controller.current;
     const listener = vi.fn();
     const unsubscribe = controller.subscribe(listener);
 
-    controller.update({ children: [{ type: 'node', id: 'second', position: [20, 0] }] });
+    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
-    const second = controller.read();
+    const second = controller.current;
 
     expect(second.revision).toBe(first.revision + 1);
-    expect(second.scene).not.toBe(first.scene);
-    expect(Object.isFrozen(second)).toBe(true);
+    expect(second.compilation.result.scene).not.toBe(first.compilation.result.scene);
+    expect(controller.current).toBe(second);
     expect(listener).toHaveBeenCalledWith(second);
 
     expect(() =>
-      controller.update({
+      controller.replace({
+        type: 'scene',
         children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
       }),
     ).toThrow();
-    expect(controller.read()).toBe(second);
+    expect(controller.current).toBe(second);
 
     unsubscribe();
-    controller.update({ children: [{ type: 'node', id: 'third', position: [40, 0] }] });
+    controller.replace({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 
     controller.dispose();
 
-    expect(() => controller.update({ children: [{ type: 'node', id: 'after-dispose', position: [60, 0] }] })).toThrow(
-      /disposed/i,
-    );
+    expect(() =>
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'after-dispose', position: [60, 0] }] }),
+    ).toThrow(/disposed/i);
   });
 
-  it('retained controller 接受新增和移除 Composite contribution 的 InputScene 更新', () => {
+  it('session controller 接受新增和移除 Composite contribution 的 InputScene 更新', () => {
     const definition = defineComposite({
       namespace: 'fixture',
       type: 'box',
@@ -166,23 +209,25 @@ describe('Vanilla 处理', () => {
         },
       }),
     };
-    const controller = createProcessingController(
-      { children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
-      { adapters: [adapter] },
+    const phases: Array<string> = [];
+    const controller = SceneRuntime.fromInput(
+      { type: 'scene', children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
+      { reconciler: { trace: record => phases.push(record.phase) } },
     );
-    const first = controller.read();
+    const first = controller.current;
 
     expect(() =>
-      controller.update({
-        children: [{ type: 'embed', kind: 'fixture-box', id: 'box', props: {} }],
-      }),
+      controller.replace({ type: 'scene', children: [embed({ adapter, id: 'box', props: {} })] }),
     ).not.toThrow();
-    expect(controller.read().revision).toBe(first.revision + 1);
+    expect(controller.current.revision).toBe(first.revision + 1);
 
-    expect(() => controller.update({ children: [{ type: 'node', id: 'restored', position: [20, 0] }] })).not.toThrow();
-    expect(controller.read().revision).toBe(first.revision + 2);
+    expect(() =>
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'restored', position: [20, 0] }] }),
+    ).not.toThrow();
+    expect(controller.current.revision).toBe(first.revision + 2);
 
     controller.dispose();
+    expect(phases).toEqual(['mount', 'update', 'update', 'unmount']);
   });
 
   it('候选 Composite topology 编译失败时保留旧 result 并记录 diagnostics', () => {
@@ -213,18 +258,19 @@ describe('Vanilla 处理', () => {
         },
       }),
     };
-    const controller = createProcessingController(
-      { children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
-      { adapters: [adapter] },
-    );
-    const stable = controller.read();
+    const controller = SceneRuntime.fromInput({
+      type: 'scene',
+      children: [{ type: 'node', id: 'stable', position: [0, 0] }],
+    });
+    const stable = controller.current;
 
     expect(() =>
-      controller.update({
-        children: [{ type: 'embed', kind: 'broken-composite', id: 'broken', props: {} }],
+      controller.replace({
+        type: 'scene',
+        children: [embed({ adapter, id: 'broken', props: {} })],
       }),
     ).toThrow(/expected candidate composite failure/);
-    expect(controller.read()).toBe(stable);
+    expect(controller.current).toBe(stable);
     expect(controller.diagnostics()).toEqual([
       expect.objectContaining({ message: 'expected candidate composite failure' }),
     ]);
@@ -233,148 +279,84 @@ describe('Vanilla 处理', () => {
   });
 
   it('订阅方异常不会回滚已提交 revision，并经诊断边界报告', () => {
-    const controller = createProcessingController({ children: [{ type: 'node', id: 'first', position: [0, 0] }] });
-    const first = controller.read();
+    const controller = SceneRuntime.fromInput({
+      type: 'scene',
+      children: [{ type: 'node', id: 'first', position: [0, 0] }],
+    });
+    const first = controller.current;
     const failure = new Error('expected subscriber failure');
     controller.subscribe(() => {
       throw failure;
     });
 
-    expect(() => controller.update({ children: [{ type: 'node', id: 'second', position: [20, 0] }] })).not.toThrow();
-    expect(controller.read().revision).toBe(first.revision + 1);
+    expect(() =>
+      controller.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] }),
+    ).not.toThrow();
+    expect(controller.current.revision).toBe(first.revision + 1);
     expect(controller.diagnostics()).toContain(failure);
 
     controller.dispose();
   });
 
-  it('预编译 Scene 只产生 static processing result', () => {
-    const scene = { layout: { x: 0, y: 0, width: 1, height: 1 }, primitives: [] };
-
-    const result = processToStaticResult(scene, {});
-
-    expect(result.revision).toBe(0);
-    expect(result.compileResult).toBeUndefined();
-    expect(result.scene).toBe(scene);
-  });
-
-  it('已类型化 IRScene 直接进入 processing，不重走 Input normalize', () => {
-    const ir: IRScene = {
+  it('session processing 只在成功 Runtime transaction 后替换完整 result', () => {
+    const processing = SceneRuntime.fromInput({
       type: 'scene',
-      version: 1,
-      children: [{ type: 'node', id: 'source', position: [0, 0] }],
-    };
-
-    const prepared = prepareProcessingInput(ir, {});
-
-    expect(prepared.source).toBe(ir);
-    expect(prepared.authoringSites).toEqual([]);
-    expect(prepared.runtimeMeta.layers).toEqual([]);
-  });
-
-  it('retained processing 只在成功 Runtime transaction 后替换完整 result', () => {
-    const processing = createProcessingController({ children: [{ type: 'node', id: 'first', position: [0, 0] }] });
-    const first = processing.read();
+      children: [{ type: 'node', id: 'first', position: [0, 0] }],
+    });
+    const first = processing.current;
     const listener = vi.fn();
     const unsubscribe = processing.subscribe(listener);
 
-    processing.update({ children: [{ type: 'node', id: 'second', position: [20, 0] }] });
+    processing.replace({ type: 'scene', children: [{ type: 'node', id: 'second', position: [20, 0] }] });
 
-    const second = processing.read();
+    const second = processing.current;
 
     expect(second.revision).toBe(first.revision + 1);
-    expect(second.scene).not.toBe(first.scene);
+    expect(second.compilation.result.scene).not.toBe(first.compilation.result.scene);
     expect(listener).toHaveBeenCalledWith(second);
     expect(() =>
-      processing.update({ children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }] }),
+      processing.replace({
+        type: 'scene',
+        children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
+      }),
     ).toThrow();
-    expect(processing.read()).toBe(second);
+    expect(processing.current).toBe(second);
 
     unsubscribe();
-    processing.update({ children: [{ type: 'node', id: 'third', position: [40, 0] }] });
+    processing.replace({ type: 'scene', children: [{ type: 'node', id: 'third', position: [40, 0] }] });
 
     expect(listener).toHaveBeenCalledTimes(1);
 
     processing.dispose();
   });
 
-  it('controller 在更新间保留同一个 processing instance，并与 static 结果保持一致', () => {
-    const instances: Array<object> = [];
-    const sessions = new WeakMap<object, VanillaCompileDriverSession>();
-    const driver: VanillaCompileDriver = {
-      create: input => {
-        instances.push(input.instance);
-        const existing = sessions.get(input.instance);
-        if (existing !== undefined) return existing;
-
-        const session = {
-          resolve: (output: Parameters<VanillaCompileDriverSession['resolve']>[0]) => ({
-            primary: output.result,
-            layers: [],
-            diagnostics: [],
-          }),
-        };
-        sessions.set(input.instance, session);
-
-        return session;
+  it('持续会话通过 diagnostics 交付并清空 warning 回调异常', () => {
+    const cause = new Error('warning callback failed');
+    const runtime = new SceneRuntime(
+      { type: 'scene', version: 1, children: [{ namespace: 'missing', type: 'composite' }] },
+      {
+        compile: {
+          onWarn: () => {
+            throw cause;
+          },
+        },
       },
-    };
-    const first = { children: [{ type: 'node', id: 'first', position: [0, 0] }] } satisfies InputScene;
-    const second = { children: [{ type: 'node', id: 'second', position: [20, 0] }] } satisfies InputScene;
-    const controller = createProcessingController(first, { compileDriver: driver });
-
-    controller.update(second);
-
-    expect(instances).toHaveLength(2);
-    expect(instances[1]).toBe(instances[0]);
-
-    const staticResult = compileToScene(second, { compileDriver: driver });
-    const retainedResult = controller.read();
-
-    expect(retainedResult.revision).toBe(1);
-    expect(retainedResult.scene).toEqual(staticResult.scene);
-    expect(retainedResult.compileResult).toEqual(staticResult.compileResult);
-    expect(retainedResult.artifacts).toEqual(staticResult.artifacts);
-    expect(retainedResult.layers).toEqual(staticResult.layers);
-    expect(retainedResult.diagnostics).toEqual(staticResult.diagnostics);
-    expect(retainedResult.runtimeMeta.layers).toEqual(staticResult.runtimeMeta.layers);
-
-    controller.dispose();
+    );
+    try {
+      expect(runtime.current.compilation.result.scene.primitives).toEqual([]);
+      expect(runtime.diagnostics()).toContain(cause);
+      expect(runtime.diagnostics()).toEqual([]);
+    } finally {
+      runtime.dispose();
+    }
   });
 
-  it('compile driver 解析失败时不发布 retained candidate，并恢复上一份 driver 输入', () => {
-    let reject = false;
-    const session: VanillaCompileDriverSession = {
-      resolve: output => {
-        if (reject) throw new Error('expected driver resolution failure');
-        return { primary: output.result, layers: [], diagnostics: [] };
-      },
-    };
-    const driver: VanillaCompileDriver = {
-      create: input => {
-        reject = input.source.children.some(child => child.id === 'broken');
-        return session;
-      },
-    };
-    const controller = createProcessingController(
-      { children: [{ type: 'node', id: 'stable', position: [0, 0] }] },
-      { compileDriver: driver },
+  it('单次编译只通知一次 warning', () => {
+    const onWarn = vi.fn();
+    compileToScene(
+      { type: 'scene', version: 1, children: [{ namespace: 'missing', type: 'composite' }] },
+      { compile: { onWarn } },
     );
-    const stable = controller.read();
-    const listener = vi.fn();
-    controller.subscribe(listener);
-
-    expect(() => controller.update({ children: [{ type: 'node', id: 'broken', position: [20, 0] }] })).toThrow(
-      /Failed to publish the compilation|RENDER_RUNTIME_RENDERER_PREPARE_FAILED|Vanilla compile driver resolve failed/,
-    );
-
-    expect(controller.read()).toBe(stable);
-    expect(listener).not.toHaveBeenCalled();
-    expect(controller.diagnostics()).toEqual([expect.objectContaining({ code: 'VANILLA_COMPILE_DRIVER_FAILED' })]);
-
-    controller.update({ children: [{ type: 'node', id: 'recovered', position: [40, 0] }] });
-
-    expect(controller.read().revision).toBe(stable.revision + 1);
-
-    controller.dispose();
+    expect(onWarn).toHaveBeenCalledOnce();
   });
 });

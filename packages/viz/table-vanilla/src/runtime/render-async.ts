@@ -1,10 +1,9 @@
 import { isPropertyPathEqual } from '@retikz/foundation';
 import type { CompositeArtifact } from '@retikz/reconciler';
 import type { IRTable, TableCompileArtifact } from '@retikz/table';
-import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
-import { compileToSceneAsync, renderToSvgString, scene } from '@retikz/vanilla';
+import { prepareTableData, TABLE_NAMESPACE, TableComposite } from '@retikz/table';
+import { compileToScene, renderToSvg, scene } from '@retikz/vanilla';
 
-import { tableInputEmbedAdapter } from '../adapter';
 import { RetikzTableVanillaError } from '../error';
 import { embedTable } from '../spec';
 import type { AsyncTableRenderer, TableRenderArtifactResult, TableRenderAsyncCommonOptions } from './types';
@@ -16,30 +15,35 @@ const isRootTableArtifact = (artifact: CompositeArtifact): artifact is TableComp
   isPropertyPathEqual(artifact.occurrence.sourcePath, ['children', 0]) &&
   artifact.occurrence.expansionPath.length === 0;
 
-/** 共享Vanilla准备、编译和提交，不建立Table私有异步状态机 */
+/** 等待 Table 的数据计算，再同步编译与渲染 */
 const renderTableAsyncImpl = async <TSource = never>(
   spec: IRTable,
   options: TableRenderAsyncCommonOptions<TSource> & { artifacts?: boolean } = {},
 ): Promise<string | TableRenderArtifactResult> => {
-  const input = embedTable(spec, {
-    data: options.data,
-    dataBindings: options.dataBindings,
-    dataTransformExecutor: options.dataTransformExecutor,
-    lowerOptions: options.lowerOptions,
-    signal: options.signal,
-  });
-  const result = await compileToSceneAsync(
+  const preparation = await prepareTableData(
+    spec,
+    {
+      dataBindings:
+        options.dataBindings ??
+        Object.fromEntries(
+          Object.entries(options.data ?? {}).map(([name, rows]) => [name, { kind: 'rows' as const, rows }]),
+        ),
+      dataTransformExecutor: options.dataTransformExecutor,
+      signal: options.signal,
+    },
+    options.lowerOptions,
+  );
+  const input = embedTable(spec, { preparedData: await preparation.execute(), lowerOptions: options.lowerOptions });
+  const result = compileToScene(
     scene({ ...(options.theme === undefined ? {} : { theme: options.theme }), children: [input] }),
     {
-      adapters: [tableInputEmbedAdapter],
-      signal: options.signal,
       compile: options.compile,
     },
   );
-  const svg = renderToSvgString(result.scene, { output: options.output, animation: options.animation });
+  const svg = renderToSvg(result.scene, { output: options.output, animation: options.animation });
   if (options.artifacts !== true) return svg;
 
-  const artifacts = result.compileResult.artifacts.filter(isRootTableArtifact);
+  const artifacts = result.artifacts.filter(isRootTableArtifact);
   if (artifacts.length !== 1)
     throw new RetikzTableVanillaError(`Table expected exactly one root artifact, received ${artifacts.length}`);
 

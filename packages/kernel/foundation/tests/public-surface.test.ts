@@ -36,6 +36,7 @@ describe('基础公共面', () => {
         'mergeDefinedProperties',
         'mergeProperties',
         'parseStaticCssColor',
+        'pickDefined',
         'readPropertyPath',
       ].sort(),
     );

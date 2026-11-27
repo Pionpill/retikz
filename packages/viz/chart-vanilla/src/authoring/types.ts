@@ -1,7 +1,8 @@
 import type { ChartThemeDefinition, IRChartSource } from '@retikz/chart';
 import type { IRScene, ThemeDefinition } from '@retikz/core';
-import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
 import type { RequireExactlyOne } from '@retikz/foundation';
+import type { PreparedPlotData } from '@retikz/plot';
 import type { PlotsLoweringOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate, InputChartPresentation } from '../normalize/chart';
@@ -9,23 +10,18 @@ import type { InputChartPanel } from '../shared';
 
 /**
  * Chart 各 concrete chartType 共用的 Vanilla 输入字段
- * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
  * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
  */
-export type InputChartCommon<TSource extends IRChartSource, TNative = never> = InputChartPresentation &
+export type InputChartCommon<TSource extends IRChartSource> = InputChartPresentation &
   RequireExactlyOne<{
-    /** 直接输入的行数据，与 dataBindings 互斥 */
+    /** 直接输入的行数据，与 preparedData 互斥 */
     data: Array<ExternalRow>;
-    /** 具名行数据、结果或原生源绑定，与 data 互斥 */
-    dataBindings: DataInputBindings<TNative>;
+    /** 当前图表已完成的数据计算，与 data 互斥 */
+    preparedData: PreparedPlotData;
   }> &
   Readonly<{
     /** 根级执行配置 */
     dataExecution?: TSource['dataExecution'];
-    /** 执行器默认配置与外部入口 */
-    dataTransformExecutor?: DataTransformExecutor<TNative>;
-    /** 请求取消信号 */
-    signal?: AbortSignal;
     /** 稳定的数据引用；省略时固定为 `chart.data` */
     dataRef?: string;
     /** 可选的 Plot 数据模型 */

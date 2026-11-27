@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
-import { createInputScene, Layout } from '@retikz/react';
+import { convertReactToInputScene, Layout } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import type { ErrorInfo, FC, ReactElement, ReactNode } from 'react';
@@ -12,7 +12,6 @@ import { parseRetikzJsx } from '@/lib';
 import { cn } from '@/lib';
 import type { ComponentRenderSource } from '@/modules/docs/components';
 import { CodeBlock, ComponentPreviewCard, formatIR } from '@/modules/docs/components';
-import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import { formatZodError } from '../retikz-validation';
 
@@ -81,8 +80,8 @@ const resolveTsx = (source: string): Resolved => {
   let irJson: string;
 
   try {
-    const input = createInputScene(element.props.children);
-    irJson = formatIR(normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) }).ir);
+    const input = convertReactToInputScene(element.props.children);
+    irJson = formatIR(normalizeScene(input).ir);
   } catch (err) {
     irJson = `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
   }

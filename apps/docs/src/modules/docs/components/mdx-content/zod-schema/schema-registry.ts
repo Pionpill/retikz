@@ -149,7 +149,6 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
-import { ClipInspectOptionsSchema, PathInspectOptionsSchema, GroupInspectOptionsSchema } from '@retikz/inspect';
 import * as LayoutIR from '@retikz/layout';
 import * as IRPlot from '@retikz/plot';
 import * as StandardCollectionIR from '@retikz/standard/collection';
@@ -510,21 +509,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   AxisScaleSchema: { schema: IR.AxisScaleSchema, label: 'AxisScaleSchema' },
   BoxSizeSchema: { schema: IR.BoxSizeSchema, label: 'BoxSizeSchema' },
   BoxSpacingSchema: { schema: IR.BoxSpacingSchema, label: 'BoxSpacingSchema' },
-  GroupInspectOptionsSchema: {
-    schema: GroupInspectOptionsSchema,
-    label: 'GroupInspectOptions',
-    url: '/kernel/packages/inspect/reference#groupinspectoptionsschema',
-  },
-  ClipInspectOptionsSchema: {
-    schema: ClipInspectOptionsSchema,
-    label: 'ClipInspectOptions',
-    url: '/kernel/packages/inspect/reference#clipinspectoptionsschema',
-  },
-  PathInspectOptionsSchema: {
-    schema: PathInspectOptionsSchema,
-    label: 'StrokePathInspectOptions',
-    url: '/kernel/packages/inspect/reference#pathinspectoptionsschema',
-  },
   SceneSchema: {
     schema: IR.SceneSchema,
     label: 'Scene',
@@ -717,9 +701,9 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'NodeLayoutSchema',
     url: '/kernel/components/node/reference#irnodelayout--nodelayoutschema',
   },
-  NodeLabelBoundaryPositionSchema: {
+  NodeLabelSidePositionSchema: {
     schema: IR.NodeLabelSchema.shape.position.unwrap().options[2],
-    label: 'NodeLabelBoundaryPositionSchema',
+    label: 'NodeLabelSidePositionSchema',
   },
   NodeLabelPinSchema: {
     schema: IR.NodeLabelSchema.shape.pin.unwrap().options[1],

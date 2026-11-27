@@ -1,5 +1,5 @@
 ---
-title: 能力注册
+title: 基础 / 能力注册
 description: 理解 Core 图形实体与可扩展能力的关系，以及 Definition 如何通过注册表参与语义解析和编译
 ---
 
@@ -67,7 +67,7 @@ const pair = defineComposite({
   }),
 });
 
-const reconciler = new SceneReconciler({ composites: [pair] }, { incremental: false });
+const reconciler = new SceneReconciler({ composites: [pair] });
 try {
   const output = reconciler.mount({
     type: 'scene',

@@ -65,8 +65,8 @@ export const Example = () => <Layout ir={ir} composites={[mapDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { map, mapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
-import { scene, renderToSvgString } from '@retikz/vanilla';
+import { map } from '@retikz/standard-vanilla/collection';
+import { compileToScene, scene, renderToSvg } from '@retikz/vanilla';
 
 const input = scene({
   children: [
@@ -84,7 +84,8 @@ const input = scene({
     }),
   ],
 });
-const svg = renderToSvgString(input, { adapters: [mapInputEmbedAdapter] });
+const compileResult = compileToScene(input);
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 
@@ -94,7 +95,7 @@ console.log(svg);
 ```ts
 import type { IRScene } from '@retikz/core';
 import { mapDefinition } from '@retikz/standard/collection';
-import { renderToSvgString } from '@retikz/vanilla';
+import { compileToScene, renderToSvg } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
@@ -116,9 +117,8 @@ const ir: IRScene = {
     },
   ],
 };
-const svg = renderToSvgString(ir, {
-  compile: { composites: [mapDefinition] },
-});
+const compileResult = compileToScene(ir, { compile: { composites: [mapDefinition] } });
+const svg = renderToSvg(compileResult.scene);
 console.log(svg);
 ```
 

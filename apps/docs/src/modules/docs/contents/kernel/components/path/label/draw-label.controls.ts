@@ -9,7 +9,7 @@ const createControls = (lang: Lang) => {
   const i18n = drawLabelControlsI18n[lang];
   return definePreviewControls({
     presentation: 'panel',
-    title: i18n.drawEdgeLabel,
+    title: i18n.drawStepLabel,
     sections: [
       {
         label: i18n.segmentAndPosition,

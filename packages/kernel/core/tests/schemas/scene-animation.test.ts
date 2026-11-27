@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AnimationTrackSchema } from '../../src/schemas';
+import { AnimationTrackSchema, SceneSchema } from '../../src/schemas';
 
 describe('动画关键帧的作者顺序', () => {
   it('接受相同时间的多帧，并保持该时刻的作者顺序', () => {
@@ -31,4 +31,13 @@ describe('动画关键帧的作者顺序', () => {
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.issues).toContainEqual(expect.objectContaining({ path: ['keyframes'] }));
   });
+});
+
+it('解析时只冻结输出的根动画数组，不冻结作者传入的数组', () => {
+  const animations = [{ property: 'opacity', duration: 100, keyframes: [{ at: 0, value: 0 }] }];
+  const scene = SceneSchema.parse({ version: 1, type: 'scene', children: [], animations });
+
+  expect(scene.animations).toHaveLength(1);
+  expect(Object.isFrozen(scene.animations)).toBe(true);
+  expect(Object.isFrozen(animations)).toBe(false);
 });

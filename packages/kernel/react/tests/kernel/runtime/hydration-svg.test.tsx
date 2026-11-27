@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe('SVG 水合', () => {
-  it('retained SVG 禁用动画时仍可挂载带动画 track 的分组节点', async () => {
+  it('SVG 禁用动画时仍可挂载带动画 track 的分组节点', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -92,7 +92,7 @@ describe('SVG 水合', () => {
     container.remove();
   });
 
-  it('static SVG 继续绑定同一 hydration handler', async () => {
+  it('增量协调器下 SVG 继续绑定同一 hydration handler', async () => {
     const onClick = vi.fn();
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -100,7 +100,7 @@ describe('SVG 水合', () => {
 
     await act(() => {
       root.render(
-        <Layout renderer="svg" width={200} height={200} runtime={{ mode: 'static' }}>
+        <Layout renderer="svg" reconciler={{ mode: 'incremental' }} width={200} height={200}>
           <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );

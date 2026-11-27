@@ -90,19 +90,22 @@ export const Example = () => (
 );
 ```
 
-Prefer not to use React? The official `@retikz/vanilla` package offers an imperative named builder plus `mountSvg` / `mountCanvas` (SSR included):
+Prefer not to use React? The official `@retikz/vanilla` package offers an imperative named builder and `mountSceneView` for browser mounting:
 
 ```ts
-import { figure, node, draw } from '@retikz/vanilla';
+import { node, path, scene } from '@retikz/vanilla';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
-const fig = figure([
-  node('idea', { position: [0, 0], text: 'Idea' }),
-  node('ir', { position: [110, 0], text: 'JSON IR' }),
-  node('svg', { position: [230, 0], text: 'SVG' }),
-  draw(['idea', 'ir', 'svg'], { arrow: '->' }),
-]);
+const input = scene({
+  children: [
+    node({ id: 'idea', position: [0, 0], text: 'Idea' }),
+    node({ id: 'ir', position: [110, 0], text: 'JSON IR' }),
+    node({ id: 'svg', position: [230, 0], text: 'SVG' }),
+    path({ way: ['idea', 'ir', 'svg'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+  ],
+});
 
-fig.mount(document.querySelector('#diagram')); // also: fig.toSvgString() / fig.toCanvas(canvas)
+const view = mountSceneView(document.querySelector('#diagram')!, input);
 ```
 
 Open the [Quick Start](https://pionpill.github.io/retikz/kernel/get-start) to build the same idea step by step, or jump into the [examples](https://pionpill.github.io/retikz/kernel/examples/karl-circle).
@@ -123,7 +126,7 @@ retikz 0.3 focuses on general diagram primitives, now with multi-backend renderi
 | Multi-backend rendering (SVG / Canvas 2D) | The same IR compiles to either an SVG or a Canvas 2D backend                                                         |
 | Animation                                 | Declare animations on `<Layout>`, played by both SVG and Canvas backends; freeze a static frame for SSR poster shots |
 | Interactivity, events, and hydration      | Node / path events and hit-testing; hydrate on the client after SSR                                                  |
-| Framework-free / SSR                      | `@retikz/vanilla`'s `mountSvg` / `mountCanvas` and `renderToSvgString`                                               |
+| Framework-free / SSR                      | `@retikz/vanilla`'s `mountSceneView` and `renderToSvg`                                                               |
 
 Data-driven charts are handled by the emerging Tier 2 layer `@retikz/plot` (a standalone package, currently alpha); for flow layout, codecs, and additional render targets, see the [roadmap](https://pionpill.github.io/retikz/about/releases/roadmap).
 
@@ -155,7 +158,7 @@ The important design choice is that React JSX is only one input format. Once a d
 | [`@retikz/core`](https://www.npmjs.com/package/@retikz/core)       | Framework-neutral JSON IR, schemas, pure parsers, and the IR-to-Scene compiler                                                                   | `zod`                                               |
 | [`@retikz/render`](https://www.npmjs.com/package/@retikz/render)   | Scene render-backend namespace: `./svg` (Scene → SVG descriptor / string), `./canvas` (Scene → Canvas 2D), plus animation and hydration runtimes | `@retikz/core`                                      |
 | [`@retikz/react`](https://www.npmjs.com/package/@retikz/react)     | Official React components and JSX-to-IR builder, mounting both SVG and Canvas backends                                                           | `@retikz/core`, `@retikz/render`, peer `react >=18` |
-| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | Official framework-free runtime: imperative `mountSvg` / `mountCanvas`, `renderToSvgString` (SSR), and a named builder                           | `@retikz/core`, `@retikz/render`                    |
+| [`@retikz/vanilla`](https://www.npmjs.com/package/@retikz/vanilla) | Official framework-free runtime: imperative `mountSceneView`, `renderToSvg` (SSR), and a named builder                                           | `@retikz/core`, `@retikz/render`                    |
 
 The four Tier 1 packages — core / render / react / vanilla — ship in lockstep under the same version.
 

@@ -6,7 +6,7 @@ import { circuitMeter, Meter } from './circuit-01-meters.meter';
 const FONT = { family: 'Arial, sans-serif' } as const;
 
 const CircuitDemo: FC = () => (
-  <Layout extensions={{ shapes: [circuitMeter] }}>
+  <Layout compile={{ shapes: [circuitMeter] }}>
     <Scope
       defaults={{
         node: {

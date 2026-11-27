@@ -4,7 +4,7 @@ import type { FC } from 'react';
 
 /** 展示 Extension 形状的最小接入结果 */
 const Entry: FC = () => (
-  <Layout extensions={{ shapes: [crossShapeDefinition] }}>
+  <Layout compile={{ shapes: [crossShapeDefinition] }}>
     <Node
       shape="cross"
       layout={{ minimumSize: { width: 80, height: 80 } }}

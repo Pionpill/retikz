@@ -46,10 +46,10 @@ export default () => <Layout ir={ir} />;
 
 ```ts
 import { node, scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const input = scene({ children: [node({ position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } })] });
-const view = mount(document.getElementById('diagram')!, input);
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>
@@ -57,7 +57,7 @@ const view = mount(document.getElementById('diagram')!, input);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
   version: 1,
@@ -70,6 +70,17 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
+Use `NodeLabel` children to declare additional labels in JSX. Configured labels come first, followed by child labels in JSX order. Labels do not contribute to the body text.
+
+```tsx
+import { Node, NodeLabel } from '@retikz/react';
+
+<Node text="body" label={{ text: 'A' }}>
+  <NodeLabel>B</NodeLabel>
+  <NodeLabel>C</NodeLabel>
+</Node>;
+```
+
 ## Adding labels
 
 `label` accepts one object or an array. Choose the attachment point, then adjust its style:
@@ -77,7 +88,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 Each label's `text` uses the same Core text block as path labels: `\n` in a string creates a line break, or you can supply a non-empty line array such as `text: ['First line', { text: 'Second line', fill: 'red' }]`. Write mixed content as `text: [{ segments: [{ text: 'Note ' }, { tex: 'x' }] }]`. All lines share one label box, attachment, rotation, and leader. An array of `label` objects instead creates separate labels.
 
 - `position` defaults to `'top'` and accepts `'top'`, `'top-right'`, `'right'`, `'bottom-right'`, `'bottom'`, `'bottom-left'`, `'left'`, and `'top-left'`
-- It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ boundary: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
+- It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ side: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
 - `placement` defaults to `'outside'`; use `'inside'` to place the label inside the border
 - `font` / `textColor` use explicit label values first, then `Scope.defaults.node.label`, and finally inherit missing values from the node
 - `opacity` is 0..1 and multiplies the node opacity. Omitted factors count as 1; line and segment opacity multiply further, and an explicit 0 is preserved
@@ -117,9 +128,9 @@ import { Node } from '@retikz/react';
 
 ## Spacing and placement
 
-`distance` is the net gap, along the placement direction, between the node boundary and the **rotated label visual box**. When omitted, it uses `<Layout labelDistance>` (default `12`); `0` makes the visual box touch the boundary. `placement: 'inside'` turns the direction inward and preserves the same gap on the inner side. Rectangle nodes can also use `position: { boundary, fraction }` to attach to a proportional point on a specific side. `position: 'center'` always uses the final node rectangle center and ignores `placement` and `distance`.
+`distance` is the net gap, along the placement direction, between the node boundary and the **rotated label visual box**. When omitted, it uses `<Layout labelDistance>` (default `12`); `0` makes the visual box touch the boundary. `placement: 'inside'` turns the direction inward and preserves the same gap on the inner side. Rectangle nodes can also use `position: { side, fraction }` to attach to a proportional point on a specific side. `position: 'center'` always uses the final node rectangle center and ignores `placement` and `distance`.
 
-- `boundary` accepts `'top'` / `'right'` / `'bottom'` / `'left'`
+- `side` accepts `'top'` / `'right'` / `'bottom'` / `'left'`
 - `fraction` is the 0..1 proportional position on that side and defaults to `0.5`
 - `placement: 'inside'` cannot be combined with `pin`; keep labels outside when a leader line is needed
 
@@ -188,7 +199,7 @@ These members control label attachment, placement, and visual style. See the [AP
 
 - Named direction: \`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`. A named direction attaches from the node border; \`'center'\` fixes the final node-rectangle center and ignores \`placement\` and \`distance\`
 - Angle: \`number\`, attaching along the ray from the node center at that angle
-- Boundary fraction: \`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`. It attaches to one edge; \`fraction\` defaults to \`0.5\` and ranges from \`0..1\``,
+- Boundary fraction: \`{ side: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`. It attaches to one edge; \`fraction\` defaults to \`0.5\` and ranges from \`0..1\``,
 },
 {
   name: 'IRNodeLabel.placement',

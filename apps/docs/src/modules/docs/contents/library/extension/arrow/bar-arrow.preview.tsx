@@ -11,7 +11,7 @@ export type BarArrowPreviewValues = {
 
 /** 绘制示例图形 */
 export const renderBarArrowPreview = (values: BarArrowPreviewValues) => (
-  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [barArrowDefinition] }}>
+  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} compile={{ arrows: [barArrowDefinition] }}>
     <Draw
       way={[
         [-120, 0],

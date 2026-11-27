@@ -4,7 +4,7 @@ import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout extensions={{ paths: [ribbonPathDefinition] }} rootScope={{ defaults: { style: { color: '#172033' } } }}>
+  <Layout compile={{ paths: [ribbonPathDefinition] }} rootScope={{ defaults: { style: { color: '#172033' } } }}>
     <Path
       kind="ribbon"
       kindOptions={

@@ -116,9 +116,9 @@ export const Gateway = () => (
 <DocTab value="vanilla" label="Vanilla API">
 
 ```ts
-import { graph, entity, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { graph, entity } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
-import { mount } from '@retikz/vanilla/dom';
+import { mountSceneView } from '@retikz/vanilla/dom';
 import { serviceRole, gatewayKind, availabilityPredicate, availabilityRules } from './entity-definition.data';
 
 const input = scene({
@@ -140,15 +140,13 @@ const input = scene({
     }),
   ],
 });
-const view = mount(document.getElementById('diagram')!, input, {
-  adapters: createGraphVanillaAdapters(),
-});
+const view = mountSceneView(document.getElementById('diagram')!, input);
 ```
 
 </DocTab>
 </DocTabs>
 
-When consuming IR directly, pass the same definitions to `createGraphDefinitions({ entityRoles, entityKinds, entityPredicates })`, then install them in React's `extensions.composites` or Vanilla's `compile.composites` as shown in Basic usage. Rules remain Graph Source `graphRules`, not Entity predicate parameters. The Vanilla example requires an existing container; dispose the view when unmounting.
+When consuming IR directly, pass the same definitions to `createGraphDefinitions({ entityRoles, entityKinds, entityPredicates })`, then install them in React's `compile.composites` or Vanilla's `compile.composites` as shown in Basic usage. Rules remain Graph Source `graphRules`, not Entity predicate parameters. The Vanilla example requires an existing container; dispose the view when unmounting.
 
 ## Errors and limits
 

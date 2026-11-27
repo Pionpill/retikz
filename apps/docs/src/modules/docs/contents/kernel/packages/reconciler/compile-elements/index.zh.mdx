@@ -1,0 +1,97 @@
+---
+title: 执行 / 元素组装
+description: 对照节点、命名坐标和连接线，追踪 Core 的计算结果怎样写入名称帧、子树布局和图元列表
+---
+
+[子树遍历](/kernel/packages/reconciler/compile-traversal)把同一层的子项按声明顺序交给执行器。接下来要分清两件事：一个元素能被路径引用吗？它自己会画出来吗？节点 A 和坐标 C 都能当端点，但只有 A 会画出节点。这里用一次全量编译追踪三种叶子元素，从收到声明一直看到结果写回当前子树。
+
+## 整体流程
+
+下图的声明顺序是**路径、节点 A、坐标 C**。A 是中心在 [0, 0]、宽 60 的矩形；C 在 [180, 0]。连线从 A 的右边界出发，停在 C 的位置。右端没有圆点，因为坐标只提供位置。
+
+<ComponentPreview files="element-example" size="sm" hideCode type="illustration" />
+
+| 读到的声明 | 当时能做什么                               | 后续从哪里取结果                                 |
+| ---------- | ------------------------------------------ | ------------------------------------------------ |
+| 路径 A → C | 在图元列表占位，把端点计算留到本层收尾     | 待处理任务保存原图元列表和占位对象               |
+| 节点 A     | 调用 Core 算出节点，发出图元并登记具名几何 | 路径按 A 查形状和位置；父 Scope 收集节点布局     |
+| 坐标 C     | 调用 Core 算出位置，登记名字               | 路径按 C 查一个点；父 Scope 也能用这个点计算包络 |
+
+## 三层表示：IR → Canonical → Compiled
+
+这三层面向不同的使用者：作者 API 用 IR 描述要画什么，Core 将声明解析为当前上下文中生效的配置，再把计算结果交给下游组装和复用。
+
+- **IR：各类 API 的共同契约。** 无论从 React、Vanilla 还是直接从 JSON 描述场景，进入内核时都使用同一种中间表示。整份 IR 都可以序列化为 JSON（100%），不含函数、React 元素或类实例。IR 的设计把 LLM 易于理解和生成声明放在首位：Zod Schema 明确字段的含义、可选项和取值约束，也让生成的声明可以按同一套规则校验。
+- **Canonical：供编译器使用的内部类型。** 解析阶段把 IR 中的显式配置与作用域继承、主题和默认值结合，确定本次编译实际采用的配置。后续计算直接读取 `canon`，无须再次判断某个值来自声明还是父作用域。
+- **Compiled：供下游使用的编译结果。** 结果的结构取决于下游需要什么：父作用域用布局贡献计算包络，连线用几何信息确定端点，Reconciler 将绘制图元组装进 Scene。这样的划分也服务于增量渲染：例如只修改连线时，Weave 可以复用未变节点的几何，仅重新计算受影响的结果。
+
+<ComponentAlert
+  type="tip"
+  title="Vanilla 入口还有一步 normalize"
+  description="使用 Vanilla 编写节点时，normalizeNode 先把 InputNode 转成 IRNode，例如移除只供作者侧使用的 authoring 字段。直接提供 IR 时从声明层开始；两种入口随后使用相同的解析和编译逻辑。"
+/>
+
+以节点为例，三层依次对应 <ApiSourceLink label="IRNode" path="packages/kernel/core/src/schemas/node/node.ts" startLine={195}>`IRNode`</ApiSourceLink> → <ApiSourceLink label="CanonicalNode" path="packages/kernel/core/src/resolve/node/types.ts" startLine={149}>`CanonicalNode`</ApiSourceLink> → <ApiSourceLink label="CompiledNode" path="packages/kernel/core/src/compile/node/types.ts" startLine={23}>`CompiledNode`</ApiSourceLink>。下面是 <ApiSourceLink label="visitNode" path="packages/kernel/reconciler/src/compile/execution/leaf/node.ts" startLine={13}>`visitNode`</ApiSourceLink> 处理节点的三行源码：前两行调用 Core 完成两次转换，最后一行把结果交给 Reconciler 组装。
+
+```ts
+const canon = resolveNode(ir, createNodeResolveContext(runtime, nodeIrPath, frame.context));
+const compiled = compileNode(canon, createNodeCompileContext(runtime, canon, nodeIrPath, frame.context));
+assembleNode(runtime, outputState, ir, nodeIrPath, frame, compiled, semanticOwner);
+```
+
+## 节点：一次计算，分别写入
+
+以 A 为例，<ApiSourceLink label="assembleNode" path="packages/kernel/reconciler/src/compile/execution/leaf/node.ts" startLine={28}>`assembleNode`</ApiSourceLink> 将同一结果按用途写到不同位置：
+
+- **绘制**：将 `compiled.emit.overall.primitives` 追加到 `frame.state.primitives`，将可见边界贡献写入 `bounds`。图中的矩形和文字都来自这份输出。
+- **父层布局**：将节点的局部几何加入 `geometries`，供父 Scope 求包络；另把用于排版的占位点写入 `allocations`。这让父层能分别回答“内容画到哪里”和“排版要留多少空间”。
+- **路径引用**：有名字时，用本层变换链把局部几何投影到全局，再把 A 登记到当前名称帧，并在 `publications` 留一份引用供祖先修正放置。路径之后查到的不只是中心，还能结合形状求出朝向 C 的边界点。匿名节点也会绘制并贡献布局，只省去这一步名称登记。
+
+## 坐标：登记位置
+
+C 的声明只有 `type: 'coordinate'`、`id: 'C'` 和 `position: [180, 0]`。<ApiSourceLink label="visitCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={10}>`visitCoordinate`</ApiSourceLink> 用当前的位置查询环境调用 Core；<ApiSourceLink label="assembleCoordinate" path="packages/kernel/reconciler/src/compile/execution/leaf/coordinate.ts" startLine={22}>`assembleCoordinate`</ApiSourceLink> 将结果分给两个读者：
+
+- 父 Scope 从 `geometries` 取得局部坐标，占位贡献只有一个点。
+- 名称帧以 C 为键保存 `{ position: globalCenter }`。如果当前 Scope 有变换，登记前先投影；示例在根层，所以局部和全局坐标都是 [180, 0]。
+
+C 没有绘制输出，图元列表在访问它前后完全相同。连线末端之所以可见，是路径画到了这个位置，而非坐标画出了标记。
+
+## 路径：保留位置，再求端点
+
+路径先于 A、C 声明。<ApiSourceLink label="queuePathChild" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={45}>`queuePathChild`</ApiSourceLink> 先将占位对象放入图元列表，再将待处理任务加入 `state.paths`。任务保存路径声明、有效默认值、主题和变换链；它还用下面两个字段记住稍后要改动哪个列表、替换哪个对象。这是待处理任务类型中的字段节选：
+
+```ts
+placeholderSlot: {
+  primitives: Array<InternalScenePrimitive>;
+  placeholder: {
+    type: typeof PATH_PLACEHOLDER;
+  }
+}
+```
+
+本层收尾时，<ApiSourceLink label="flushPendingPathEmissions" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={84}>`flushPendingPathEmissions`</ApiSourceLink> 才逐项计算路径。Core 此时可以查询 A 和 C：A 返回节点几何，端点取向右的矩形边界 [30, 0]；C 返回位置，端点就是 [180, 0]。在 Scope 内，这一步发生在退出局部名称帧之前。
+
+## 完整实现流程
+
+下图截取两次快照：上排是三个声明都已访问、路径还没求值时的图元列表，下排是回填后的列表。为便于对照，A 的图元合写为一格。注意 C 在两排都没有自己的槽位。
+
+<ComponentPreview files="assembly-slots" size="md" hideCode type="illustration" />
+
+拿到 Core 的路径结果后，<ApiSourceLink label="assemblePaths" path="packages/kernel/reconciler/src/compile/execution/leaf/path.ts" startLine={128}>`assemblePaths`</ApiSourceLink> 按目标列表归集替换项，再顺序扫描原列表。遇到占位对象，就在原处展开对应的路径图元；其余图元照原顺序保留。任务还将路径的边界点写回本层。这样，路径虽然最后算出，却仍在 A 之前绘制（示例没有指定额外的绘制层级）。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '执行 / 编译调度',
+      description: '从会话入口追到子树收尾',
+      url: '/kernel/packages/reconciler/compile-scheduling',
+    },
+    {
+      title: '执行 / 作用域与遍历',
+      description: '看局部几何和命名引用怎样随 Scope 传递',
+      url: '/kernel/packages/reconciler/compile-traversal',
+    },
+  ]}
+/>

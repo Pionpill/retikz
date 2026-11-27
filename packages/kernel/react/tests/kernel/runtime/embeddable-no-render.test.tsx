@@ -1,15 +1,16 @@
+// @vitest-environment jsdom
 import type { AnyCompositeDefinition } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { Fragment, useEffect, useState } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { Layout } from '../../../src/kernel';
-import { createInputScene } from '../../../src/kernel/adapter/input-scene';
-import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hydration-handlers';
+import { Layout } from '../../../src';
+import { convertReactToInputScene } from '../../../src/container';
+import { collectHydrationHandlers } from '../../../src/container/hydration';
+import { mountedMarkup } from '../../helpers/mounted-markup';
 
 /**
  * 端到端回归护栏：可嵌入 Tier2 子组件的函数体在静态遍历期间「绝不被调用 / 渲染」
@@ -19,7 +20,7 @@ import { collectHydrationHandlers } from '../../../src/kernel/runtime/collect-hy
  *
  * 测试工具说明：本包 vitest 环境为 `node`（无 jsdom），且仓库未安装 @testing-library/react /
  *   react-test-renderer，React 为 18.2（无 `act`）。为不引入新依赖 / 不改测试环境配置，
- *   用 react-dom/server `renderToStaticMarkup` 驱动真实 React 渲染（hooks 在 SSR 期间确实执行），
+ *   用 `mountedMarkup` 驱动真实 React 渲染（hooks 在 挂载期间确实执行），
  *   并以「同子树多次渲染 + 变更无关 prop」模拟重渲染 / 语言切换；回归向量（静态遍历期误调函数体触发 hook）
  *   在此路径下被完整覆盖
  */
@@ -91,7 +92,7 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
 
 /**
  * 有状态宿主兄弟组件：持 useState + useEffect（hook），渲染普通 DOM 标记
- * @description 与抛错可嵌入 fixture 并列挂在同一棵树里；其 hooks 在 SSR 渲染期间执行——
+ * @description 与抛错可嵌入 fixture 并列挂在同一棵树里；其 hooks 在 挂载期间执行——
  *   若可嵌入函数体被静态遍历误调并触发自身 hook，将污染本宿主的 hook 顺序。label prop 模拟
  *   i18n 文案，bump prop 模拟一次 state 变更后的重渲染
  */
@@ -128,12 +129,12 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
     let second = '';
 
     expect(() => {
-      first = renderToStaticMarkup(tree('initial', 0));
+      first = mountedMarkup(tree('initial', 0));
     }).not.toThrow();
 
     // 模拟一次 state 变更后的重渲染（bump 变化 + 同一子树）
     expect(() => {
-      second = renderToStaticMarkup(tree('initial', 1));
+      second = mountedMarkup(tree('initial', 1));
     }).not.toThrow();
 
     expect(first).toContain('data-retikz-id="panel-guard"');
@@ -142,20 +143,17 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
     expect(second).toContain('data-host-label="initial"');
   });
 
-  it('两条遍历链都 hook-free：createInputScene 与 collectHydrationHandlers 直接喂抛错可嵌入元素都不抛', () => {
+  it('两条遍历链都 hook-free：convertReactToInputScene 与 collectHydrationHandlers 直接喂抛错可嵌入元素都不抛', () => {
     const Throwing = makeThrowingFixture();
     const element = <Throwing id="probe" data={{ v: 2 }} />;
 
-    expect(() => createInputScene(element)).not.toThrow();
+    expect(() => convertReactToInputScene(element)).not.toThrow();
     expect(() => collectHydrationHandlers(element)).not.toThrow();
 
     // React 只收集 Vanilla adapter，领域贡献由 Vanilla normalize / processing 统一消费
-    const input = createInputScene(element);
+    const input = convertReactToInputScene(element);
 
-    expect(input.adapters).toHaveLength(1);
-
-    const children = input.scene.children;
-    if (children === undefined) throw new Error('expected direct InputScene children');
+    const children = input.children;
 
     expect(children[0]).toMatchObject({ type: 'embed', id: 'probe' });
   });
@@ -175,10 +173,10 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
     let en = '';
 
     expect(() => {
-      zh = renderToStaticMarkup(tree('你好'));
+      zh = mountedMarkup(tree('你好'));
     }).not.toThrow();
     expect(() => {
-      en = renderToStaticMarkup(tree('hello'));
+      en = mountedMarkup(tree('hello'));
     }).not.toThrow();
 
     // 可嵌入展开输出与语言无关，保持稳定

@@ -14,7 +14,7 @@ export const previewSource = {
 const Demo: FC = () => {
   const lowerTexState = useLowerTex();
   return (
-    <Layout lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
+    <Layout compile={{ lowerTex: lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined }}>
       {/* 背景网格由 Standard Grid 声明，lowering 后复用 Core Path */}
       <Grid
         bounds={{ start: [-100, -100], end: [100, 100] }}

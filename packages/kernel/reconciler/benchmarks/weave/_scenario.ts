@@ -3,10 +3,10 @@ import { expect } from 'vitest';
 
 import { defineBenchmark } from '../../../../../scripts/benchmarks/scenario';
 import type { BenchmarkExecution } from '../../../../../scripts/benchmarks/scenario';
-import { SceneReconciler } from '../../src';
+import { ReconcilerMode, SceneReconciler } from '../../src';
 import type { CompileOptions, CompileResult, ReconcilerResult } from '../../src';
 import type { InputWeaveOwn, WeaveBatch } from '../../src/weave';
-import { benchmarkCompileOptions } from '../reconciler/_execution';
+import { benchmarkCompileOptions } from '../reconcile/_execution';
 
 /** 单次更新及独立的完整 Scene 参照，不声明内部阶段命中预期 */
 export type CacheStep = {
@@ -37,7 +37,7 @@ const createCacheTiming = (
   index: number,
 ): BenchmarkExecution<ReconcilerResult> => {
   const before = JSON.stringify(reference);
-  const oracle = new SceneReconciler(compileOptions, { incremental: false });
+  const oracle = new SceneReconciler(compileOptions);
   let expected: CompileResult;
   try {
     const referenceResult = oracle.mount(reference.steps[index].scene);
@@ -78,7 +78,7 @@ const createCacheTiming = (
     beforeEach: () => {
       scenario = create();
       expect(JSON.stringify(scenario)).toBe(before);
-      reconciler = new SceneReconciler(compileOptions, { incremental: true, updateStrategy: 'auto' });
+      reconciler = new SceneReconciler(compileOptions, { mode: ReconcilerMode.Incremental, updateStrategy: 'auto' });
       const mounted = reconciler.mount(scenario.scene);
       expect(mounted.compilation.diagnostics).toEqual([]);
       expect(reconciler.diagnostics()).toEqual([]);
